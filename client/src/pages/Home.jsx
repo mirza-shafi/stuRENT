@@ -17,7 +17,7 @@ const SLIDES = [
   { bg:'linear-gradient(135deg,#064e3b 0%,#10b981 100%)', tag:'🏕️ Outdoor Adventures', title:['Explore More','Spend Less'], sub:'Camping gear, sports equipment, bikes — rent instead of buying!', price:['From $8/day','Get Started'], emoji:'🏕️' },
 ]
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1','') || 'http://localhost:8000'
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace('/api/v1', '')
 
 export default function HomePage() {
   return <CartProvider><HomePageInner /></CartProvider>

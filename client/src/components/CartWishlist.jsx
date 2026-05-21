@@ -4,7 +4,7 @@
 import { useState, useCallback, createContext, useContext } from 'react'
 import { Link } from 'react-router-dom'
 
-const BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1','') || 'http://localhost:8000'
+const BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace('/api/v1', '')
 const Ctx = createContext()
 export const useCart = () => useContext(Ctx)
 

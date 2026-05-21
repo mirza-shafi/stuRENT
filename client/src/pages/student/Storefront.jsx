@@ -7,7 +7,7 @@ import { Search, Filter, Package, ArrowRight, ShoppingCart, Heart } from 'lucide
 import { useApi } from '../../hooks/useApi'
 import StudentService from '../../services/studentService'
 
-const BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000'
+const BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace('/api/v1', '')
 const CATS = ['All', 'Indoor', 'Outdoor']
 
 export default function Storefront() {

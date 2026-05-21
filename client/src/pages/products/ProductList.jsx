@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 
 const EMPTY_FORM = { name: '', price: '', buy_price: '', listing_type: 'Rent', category: 'Indoor', description: '', is_available: true, image: null }
-const BASE_URL   = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000'
+const BASE_URL   = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace('/api/v1', '')
 
 export default function ProductList() {
   const { data, loading, execute: refetch } = useApi(ProductService.getAll)
