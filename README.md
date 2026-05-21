@@ -7,7 +7,7 @@
 ## Project Layout
 
 ```
-stuRENT-main/
+stuRENT/
 ├── backend/                      ← Django REST API
 │   ├── manage.py
 │   ├── requirements.txt
