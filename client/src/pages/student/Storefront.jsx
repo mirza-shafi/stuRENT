@@ -1,323 +1,190 @@
 /**
- * Storefront.jsx — Student product browsing page
- * Students browse available rental items, filter by category, and click to rent.
+ * Storefront.jsx — Student product browsing page (ShopNest-style)
  */
-
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, Filter, Package, Tag, ArrowRight } from 'lucide-react'
+import { Search, Filter, Package, ArrowRight, ShoppingCart, Heart } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import StudentService from '../../services/studentService'
 
-const CATEGORIES = ['All', 'Indoor', 'Outdoor']
+const BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000'
+const CATS = ['All', 'Indoor', 'Outdoor']
 
 export default function Storefront() {
   const { data, loading } = useApi(StudentService.getProducts)
+  const [search, setSearch]   = useState('')
+  const [cat, setCat]         = useState('All')
+  const [wish, setWish]       = useState(new Set())
+  const [cartMsg, setCartMsg] = useState('')
 
-  const [search, setSearch]     = useState('')
-  const [category, setCategory] = useState('All')
-
-  const allProducts = data?.results ?? data ?? []
-
-  const filtered = allProducts.filter((p) => {
-    const matchSearch   = p.name.toLowerCase().includes(search.toLowerCase()) ||
-                          p.description?.toLowerCase().includes(search.toLowerCase())
-    const matchCategory = category === 'All' || p.category === category
-    return matchSearch && matchCategory
-  })
-
-  return (
-    <div className="fade-in">
-      {/* Page header */}
-      <div style={{ marginBottom: 'var(--space-8)' }}>
-        <h1 className="page-title">Browse Rentals</h1>
-        <p className="page-subtitle">Find the perfect item for your needs. All available for student rental.</p>
-      </div>
-
-      {/* Search + filter bar */}
-      <div className="storefront-toolbar glass-card">
-        <div className="storefront-search">
-          <Search size={16} color="var(--clr-text-muted)" />
-          <input
-            type="search"
-            placeholder="Search items..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="storefront-search__input"
-          />
-        </div>
-
-        <div className="storefront-filters">
-          <Filter size={14} color="var(--clr-text-muted)" />
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              className={`filter-chip ${category === cat ? 'filter-chip--active' : ''}`}
-              onClick={() => setCategory(cat)}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Results count */}
-      {!loading && (
-        <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--clr-text-muted)', marginBottom: 'var(--space-5)' }}>
-          {filtered.length} item{filtered.length !== 1 ? 's' : ''} available
-        </p>
-      )}
-
-      {/* Product grid */}
-      {loading ? (
-        <div className="product-grid">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="product-card product-card--skeleton glass-card" />
-          ))}
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="empty-state glass-card">
-          <Package size={48} className="empty-state__icon" />
-          <p className="empty-state__title">No items found</p>
-          <p className="text-muted text-sm">Try a different search or category.</p>
-        </div>
-      ) : (
-        <div className="product-grid">
-          {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      )}
-
-      <style>{`
-        .storefront-toolbar {
-          display: flex;
-          align-items: center;
-          gap: var(--space-4);
-          padding: var(--space-4) var(--space-5);
-          margin-bottom: var(--space-5);
-          flex-wrap: wrap;
-        }
-
-        .storefront-search {
-          display: flex;
-          align-items: center;
-          gap: var(--space-3);
-          flex: 1;
-          min-width: 200px;
-        }
-
-        .storefront-search__input {
-          flex: 1;
-          background: none;
-          border: none;
-          color: var(--clr-text);
-          font-size: var(--font-size-sm);
-          font-family: var(--font-family);
-        }
-
-        .storefront-filters {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-          flex-wrap: wrap;
-        }
-
-        .filter-chip {
-          padding: var(--space-1) var(--space-4);
-          border-radius: var(--radius-full);
-          font-size: var(--font-size-xs);
-          font-weight: 600;
-          background: var(--clr-surface);
-          border: 1px solid var(--clr-border);
-          color: var(--clr-text-muted);
-          transition: all var(--transition-base);
-          cursor: pointer;
-        }
-
-        .filter-chip:hover { border-color: var(--clr-primary); color: var(--clr-primary); }
-
-        .filter-chip--active {
-          background: var(--clr-primary-glow);
-          border-color: rgba(108,99,255,0.4);
-          color: var(--clr-primary);
-        }
-
-        .product-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: var(--space-6);
-        }
-
-        .product-card--skeleton {
-          height: 320px;
-          background: linear-gradient(
-            90deg, var(--clr-surface) 25%,
-            var(--clr-surface-hov) 50%,
-            var(--clr-surface) 75%
-          );
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-        }
-
-        @keyframes shimmer {
-          0%   { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-      `}</style>
-    </div>
+  const all = data?.results ?? data ?? []
+  const filtered = all.filter(p =>
+    (cat === 'All' || p.category === cat) &&
+    (p.name.toLowerCase().includes(search.toLowerCase()) ||
+     p.description?.toLowerCase().includes(search.toLowerCase()))
   )
-}
 
-function ProductCard({ product }) {
-  const categoryColor = product.category === 'Indoor' ? 'var(--clr-primary)' : 'var(--clr-danger)'
+  const toggleWish = (id) => setWish(w => { const n = new Set(w); n.has(id) ? n.delete(id) : n.add(id); return n })
+
+  const toast = (msg) => { setCartMsg(msg); setTimeout(() => setCartMsg(''), 2500) }
 
   return (
-    <div className="product-card glass-card slide-up">
-      {/* Top color bar */}
-      <div className="product-card__bar" style={{ background: categoryColor }} />
+    <div style={{ minHeight: '100vh', background: '#f8f7f4', fontFamily: "'DM Sans',sans-serif" }}>
 
-      {/* Icon placeholder */}
-      <div className="product-card__icon" style={{ background: `${categoryColor}22` }}>
-        <Package size={32} color={categoryColor} />
+      {/* Toast */}
+      {cartMsg && (
+        <div style={{ position:'fixed', bottom:24, right:24, background:'#1a1a2e', color:'#fff', padding:'12px 20px', borderRadius:10, fontSize:13, fontWeight:500, boxShadow:'0 8px 24px rgba(0,0,0,.2)', borderLeft:'3px solid #6366f1', zIndex:9999, animation:'slideIn .3s ease' }}>
+          🛒 {cartMsg}
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ background:'#1a1a2e', padding:'32px 24px 24px', marginBottom:0 }}>
+        <div style={{ maxWidth:1200, margin:'0 auto' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+            <div>
+              <Link to="/" style={{ color:'rgba(255,255,255,.5)', fontSize:13, textDecoration:'none' }}>← Back to Home</Link>
+              <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:28, fontWeight:800, color:'#fff', marginTop:6 }}>Browse Listings</h1>
+              <p style={{ color:'rgba(255,255,255,.55)', fontSize:14, marginTop:4 }}>
+                {loading ? 'Loading...' : `${filtered.length} item${filtered.length !== 1 ? 's' : ''} available`}
+              </p>
+            </div>
+            <Link to="/" style={{ background:'rgba(255,255,255,.08)', border:'1px solid rgba(255,255,255,.15)', color:'#fff', padding:'10px 20px', borderRadius:8, fontSize:13, fontWeight:600, textDecoration:'none' }}>
+              Post a Listing →
+            </Link>
+          </div>
+
+          {/* Search + filters */}
+          <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+            <div style={{ flex:1, minWidth:200, display:'flex', alignItems:'center', gap:10, background:'rgba(255,255,255,.07)', border:'1px solid rgba(255,255,255,.12)', borderRadius:8, padding:'0 14px', height:44 }}>
+              <Search size={16} color="rgba(255,255,255,.4)" />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search products..."
+                style={{ flex:1, background:'none', border:'none', outline:'none', color:'#fff', fontSize:14, fontFamily:'inherit' }}
+              />
+            </div>
+            <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+              <Filter size={14} color="rgba(255,255,255,.4)" />
+              {CATS.map(c => (
+                <button key={c} onClick={() => setCat(c)} style={{ padding:'8px 16px', borderRadius:20, fontSize:12, fontWeight:600, border:'none', cursor:'pointer', background: cat===c ? '#6366f1' : 'rgba(255,255,255,.08)', color: cat===c ? '#fff' : 'rgba(255,255,255,.6)', transition:'all .2s', fontFamily:'inherit' }}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Info */}
-      <div className="product-card__body">
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
-          <h3 className="product-card__name">{product.name}</h3>
-          <span className="product-card__category" style={{ color: categoryColor, background: `${categoryColor}22` }}>
-            {product.category}
-          </span>
-        </div>
-
-        <p className="product-card__desc">
-          {product.description || 'Quality rental item available for students.'}
-        </p>
-
-        {/* Tags */}
-        {product.tags?.length > 0 && (
-          <div className="product-card__tags">
-            {product.tags.slice(0, 3).map((tag) => (
-              <span key={tag.id} className="product-card__tag">
-                <Tag size={10} /> {tag.name}
-              </span>
+      {/* Grid */}
+      <div style={{ maxWidth:1200, margin:'0 auto', padding:'32px 24px' }}>
+        {loading ? (
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:20 }}>
+            {[1,2,3,4,5,6].map(i => (
+              <div key={i} style={{ height:320, borderRadius:14, background:'#e2e8f0', animation:'pulse 1.5s infinite' }} />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign:'center', padding:'80px 0', color:'#64748b' }}>
+            <Package size={56} style={{ margin:'0 auto 16px', opacity:.3 }} />
+            <p style={{ fontSize:18, fontWeight:700, color:'#334155', marginBottom:8 }}>No items found</p>
+            <p style={{ fontSize:14 }}>Try a different search or category.</p>
+          </div>
+        ) : (
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:20 }}>
+            {filtered.map(p => (
+              <BrowseCard key={p.id} product={p} inWish={wish.has(p.id)} onWish={toggleWish} onCart={toast} />
             ))}
           </div>
         )}
       </div>
 
-      {/* Footer */}
-      <div className="product-card__footer">
-        <div>
-          <span className="product-card__price">${product.price}</span>
-          <span className="product-card__per"> / day</span>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+        @keyframes slideIn { from{transform:translateX(80px);opacity:0} to{transform:translateX(0);opacity:1} }
+      `}</style>
+    </div>
+  )
+}
+
+function BrowseCard({ product: p, inWish, onWish, onCart }) {
+  const isRent  = p.listing_type === 'Rent'  || p.listing_type === 'Both' || !p.listing_type
+  const isBuy   = p.listing_type === 'Buy'   || p.listing_type === 'Both'
+  const isBoth  = p.listing_type === 'Both'
+
+  return (
+    <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e2e8f0', overflow:'hidden', transition:'all .25s', cursor:'pointer', position:'relative' }}
+      onMouseEnter={e => { e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.boxShadow='0 12px 32px rgba(0,0,0,.1)'; e.currentTarget.style.borderColor='transparent' }}
+      onMouseLeave={e => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; e.currentTarget.style.borderColor='#e2e8f0' }}>
+
+      {/* Image area */}
+      <div style={{ height:180, background: p.category==='Indoor' ? '#eef2ff' : '#fef2f2', display:'flex', alignItems:'center', justifyContent:'center', fontSize:64, position:'relative', overflow:'hidden' }}>
+        {p.image
+          ? <img src={`${BASE}${p.image}`} alt={p.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+          : <span>{p.category === 'Indoor' ? '🪑' : '🏕️'}</span>
+        }
+
+        {/* Badges */}
+        <div style={{ position:'absolute', top:10, left:10, display:'flex', gap:4 }}>
+          {isBoth ? (
+            <span style={{ fontSize:10, fontWeight:700, padding:'3px 8px', borderRadius:999, background:'rgba(245,158,11,.9)', color:'#fff' }}>RENT & BUY</span>
+          ) : isRent ? (
+            <span style={{ fontSize:10, fontWeight:700, padding:'3px 8px', borderRadius:999, background:'rgba(99,102,241,.9)', color:'#fff' }}>📅 FOR RENT</span>
+          ) : (
+            <span style={{ fontSize:10, fontWeight:700, padding:'3px 8px', borderRadius:999, background:'rgba(16,185,129,.9)', color:'#fff' }}>🛒 FOR SALE</span>
+          )}
         </div>
-        <Link to={`/browse/${product.id}`} className="btn btn--primary btn--sm">
-          View & Rent <ArrowRight size={13} />
-        </Link>
+
+        {/* Availability dot */}
+        <span style={{ position:'absolute', top:10, right:10, width:10, height:10, borderRadius:'50%', background: p.is_available ? '#10b981' : '#ef4444', border:'2px solid #fff', display:'block' }} title={p.is_available ? 'Available' : 'Unavailable'} />
+
+        {/* Wishlist btn */}
+        <button onClick={e => { e.preventDefault(); onWish(p.id) }}
+          style={{ position:'absolute', bottom:10, right:10, width:32, height:32, borderRadius:'50%', background: inWish ? '#ef4444' : 'rgba(255,255,255,.9)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, transition:'all .2s', boxShadow:'0 2px 8px rgba(0,0,0,.15)' }}>
+          {inWish ? '♥' : '♡'}
+        </button>
       </div>
 
-      <style>{`
-        .product-card {
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-          position: relative;
-          transition: transform var(--transition-base), box-shadow var(--transition-base);
-        }
+      {/* Body */}
+      <div style={{ padding:'14px 16px' }}>
+        <div style={{ fontSize:11, color:'#94a3b8', fontWeight:600, textTransform:'uppercase', letterSpacing:'.04em', marginBottom:4 }}>{p.category}</div>
+        <h3 style={{ fontSize:15, fontWeight:700, color:'#0f172a', marginBottom:6, overflow:'hidden', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', lineHeight:1.4 }}>{p.name}</h3>
+        {p.description && (
+          <p style={{ fontSize:12, color:'#64748b', marginBottom:10, overflow:'hidden', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', lineHeight:1.5 }}>{p.description}</p>
+        )}
 
-        .product-card:hover {
-          transform: translateY(-4px);
-          box-shadow: var(--shadow-card), var(--shadow-glow);
-        }
+        {/* Pricing */}
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12, flexWrap:'wrap' }}>
+          {isRent && (
+            <div>
+              <span style={{ fontSize:20, fontWeight:800, color:'#6366f1' }}>${p.price}</span>
+              <span style={{ fontSize:11, color:'#94a3b8' }}>/day</span>
+            </div>
+          )}
+          {isBuy && p.buy_price && (
+            <div style={{ fontSize:13, fontWeight:700, color:'#10b981', background:'#ecfdf5', padding:'2px 10px', borderRadius:6 }}>
+              Buy: ${p.buy_price}
+            </div>
+          )}
+        </div>
 
-        .product-card__bar {
-          height: 3px;
-          width: 100%;
-        }
-
-        .product-card__icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 120px;
-          border-bottom: 1px solid var(--clr-border);
-        }
-
-        .product-card__body {
-          padding: var(--space-5);
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: var(--space-3);
-        }
-
-        .product-card__name {
-          font-size: var(--font-size-base);
-          font-weight: 700;
-          line-height: 1.3;
-        }
-
-        .product-card__category {
-          font-size: 10px;
-          font-weight: 700;
-          padding: 2px 8px;
-          border-radius: var(--radius-full);
-          white-space: nowrap;
-          flex-shrink: 0;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .product-card__desc {
-          font-size: var(--font-size-sm);
-          color: var(--clr-text-muted);
-          line-height: 1.6;
-          flex: 1;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-
-        .product-card__tags {
-          display: flex;
-          gap: var(--space-2);
-          flex-wrap: wrap;
-        }
-
-        .product-card__tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 3px;
-          font-size: 10px;
-          color: var(--clr-text-dim);
-          background: var(--clr-surface);
-          border: 1px solid var(--clr-border);
-          padding: 2px 6px;
-          border-radius: var(--radius-full);
-        }
-
-        .product-card__footer {
-          padding: var(--space-4) var(--space-5);
-          border-top: 1px solid var(--clr-border);
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .product-card__price {
-          font-size: var(--font-size-xl);
-          font-weight: 800;
-          color: var(--clr-accent);
-        }
-
-        .product-card__per {
-          font-size: var(--font-size-xs);
-          color: var(--clr-text-muted);
-        }
-      `}</style>
+        {/* Actions */}
+        <div style={{ display:'flex', gap:8 }}>
+          <Link to={`/browse/${p.id}`} style={{ flex:1, background:'#6366f1', color:'#fff', padding:'9px 0', borderRadius:8, fontSize:12, fontWeight:700, textDecoration:'none', textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:4, transition:'background .2s' }}
+            onMouseEnter={e => e.currentTarget.style.background='#4f46e5'}
+            onMouseLeave={e => e.currentTarget.style.background='#6366f1'}>
+            View Details <ArrowRight size={12} />
+          </Link>
+          <button onClick={() => onCart(`"${p.name.slice(0,20)}..." added!`)}
+            style={{ width:38, height:38, borderRadius:8, background:'#f8fafc', border:'1px solid #e2e8f0', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .2s' }}
+            onMouseEnter={e => { e.currentTarget.style.background='#6366f1'; e.currentTarget.style.borderColor='#6366f1' }}
+            onMouseLeave={e => { e.currentTarget.style.background='#f8fafc'; e.currentTarget.style.borderColor='#e2e8f0' }}>
+            🛒
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
