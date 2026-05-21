@@ -1,0 +1,228 @@
+/**
+ * Chat.jsx — Fixed 2-panel messaging layout
+ * Left: conversation list | Right: active chat window
+ */
+import { useState, useRef, useEffect } from 'react'
+import { Send, Search, MessageCircle } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+
+const MOCK_CONVOS = [
+  { id: 1, name: 'Alex Kim',    sub: 'Folding Table',    last: 'Is it still available?',    time: '2m',  avatar: 'A', unread: 2, color: '#6366f1' },
+  { id: 2, name: 'Sara Malik',  sub: 'Study Lamp',       last: 'Thanks for the info!',      time: '1h',  avatar: 'S', unread: 0, color: '#06b6d4' },
+  { id: 3, name: 'Omar Hassan', sub: '1BR Apartment',    last: 'When can I view it?',       time: '3h',  avatar: 'O', unread: 1, color: '#10b981' },
+  { id: 4, name: 'Priya Roy',   sub: 'Camping Chair',    last: 'What is the daily rate?',   time: 'Yd',  avatar: 'P', unread: 0, color: '#f59e0b' },
+]
+
+const MOCK_MSGS = {
+  1: [
+    { id: 1, mine: false, text: 'Hi! Is the Folding Table still available?',     time: '2:30 PM' },
+    { id: 2, mine: true,  text: 'Yes it is! Want to rent or buy?',               time: '2:31 PM' },
+    { id: 3, mine: false, text: 'I want to rent for 3 days. How much?',          time: '2:32 PM' },
+    { id: 4, mine: true,  text: '$5/day so $15 total. Interested?',              time: '2:33 PM' },
+    { id: 5, mine: false, text: 'Is it still available?',                        time: '2:34 PM' },
+  ],
+  2: [
+    { id: 1, mine: false, text: 'Hello! Question about the Study Lamp.',         time: 'Yesterday' },
+    { id: 2, mine: true,  text: 'Sure! Ask away.',                               time: 'Yesterday' },
+    { id: 3, mine: false, text: 'Thanks for the info!',                          time: 'Yesterday' },
+  ],
+  3: [
+    { id: 1, mine: false, text: 'I saw your 1BR Apartment listing.',             time: 'Yesterday' },
+    { id: 2, mine: true,  text: 'Available from next month!',                    time: 'Yesterday' },
+    { id: 3, mine: false, text: 'When can I view it?',                           time: 'Yesterday' },
+  ],
+  4: [
+    { id: 1, mine: false, text: 'What is the daily rate for the camping chair?', time: '2 days ago' },
+  ],
+}
+
+const AUTO_REPLIES = [
+  'Got it, thanks!', 'Sure, sounds good.', 'Let me check and get back to you.',
+  'Yes, it\'s available!', 'I\'ll confirm shortly.', 'Great, see you then!'
+]
+
+export default function Chat() {
+  const { user } = useAuth()
+  const [activeId, setActiveId]     = useState(null)
+  const [messages, setMessages]     = useState(MOCK_MSGS)
+  const [input, setInput]           = useState('')
+  const [search, setSearch]         = useState('')
+  const [typing, setTyping]         = useState(false)
+  const bottomRef = useRef(null)
+
+  const activeConvo  = MOCK_CONVOS.find(c => c.id === activeId)
+  const currentMsgs  = activeId ? (messages[activeId] ?? []) : []
+  const filteredList = MOCK_CONVOS.filter(c =>
+    c.name.toLowerCase().includes(search.toLowerCase()) ||
+    c.sub.toLowerCase().includes(search.toLowerCase())
+  )
+
+  // Scroll to bottom on new message
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [currentMsgs])
+
+  const sendMessage = () => {
+    if (!input.trim() || !activeId) return
+    const msg = { id: Date.now(), mine: true, text: input.trim(), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+    setMessages(prev => ({ ...prev, [activeId]: [...(prev[activeId] ?? []), msg] }))
+    setInput('')
+    setTyping(true)
+    setTimeout(() => {
+      const reply = { id: Date.now() + 1, mine: false, text: AUTO_REPLIES[Math.floor(Math.random() * AUTO_REPLIES.length)], time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+      setMessages(prev => ({ ...prev, [activeId]: [...(prev[activeId] ?? []), reply] }))
+      setTyping(false)
+    }, 1200 + Math.random() * 600)
+  }
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', height: 'calc(100vh - 64px)', background: 'var(--bg)', overflow: 'hidden' }}>
+
+      {/* ── LEFT: Conversation List ── */}
+      <div style={{ background: 'var(--bg-2)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{ padding: '18px 16px 12px', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 12 }}>Messages</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-3)', borderRadius: 10, padding: '8px 12px' }}>
+            <Search size={14} color="var(--text-muted)" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search conversations..."
+              style={{ background: 'none', border: 'none', color: 'var(--text)', fontSize: 13, outline: 'none', flex: 1 }}
+            />
+          </div>
+        </div>
+
+        {/* Conversation items */}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          {filteredList.map(c => (
+            <div
+              key={c.id}
+              onClick={() => setActiveId(c.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '14px 16px', cursor: 'pointer', borderBottom: '1px solid var(--border)',
+                background: activeId === c.id ? 'var(--primary-glow)' : 'none',
+                transition: 'background .15s',
+                borderLeft: activeId === c.id ? '3px solid var(--primary)' : '3px solid transparent',
+              }}
+              onMouseEnter={e => { if (activeId !== c.id) e.currentTarget.style.background = 'var(--surface-hov)' }}
+              onMouseLeave={e => { if (activeId !== c.id) e.currentTarget.style.background = 'none' }}
+            >
+              {/* Avatar */}
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: c.color, color: '#fff', fontWeight: 700, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative' }}>
+                {c.avatar}
+                {c.unread > 0 && (
+                  <span style={{ position: 'absolute', top: -2, right: -2, width: 18, height: 18, borderRadius: '50%', background: 'var(--primary)', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-2)' }}>
+                    {c.unread}
+                  </span>
+                )}
+              </div>
+
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{c.name}</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>{c.time}</span>
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 500, marginBottom: 2 }}>{c.sub}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.last}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── RIGHT: Chat Window ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
+        {!activeId ? (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', gap: 12 }}>
+            <MessageCircle size={56} style={{ opacity: .2 }} />
+            <p style={{ fontWeight: 600, fontSize: 16 }}>Select a conversation</p>
+            <p style={{ fontSize: 13 }}>Click a contact on the left to start chatting</p>
+          </div>
+        ) : (
+          <>
+            {/* Chat header */}
+            <div style={{ padding: '14px 20px', background: 'var(--bg-2)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: activeConvo?.color, color: '#fff', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {activeConvo?.avatar}
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{activeConvo?.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Re: {activeConvo?.sub}</div>
+              </div>
+              <div style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} />
+                Online
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {currentMsgs.map(m => (
+                <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: m.mine ? 'flex-end' : 'flex-start' }}>
+                  <div style={{
+                    maxWidth: '65%', padding: '10px 14px', borderRadius: m.mine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                    background: m.mine ? 'var(--primary)' : 'var(--bg-2)',
+                    border: m.mine ? 'none' : '1px solid var(--border)',
+                    color: m.mine ? '#fff' : 'var(--text)',
+                    fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word',
+                  }}>
+                    {m.text}
+                  </div>
+                  <span style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 3, padding: '0 2px' }}>{m.time}</span>
+                </div>
+              ))}
+
+              {/* Typing indicator */}
+              {typing && (
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+                  <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', padding: '10px 14px', borderRadius: '18px 18px 18px 4px', display: 'flex', gap: 4 }}>
+                    {[0,1,2].map(i => (
+                      <span key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--text-muted)', animation: 'bounce .9s infinite', animationDelay: `${i*0.15}s`, display: 'inline-block' }} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div ref={bottomRef} />
+            </div>
+
+            {/* Input bar */}
+            <div style={{ padding: '14px 20px', background: 'var(--bg-2)', borderTop: '1px solid var(--border)', display: 'flex', gap: 10, alignItems: 'center' }}>
+              <input
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                placeholder="Type a message..."
+                style={{ flex: 1, padding: '10px 16px', borderRadius: 24, background: 'var(--bg-3)', border: '1.5px solid var(--border)', color: 'var(--text)', fontSize: 14, outline: 'none', transition: 'border-color .2s' }}
+                onFocus={e => e.target.style.borderColor = 'var(--primary)'}
+                onBlur={e => e.target.style.borderColor = 'var(--border)'}
+              />
+              <button
+                onClick={sendMessage}
+                disabled={!input.trim()}
+                style={{ width: 40, height: 40, borderRadius: '50%', background: input.trim() ? 'var(--primary)' : 'var(--surface)', border: '1px solid var(--border)', color: input.trim() ? '#fff' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() ? 'pointer' : 'default', transition: 'all .2s', flexShrink: 0 }}
+              >
+                <Send size={16} />
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes bounce {
+          0%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-6px); }
+        }
+        @media (max-width: 768px) {
+          div[style*="gridTemplateColumns: 300px 1fr"] {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+    </div>
+  )
+}

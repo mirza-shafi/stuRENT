@@ -1,0 +1,39 @@
+{% extends 'sturentapps/main.html' %}
+{% load static %}
+
+
+
+
+{% block content %}
+
+<!-- home.html -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Your Website</title>
+	<style>
+		body {
+			background-image: url("{% static 'images/stuhsvg.svg' %}");
+			background-size: cover;
+			background-position: center;
+			height: 100vh;
+			padding: 0;
+			/* Adjust the height as needed */
+			margin: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		h1 {
+			color: #fff;
+			/* Adjust text color for visibility */
+		}
+	</style>
+</head>
+
+</html>
+
+{% endblock %}

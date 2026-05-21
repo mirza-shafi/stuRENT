@@ -1,0 +1,6 @@
+12345
+
+
+git config --global user.email "naima.nawar.achol@g.bracu.ac.bd"
+git config --global user.name "Naima-345"
+1

@@ -1,0 +1,19 @@
+# ── Core ──────────────────────────────────────────────────────────────────────
+Django==4.2.7
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.0
+
+# ── Database ──────────────────────────────────────────────────────────────────
+# sqlite3 ships with Python (dev); swap for psycopg2-binary in production
+
+# ── Auth / Security ───────────────────────────────────────────────────────────
+django-cors-headers==4.3.0
+
+# ── Filtering ─────────────────────────────────────────────────────────────────
+django-filter==23.3
+
+# ── Config ────────────────────────────────────────────────────────────────────
+python-decouple==3.8
+
+# ── Dev tools ─────────────────────────────────────────────────────────────────
+django-extensions==3.2.3   # shell_plus, etc.

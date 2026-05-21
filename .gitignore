@@ -1,0 +1,105 @@
+# ══════════════════════════════════════════════════════════════
+# stuRENT — .gitignore
+# Protects credentials, build artifacts, and OS junk
+# ══════════════════════════════════════════════════════════════
+
+# ── Python / Django ───────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.log
+
+# Virtual environments (all common names)
+.venv/
+venv/
+env/
+.env.bak
+*.venv/
+.virtualenvs/
+
+# ── Django ────────────────────────────────────────────────────
+*.sqlite3
+db.sqlite3-journal
+backend/staticfiles/
+backend/media/
+backend/local_settings.py
+backend/settings/local.py
+
+# ── Environment / Secrets (CRITICAL — never push!) ────────────
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+backend/.env
+backend/.env.local
+backend/.env.production
+client/.env
+client/.env.local
+client/.env.production
+
+# Secret keys, certificates, credentials
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.jks
+serviceAccountKey.json
+firebase-adminsdk*.json
+google-credentials*.json
+
+# ── Node / React ──────────────────────────────────────────────
+node_modules/
+client/node_modules/
+client/dist/
+client/.vite/
+*.tsbuildinfo
+.cache/
+.parcel-cache/
+
+# ── macOS ─────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ── Windows ───────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── Linux ─────────────────────────────────────────────────────
+*~
+
+# ── IDE / Editor ──────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# ── Misc ──────────────────────────────────────────────────────
+*.bak
+*.tmp
+*.orig
+*.rej
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+.eslintcache
+coverage/
+.nyc_output/
