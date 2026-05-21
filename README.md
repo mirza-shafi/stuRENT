@@ -2,7 +2,6 @@
 
 **Student Rental Management System** — Django REST API + React SPA
 
----
 
 ## Project Layout
 
