@@ -19,10 +19,17 @@ export function AuthProvider({ children }) {
         try {
           const { data } = await AuthService.getMe()
           setUser(data)
+          // Sync localStorage with user.is_staff
+          if (data.is_staff) {
+            localStorage.setItem('is_admin', 'true')
+          } else {
+            localStorage.removeItem('is_admin')
+          }
         } catch {
           // Token is stale — clear it
           localStorage.removeItem('access_token')
           localStorage.removeItem('refresh_token')
+          localStorage.removeItem('is_admin')
         }
       }
       setLoading(false)
@@ -34,6 +41,24 @@ export function AuthProvider({ children }) {
     await AuthService.login(credentials)
     const { data } = await AuthService.getMe()
     setUser(data)
+    // Sync admin status
+    if (data.is_staff) {
+      localStorage.setItem('is_admin', 'true')
+    } else {
+      localStorage.removeItem('is_admin')
+    }
+  }, [])
+
+  const adminLogin = useCallback(async (credentials) => {
+    await AuthService.adminLogin(credentials)
+    const { data } = await AuthService.getMe()
+    setUser(data)
+    // Sync admin status
+    if (data.is_staff) {
+      localStorage.setItem('is_admin', 'true')
+    } else {
+      localStorage.removeItem('is_admin')
+    }
   }, [])
 
   const logout = useCallback(async () => {
@@ -64,10 +89,11 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading, login, logout, register,
+      user, loading, login, logout, register, adminLogin,
       showAuthModal, setShowAuthModal,
       authModalView, setAuthModalView,
-      openLoginModal, openRegisterModal, closeAuthModal
+      openLoginModal, openRegisterModal, closeAuthModal,
+      isAdmin: user?.is_staff || false
     }}>
       {children}
     </AuthContext.Provider>

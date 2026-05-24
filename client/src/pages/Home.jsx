@@ -426,29 +426,18 @@ function NavActions({ user }) {
         )}
       </div>
 
-      {/* Track Order dropdown */}
+      {/* Track Order button */}
       <div className="hp-na-wrap">
-        <button className="hp-na-btn" title="Track Order" onClick={() => toggleDrop('track')}>
+        <button className="hp-na-btn" title="Track Order" onClick={() => {
+          if (user) {
+            navigate('/my-orders')
+          } else {
+            openLoginModal()
+          }
+        }}>
           <span className="hp-na-icon">📍</span>
           <span className="hp-na-label">Track Order</span>
         </button>
-        {openDrop === 'track' && (
-          <div className="hp-na-drop">
-            <div className="hp-na-drop-title">Track Your Order</div>
-            {user ? (
-              <>
-                <Link to="/my-orders" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>📦 My Orders</Link>
-                <Link to="/my-orders" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>🔄 Recent Rentals</Link>
-                <Link to="/my-orders" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>✅ Completed Orders</Link>
-              </>
-            ) : (
-              <div className="hp-na-drop-info">
-                <div className="hp-na-info-row" style={{marginBottom:10}}>Sign in to track your orders.</div>
-                <button className="hp-na-drop-btn" onClick={() => { setOpenDrop(null); openLoginModal() }}>Sign In</button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Cart → Checkout */}

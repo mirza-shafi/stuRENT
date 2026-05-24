@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import AuthService from '../../services/authService'
 import { Shield } from 'lucide-react'
 import ThemeToggle from '../../components/ui/ThemeToggle'
 import toast from 'react-hot-toast'
 
 export default function AdminLogin() {
-  const { login } = useAuth()
   const navigate  = useNavigate()
+  const { adminLogin } = useAuth()
   const [form, setForm]       = useState({ username: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
@@ -16,8 +17,21 @@ export default function AdminLogin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setError(''); setLoading(true)
-    try { await login(form); navigate('/dashboard') }
-    catch { setError('Invalid admin credentials.') }
+    try { 
+      await adminLogin(form)
+      toast.success('Welcome back, Admin!')
+      navigate('/dashboard') 
+    }
+    catch (err) { 
+      const detail = err.response?.data?.detail || 'Login failed. Please try again.'
+      if (err.response?.status === 403) {
+        setError('❌ You do not have admin privileges.')
+      } else if (err.response?.status === 401) {
+        setError('❌ Invalid username or password.')
+      } else {
+        setError(detail)
+      }
+    }
     finally { setLoading(false) }
   }
 

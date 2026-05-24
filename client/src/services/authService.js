@@ -26,6 +26,20 @@ const AuthService = {
   },
 
   /**
+   * Admin login — requires user to be staff/admin.
+   * @param {{ username, password }} credentials
+   * @returns {{ access, refresh, user }}
+   */
+  adminLogin: async (credentials) => {
+    const response = await api.post('/auth/admin-login/', credentials)
+    const { access, refresh } = response.data
+    localStorage.setItem('access_token', access)
+    localStorage.setItem('refresh_token', refresh)
+    localStorage.setItem('is_admin', 'true')
+    return response
+  },
+
+  /**
    * Logout — blacklist refresh token and clear local storage.
    */
   logout: async () => {
@@ -35,6 +49,7 @@ const AuthService = {
     } finally {
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
+      localStorage.removeItem('is_admin')
     }
   },
 
@@ -45,6 +60,9 @@ const AuthService = {
 
   /** Check if user is currently authenticated (token exists). */
   isAuthenticated: () => Boolean(localStorage.getItem('access_token')),
+
+  /** Check if user is admin (has staff privileges). */
+  isAdmin: () => localStorage.getItem('is_admin') === 'true',
 }
 
 export default AuthService

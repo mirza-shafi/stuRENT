@@ -3,8 +3,8 @@ Order service layer.
 All order-related business logic lives here — views stay thin.
 """
 
-from django.db.models import QuerySet, Count
-from apps.rental.models import Order, Customer
+from django.db.models import QuerySet, Count, Sum
+from apps.rental.models import Order, Customer, Product
 
 
 class OrderService:
@@ -18,6 +18,11 @@ class OrderService:
         """
         total_orders = Order.objects.count()
         total_customers = Customer.objects.count()
+        total_products = Product.objects.count()
+        
+        # Calculate estimated revenue by summing the price of all products in orders
+        total_revenue = Order.objects.aggregate(total=Sum('product__price'))['total'] or 0.0
+        
         delivered = Order.objects.filter(status=Order.Status.DELIVERED).count()
         pending = Order.objects.filter(status=Order.Status.PENDING).count()
         out_for_delivery = Order.objects.filter(
@@ -27,6 +32,8 @@ class OrderService:
         return {
             "total_orders": total_orders,
             "total_customers": total_customers,
+            "total_products": total_products,
+            "total_revenue": float(total_revenue),
             "delivered": delivered,
             "pending": pending,
             "out_for_delivery": out_for_delivery,

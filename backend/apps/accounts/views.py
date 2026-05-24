@@ -91,6 +91,51 @@ class CurrentUserView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class AdminLoginView(APIView):
+    """
+    POST /api/v1/auth/admin-login/
+    Admin-only login endpoint. Verifies user is staff/admin before issuing tokens.
+    """
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        from django.contrib.auth import authenticate
+        from django.contrib.auth.models import User
+
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        if not username or not password:
+            return Response(
+                {'detail': 'Username and password are required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = authenticate(username=username, password=password)
+
+        if user is None:
+            return Response(
+                {'detail': 'Invalid credentials.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        # Check if user is admin
+        if not user.is_staff:
+            return Response(
+                {'detail': 'You do not have admin privileges.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Issue JWT tokens
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user': UserSerializer(user).data,
+        }, status=status.HTTP_200_OK)
+
+
+
 class AdminRequestView(APIView):
     """
     POST /api/v1/auth/admin-request/ — Submit an admin registration request.
