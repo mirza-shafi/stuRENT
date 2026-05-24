@@ -101,8 +101,7 @@ function HomePageInner() {
           )}
 
           <div className="hp-nav">
-            <Link to="/" className="hp-nav-link" style={{color:'#fff'}}>Home</Link>
-            <Link to="/products" className="hp-nav-link">All Products</Link>
+            <Link to="/" className="hp-nav-link" style={{color:'#fff', fontWeight:700}}>🏠 Home</Link>
           </div>
 
           <div className="hp-search">
@@ -122,15 +121,7 @@ function HomePageInner() {
           </div>
 
           <div className="hp-actions">
-            <HeaderCartButtons />
-            {user ? (
-              <Link to="/browse" className="hp-icon-btn" title="Listings" style={{ fontSize:12, fontWeight:600, width:'auto', padding:'0 14px', gap:6 }}>📦 Listings</Link>
-            ) : (
-              <>
-                <Link to="/login" className="hp-icon-btn" title="Sign In" style={{ fontSize:12, fontWeight:600, width:'auto', padding:'0 14px' }}>Sign In</Link>
-                <Link to="/register" className="hp-btn" style={{ padding:'9px 20px', fontSize:13 }}>Join Now</Link>
-              </>
-            )}
+            <NavActions user={user} />
           </div>
         </div>
       </header>
@@ -213,7 +204,7 @@ function HomePageInner() {
       <section className="hp-section">
         <div className="hp-section-header">
           <h2 className="hp-section-title">Browse by Category</h2>
-          <Link to="/browse" className="hp-see-all">See All →</Link>
+          <Link to="/products" className="hp-see-all">See All →</Link>
         </div>
         <div className="hp-cats-grid">
           {[
@@ -245,7 +236,7 @@ function HomePageInner() {
             <div className="hp-timer-sep">:</div>
             <div className="hp-timer-block">{pad(timer.s)}<small>SEC</small></div>
           </div>
-          <Link to="/browse" className="hp-see-all" style={{ color:'rgba(255,255,255,.7)', marginLeft:16 }}>See All →</Link>
+          <Link to="/products" className="hp-see-all" style={{ color:'rgba(255,255,255,.7)', marginLeft:16 }}>See All →</Link>
         </div>
         <div className="hp-flash-body">
           {loading ? (
@@ -295,7 +286,7 @@ function HomePageInner() {
       <section className="hp-section">
         <div className="hp-section-header">
           <h2 className="hp-section-title">Recent Listings</h2>
-          <Link to="/browse" className="hp-see-all">See All →</Link>
+          <Link to="/products" className="hp-see-all">See All →</Link>
         </div>
         {loading ? (
           <div className="hp-grid">
@@ -367,17 +358,113 @@ function HomePageInner() {
   )
 }
 
-function HeaderCartButtons() {
+function NavActions({ user }) {
   const { cartCount, wish, setCartOpen, setWishOpen } = useCart()
+  const navigate = useNavigate()
+  const [openDrop, setOpenDrop] = useState(null)
+
+  const toggleDrop = (name) => setOpenDrop(d => d === name ? null : name)
+
+  // Close on outside click
+  const ref = useRef()
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpenDrop(null) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
   return (
-    <>
-      <button className="hp-icon-btn" title="Wishlist" onClick={()=>setWishOpen(true)}>
-        ♡{wish.size > 0 && <span className="hp-badge">{wish.size}</span>}
-      </button>
-      <button className="hp-icon-btn" title="Cart" onClick={()=>setCartOpen(true)}>
-        🛒{cartCount > 0 && <span className="hp-badge">{cartCount}</span>}
-      </button>
-    </>
+    <div className="hp-nav-actions" ref={ref}>
+
+      {/* Wishlist / Favorites */}
+      <div className="hp-na-wrap">
+        <button className="hp-na-btn" title="Wishlist" onClick={() => setWishOpen(true)}>
+          <span className="hp-na-icon">♡</span>
+          <span className="hp-na-label">Wishlist</span>
+          {wish.size > 0 && <span className="hp-badge">{wish.size}</span>}
+        </button>
+      </div>
+
+      {/* Favorites dropdown */}
+      <div className="hp-na-wrap">
+        <button className="hp-na-btn" title="Favorites" onClick={() => toggleDrop('fav')}>
+          <span className="hp-na-icon">⭐</span>
+          <span className="hp-na-label">Favorites</span>
+        </button>
+        {openDrop === 'fav' && (
+          <div className="hp-na-drop">
+            <div className="hp-na-drop-title">My Favorites</div>
+            <Link to="/products" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>🪑 Saved Items</Link>
+            <Link to="/products" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>🏠 Saved Housing</Link>
+            <Link to="/products" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>🏷️ Price Alerts</Link>
+          </div>
+        )}
+      </div>
+
+      {/* Shipping Info dropdown */}
+      <div className="hp-na-wrap">
+        <button className="hp-na-btn" title="Shipping Info" onClick={() => toggleDrop('ship')}>
+          <span className="hp-na-icon">🚚</span>
+          <span className="hp-na-label">Shipping</span>
+        </button>
+        {openDrop === 'ship' && (
+          <div className="hp-na-drop">
+            <div className="hp-na-drop-title">Shipping Info</div>
+            <div className="hp-na-drop-info">
+              <div className="hp-na-info-row">📦 <strong>Free pickup</strong> — Campus locations</div>
+              <div className="hp-na-info-row">🚚 <strong>Delivery</strong> — From $2.99</div>
+              <div className="hp-na-info-row">⏱️ <strong>Same day</strong> — Available for local</div>
+              <div className="hp-na-info-row">🔄 <strong>Easy returns</strong> — 30-day policy</div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Track Order dropdown */}
+      <div className="hp-na-wrap">
+        <button className="hp-na-btn" title="Track Order" onClick={() => toggleDrop('track')}>
+          <span className="hp-na-icon">📍</span>
+          <span className="hp-na-label">Track Order</span>
+        </button>
+        {openDrop === 'track' && (
+          <div className="hp-na-drop">
+            <div className="hp-na-drop-title">Track Your Order</div>
+            {user ? (
+              <Link to="/my-orders" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>📦 My Orders</Link>
+            ) : (
+              <div className="hp-na-drop-info">
+                <div className="hp-na-info-row" style={{marginBottom:10}}>Sign in to track your orders.</div>
+                <Link to="/login" className="hp-na-drop-btn" onClick={() => setOpenDrop(null)}>Sign In</Link>
+              </div>
+            )}
+            <Link to="/my-orders" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>🔄 Recent Rentals</Link>
+            <Link to="/my-orders" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>✅ Completed Orders</Link>
+          </div>
+        )}
+      </div>
+
+      {/* Cart → Checkout */}
+      <div className="hp-na-wrap">
+        <button className="hp-na-btn hp-na-btn--cart" title="Cart / Checkout" onClick={() => setCartOpen(true)}>
+          <span className="hp-na-icon">🛒</span>
+          <span className="hp-na-label">Checkout</span>
+          {cartCount > 0 && <span className="hp-badge">{cartCount}</span>}
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="hp-na-divider" />
+
+      {/* Auth */}
+      {user ? (
+        <Link to="/browse" className="hp-na-auth-btn">📦 Listings</Link>
+      ) : (
+        <>
+          <Link to="/login" className="hp-na-auth-btn">Sign In</Link>
+          <Link to="/register" className="hp-btn" style={{ padding:'7px 16px', fontSize:12 }}>Join Now</Link>
+        </>
+      )}
+    </div>
   )
 }
 

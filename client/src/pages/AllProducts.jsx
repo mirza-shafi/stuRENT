@@ -9,7 +9,7 @@ import StudentService from '../services/studentService'
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace('/api/v1', '')
 
-const CATEGORIES = ['All', 'Indoor', 'Outdoor']
+const CATEGORIES = ['All', 'Indoor', 'Outdoor', 'Housing']
 const LISTING_TYPES = ['All', 'Rent', 'Buy', 'Both']
 const SORT_OPTIONS = [
   { value: 'newest',    label: 'Newest First' },
@@ -115,7 +115,7 @@ export default function AllProducts() {
                   className="ap-radio"
                 />
                 <span className="ap-checkbox-label">
-                  {c === 'All' ? '🗂 All Categories' : c === 'Indoor' ? '🪑 Indoor' : '🏕️ Outdoor'}
+                  {c === 'All' ? '🗂 All Categories' : c === 'Indoor' ? '🪑 Indoor' : c === 'Outdoor' ? '🏕️ Outdoor' : '🏠 Housing'}
                 </span>
                 <span className="ap-filter-count">
                   {c === 'All' ? all.length : all.filter(p => p.category === c).length}
@@ -193,6 +193,10 @@ export default function AllProducts() {
               <div className="ap-stat-pill">
                 <span>🏕️ Outdoor</span>
                 <strong>{all.filter(p=>p.category==='Outdoor').length}</strong>
+              </div>
+              <div className="ap-stat-pill">
+                <span>🏠 Housing</span>
+                <strong>{all.filter(p=>p.category==='Housing').length}</strong>
               </div>
               <div className="ap-stat-pill">
                 <span>✅ Available</span>
@@ -372,7 +376,7 @@ function ProductCard({ product: p }) {
       <div className="ap-card-img">
         {p.image
           ? <img src={`${BASE_URL}${p.image}`} alt={p.name} />
-          : <span>{p.category === 'Indoor' ? '🪑' : '🏕️'}</span>
+          : <span>{p.category === 'Indoor' ? '🪑' : p.category === 'Housing' ? '🏠' : '🏕️'}</span>
         }
         <span className={`ap-card-badge ${badgeClass}`}>{badgeText}</span>
         <span className="ap-avail-dot" style={{ background: p.is_available ? '#10b981' : '#ef4444' }} />
@@ -402,7 +406,7 @@ function ProductRow({ product: p }) {
       <div className="ap-row-img">
         {p.image
           ? <img src={`${BASE_URL}${p.image}`} alt={p.name} />
-          : <span>{p.category === 'Indoor' ? '🪑' : '🏕️'}</span>
+          : <span>{p.category === 'Indoor' ? '🪑' : p.category === 'Housing' ? '🏠' : '🏕️'}</span>
         }
       </div>
       <div className="ap-row-info">

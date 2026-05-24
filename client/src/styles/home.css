@@ -24,7 +24,7 @@
 
 /* ── HEADER ── */
 .hp-header { background: var(--h-nav); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 20px rgba(0,0,0,.3); }
-.hp-header-inner { max-width: 1300px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; gap: 18px; height: 52px; position: relative; }
+.hp-header-inner { max-width: 1300px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; gap: 18px; height: 58px; position: relative; }
 .hp-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 19px; color: #fff; background: none; border: none; cursor: pointer; letter-spacing: -.5px; padding: 0; }
 .hp-logo em { font-style: normal; color: var(--h-accent); }
 
@@ -47,7 +47,7 @@
 .hp-nav-link:hover { color: #fff; }
 
 /* ── ADMIN DROPDOWN ── */
-.hp-admin-drop { position: absolute; top: 52px; left: 20px; background: #fff; border: 1px solid var(--h-border); border-radius: 12px; padding: 8px; z-index: 300; box-shadow: 0 8px 24px rgba(0,0,0,.15); min-width: 180px; }
+.hp-admin-drop { position: absolute; top: 58px; left: 20px; background: #fff; border: 1px solid var(--h-border); border-radius: 12px; padding: 8px; z-index: 300; box-shadow: 0 8px 24px rgba(0,0,0,.15); min-width: 180px; }
 .hp-admin-drop a { display: block; padding: 9px 12px; border-radius: 8px; font-size: 14px; color: #334155; text-decoration: none; transition: background .15s; }
 .hp-admin-drop a:hover { background: #f1f5f9; }
 
@@ -240,10 +240,40 @@
 /* in-wishlist highlight */
 .hp-action-btn.in-wish { background: #ef4444; }
 
+/* ── NAV ACTIONS ── */
+.hp-nav-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+.hp-na-wrap { position: relative; }
+
+.hp-na-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 10px; background: none; border: none; color: rgba(255,255,255,.75); cursor: pointer; border-radius: 6px; transition: background .2s, color .2s; font-family: inherit; min-width: 52px; }
+.hp-na-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+.hp-na-icon { font-size: 16px; line-height: 1; position: relative; }
+.hp-na-label { font-size: 10px; font-weight: 500; white-space: nowrap; letter-spacing: .01em; }
+.hp-na-btn--cart { color: var(--h-accent2); }
+.hp-na-btn--cart:hover { background: rgba(6,182,212,.15); }
+
+.hp-na-divider { width: 1px; height: 28px; background: rgba(255,255,255,.15); margin: 0 6px; }
+.hp-na-auth-btn { font-size: 12px; font-weight: 600; color: rgba(255,255,255,.8); padding: 6px 12px; border-radius: 6px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); text-decoration: none; transition: all .2s; white-space: nowrap; }
+.hp-na-auth-btn:hover { background: rgba(255,255,255,.16); color: #fff; }
+
+/* ── DROPDOWN PANELS ── */
+.hp-na-drop { position: absolute; top: calc(100% + 10px); right: 0; min-width: 210px; background: #fff; border: 1px solid #e8e6e1; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.16); z-index: 500; overflow: hidden; animation: dropIn .18s ease; }
+@keyframes dropIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+.hp-na-drop-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #94a3b8; padding: 12px 14px 8px; border-bottom: 1px solid #f1f5f9; }
+.hp-na-drop-item { display: block; padding: 10px 14px; font-size: 13px; color: #374151; text-decoration: none; transition: background .15s; border-bottom: 1px solid #f8fafc; }
+.hp-na-drop-item:last-child { border-bottom: none; }
+.hp-na-drop-item:hover { background: #f5f3ff; color: #6366f1; }
+.hp-na-drop-info { padding: 12px 14px; }
+.hp-na-info-row { font-size: 12px; color: #64748b; padding: 5px 0; line-height: 1.5; }
+.hp-na-info-row strong { color: #1a1a2e; }
+.hp-na-drop-btn { display: inline-block; background: #6366f1; color: #fff; font-size: 12px; font-weight: 700; padding: 7px 16px; border-radius: 7px; text-decoration: none; transition: background .2s; }
+.hp-na-drop-btn:hover { background: #4f46e5; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 1100px) {
   .hp-grid { grid-template-columns: repeat(3,1fr); }
   .hp-cats-grid { grid-template-columns: repeat(3,1fr); }
+  .hp-na-label { display: none; }
+  .hp-na-btn { min-width: 36px; padding: 4px 6px; }
 }
 @media (max-width: 768px) {
   .hp-hero { grid-template-columns: 1fr; }
@@ -260,4 +290,5 @@
   .hp-footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
   .hp-nav { display: none; }
   .hp-drawer { width: 100%; right: -100%; }
+  .hp-na-auth-btn { display: none; }
 }
