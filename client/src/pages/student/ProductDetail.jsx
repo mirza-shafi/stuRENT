@@ -11,10 +11,12 @@ import {
   Truck,
   RotateCcw,
   Calendar,
-  ThumbsUp
+  ThumbsUp,
+  CreditCard
 } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { useAuth } from '../../context/AuthContext'
+import { useCart } from '../../components/CartWishlist'
 import StudentService from '../../services/studentService'
 import PaymentModal from '../../components/ui/PaymentModal'
 import toast from 'react-hot-toast'
@@ -25,6 +27,7 @@ export default function ProductDetail() {
   const { id } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const { addToCart } = useCart()
 
   const { data: product, loading } = useApi(
     () => StudentService.getProduct(id), [id]
@@ -141,103 +144,76 @@ export default function ProductDetail() {
           </div>
 
           {/* Action Row Below Image */}
-          <div className="pd-visual-actions">
-            <button className={`pd-wishlist-btn ${inWish ? 'active' : ''}`} onClick={toggleWishlist}>
+          <div className="pd-visual-actions" style={{ justifyContent: 'center' }}>
+            <button className={`pd-wishlist-btn ${inWish ? 'active' : ''}`} onClick={toggleWishlist} style={{ width: '100%', justifyContent: 'center' }}>
               <Heart size={16} fill={inWish ? 'var(--danger)' : 'none'} color={inWish ? 'var(--danger)' : 'currentColor'} />
               {inWish ? 'Wishlisted' : 'Add to Wishlist'}
-            </button>
-            <button className="pd-share-btn" onClick={handleShare}>
-              <Share2 size={16} /> Share Link
             </button>
           </div>
         </div>
 
         {/* Right Column — Details & Selection */}
         <div className="pd-details-col">
-          {/* Tag & Rating */}
-          <div className="pd-meta-row">
-            <span className="pd-category-badge" style={{ color: catColor, background: `${catColor}15` }}>
-              {product.category}
-            </span>
-            <span className="pd-bestseller-badge">
-              🏆 Campus Favorite
-            </span>
-          </div>
-
-          <h1 className="pd-title">{product.name}</h1>
-
-          {/* Star Ratings */}
-          <div className="pd-rating-box">
-            <div className="pd-stars">
-              {[1, 2, 3, 4, 5].map(s => (
-                <Star key={s} size={15} fill={s <= 4 ? 'var(--warning)' : 'none'} color="var(--warning)" />
-              ))}
+          {/* Header Block */}
+          <div className="pd-header-block">
+            <div className="pd-meta-row">
+              <span className="pd-category-badge" style={{ color: catColor, background: `${catColor}15` }}>
+                {product.category}
+              </span>
+              <span className="pd-sb-name-small">
+                👤 Listed by <strong>{product.owner?.username || 'Verified Student'}</strong>
+              </span>
             </div>
-            <span className="pd-rating-text">4.2 (18 student reviews)</span>
+            <h1 className="pd-title">{product.name}</h1>
+            <div className="pd-rating-box">
+              <div className="pd-stars">
+                {[1, 2, 3, 4, 5].map(s => (
+                  <Star key={s} size={13} fill={s <= 4 ? 'var(--warning)' : 'none'} color="var(--warning)" />
+                ))}
+              </div>
+              <span className="pd-rating-text">4.2 (18 reviews)</span>
+              <span className={`pd-status-badge-inline ${product.is_available ? 'avail' : 'booked'}`}>
+                {product.is_available ? '● Available' : '● Booked'}
+              </span>
+            </div>
           </div>
 
           {/* Price Block */}
-          <div className="pd-price-card card">
-            <div className="pd-price-row">
-              <div className="pd-current-price">
-                ${currentPrice.toFixed(2)}
-                <span className="pd-price-unit">{currentMode === 'rent' ? '/day' : '/unit'}</span>
-              </div>
-              <div className="pd-old-price">${currentOriginal}</div>
-              <div className="pd-discount-tag">{currentDiscount}% off</div>
+          <div className="pd-price-row-compact">
+            <div className="pd-current-price">
+              ${currentPrice.toFixed(2)}
+              <span className="pd-price-unit">{currentMode === 'rent' ? '/day' : ' outright'}</span>
             </div>
-            <p className="pd-price-sub">
-              {currentMode === 'rent' 
-                ? 'Rent for flexible duration. Security deposit is fully refundable.' 
-                : 'One-time payment to purchase. Own the item permanently.'
-              }
-            </p>
-          </div>
-
-          {/* Listing Specs Short List */}
-          <div className="pd-specs-short">
-            <div className="pd-spec-item">
-              <ShieldCheck size={16} className="pd-spec-icon green" />
-              <span>Campus Protected Guarantee included</span>
-            </div>
-            <div className="pd-spec-item">
-              <Truck size={16} className="pd-spec-icon blue" />
-              <span>Free on-campus handoff & pickup</span>
-            </div>
-            <div className="pd-spec-item">
-              <RotateCcw size={16} className="pd-spec-icon orange" />
-              <span>Cancel or adjust reservation up to 24h before</span>
-            </div>
+            <div className="pd-old-price">${currentOriginal}</div>
+            <div className="pd-discount-tag">{currentDiscount}% off</div>
           </div>
 
           {/* Rent/Buy Segment Control */}
           {(isRentAvailable && isBuyAvailable) && (
-            <div className="pd-segment-section">
-              <label className="pd-label">Listing Option</label>
-              <div className="pd-segment-control">
-                <button 
-                  className={`pd-segment-btn ${currentMode === 'rent' ? 'active' : ''}`}
-                  onClick={() => toggleMode('rent')}
-                >
-                  📅 Rent Listing
-                </button>
-                <button 
-                  className={`pd-segment-btn ${currentMode === 'buy' ? 'active' : ''}`}
-                  onClick={() => toggleMode('buy')}
-                >
-                  🛒 Purchase Item
-                </button>
-              </div>
+            <div className="pd-segment-control-compact">
+              <button 
+                className={`pd-segment-btn ${currentMode === 'rent' ? 'active' : ''}`}
+                onClick={() => setMode('rent')}
+              >
+                📅 Rent Listing
+              </button>
+              <button 
+                className={`pd-segment-btn ${currentMode === 'buy' ? 'active' : ''}`}
+                onClick={() => setMode('buy')}
+              >
+                🛒 Purchase Item
+              </button>
             </div>
           )}
 
-          {/* Quantity and Form Options */}
-          <div className="pd-options-row">
-            <div className="pd-qty-section">
-              <label className="pd-label">Quantity</label>
-              <div className="pd-qty-picker">
+          {/* Combined Configuration & Calculator Card */}
+          <div className="pd-config-card card">
+            {/* Quantity Selector */}
+            <div className="pd-config-row">
+              <span className="pd-config-label">Quantity</span>
+              <div className="pd-qty-picker-compact">
                 <button 
-                  className="pd-qty-btn" 
+                  className="pd-qty-btn-compact" 
                   onClick={() => setQuantity(q => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
                 >
@@ -245,12 +221,12 @@ export default function ProductDetail() {
                 </button>
                 <input 
                   type="number" 
-                  className="pd-qty-input" 
+                  className="pd-qty-input-compact" 
                   value={quantity} 
                   onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} 
                 />
                 <button 
-                  className="pd-qty-btn" 
+                  className="pd-qty-btn-compact" 
                   onClick={() => setQuantity(q => q + 1)}
                 >
                   +
@@ -258,29 +234,12 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Seller Info Short Card */}
-            <div className="pd-seller-badge card">
-              <div className="pd-sb-avatar">
-                {product.owner?.username?.[0]?.toUpperCase() || 'S'}
-              </div>
-              <div className="pd-sb-info">
-                <span className="pd-sb-title">Seller / Owner</span>
-                <span className="pd-sb-name">{product.owner?.username || 'Verified Student'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Rent Duration Calculator (Only if in Rent mode) */}
-          {currentMode === 'rent' && (
-            <div className="pd-calc-card card">
-              <div className="pd-calc-header">
-                <Calendar size={15} />
-                <span>Rental Calculator</span>
-              </div>
-              <div className="pd-calc-body">
-                <div className="pd-slider-row">
-                  <span>Duration: <strong>{days} day{days > 1 ? 's' : ''}</strong></span>
-                  <span className="pd-slider-hint">Min 1 day · Max 30 days</span>
+            {/* Rent Duration Slider (Only if Rent mode) */}
+            {currentMode === 'rent' && (
+              <div className="pd-duration-row">
+                <div className="pd-duration-label-row">
+                  <span className="pd-config-label">Duration</span>
+                  <span className="pd-duration-val"><strong>{days} day{days > 1 ? 's' : ''}</strong></span>
                 </div>
                 <input 
                   type="range" 
@@ -290,55 +249,29 @@ export default function ProductDetail() {
                   onChange={e => setDays(Number(e.target.value))} 
                   className="pd-range" 
                 />
-                <div className="pd-calc-breakdown">
-                  <div className="pd-breakdown-row">
-                    <span>Base Daily Rate</span>
-                    <span>${basePrice.toFixed(2)}</span>
-                  </div>
-                  <div className="pd-breakdown-row">
-                    <span>Quantity</span>
-                    <span>× {quantity}</span>
-                  </div>
-                  <div className="pd-breakdown-row">
-                    <span>Rental Duration</span>
-                    <span>× {days} days</span>
-                  </div>
-                  <div className="pd-breakdown-row pd-breakdown-total">
-                    <span>Calculated Total</span>
-                    <span>${rentTotal}</span>
-                  </div>
+              </div>
+            )}
+
+            {/* Compact Breakdown */}
+            <div className="pd-breakdown-compact">
+              <div className="pd-bd-row">
+                <span>{currentMode === 'rent' ? 'Rental Subtotal' : 'Item Subtotal'}</span>
+                <span>${currentMode === 'rent' ? rentTotal : buyTotal}</span>
+              </div>
+              {currentMode === 'rent' && (
+                <div className="pd-bd-row deposit">
+                  <span>Refundable Deposit</span>
+                  <span>+${(basePrice * 5).toFixed(2)}</span>
                 </div>
+              )}
+              <div className="pd-bd-row total">
+                <span>Total Cost</span>
+                <span>${currentMode === 'rent' ? (parseFloat(rentTotal) + basePrice * 5).toFixed(2) : buyTotal}</span>
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Buy Details Info Card */}
-          {currentMode === 'buy' && (
-            <div className="pd-calc-card card">
-              <div className="pd-calc-header">
-                <ShoppingCart size={15} />
-                <span>Purchase Price Details</span>
-              </div>
-              <div className="pd-calc-body">
-                <div className="pd-calc-breakdown">
-                  <div className="pd-breakdown-row">
-                    <span>Base Buy Price</span>
-                    <span>${parseFloat(buyPrice).toFixed(2)}</span>
-                  </div>
-                  <div className="pd-breakdown-row">
-                    <span>Quantity</span>
-                    <span>× {quantity}</span>
-                  </div>
-                  <div className="pd-breakdown-row pd-breakdown-total">
-                    <span>Total Purchase Cost</span>
-                    <span>${buyTotal}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Buttons Area */}
+          {/* Action Buttons */}
           <div className="pd-action-buttons">
             <button 
               id="action-btn" 
@@ -346,8 +279,17 @@ export default function ProductDetail() {
               onClick={handleAction}
               disabled={!product.is_available}
             >
+              <CreditCard size={16} />
+              {currentMode === 'rent' ? 'Rent Now' : 'Buy Now'}
+            </button>
+
+            <button 
+              className="pd-btn-add-cart" 
+              onClick={() => addToCart(product, quantity)}
+              disabled={!product.is_available}
+            >
               <ShoppingCart size={16} />
-              {currentMode === 'rent' ? `Rent Now — $${overallTotal}` : `Buy Now — $${overallTotal}`}
+              Add to Cart
             </button>
 
             <button className="pd-btn-chat" onClick={handleMessage}>
@@ -356,9 +298,14 @@ export default function ProductDetail() {
             </button>
           </div>
 
-          <p className="pd-security-note">
-            🔒 Secure transaction escrow · Student community guarantee · Pick up on-campus
-          </p>
+          {/* Unified mini specs */}
+          <div className="pd-mini-specs">
+            <span>🛡️ Campus Escrow Protection</span>
+            <span>•</span>
+            <span>🤝 Free Pickup</span>
+            <span>•</span>
+            <span>🔄 24h Free Cancel</span>
+          </div>
         </div>
       </div>
 
@@ -1051,6 +998,30 @@ export default function ProductDetail() {
           opacity: 0.5;
           cursor: not-allowed;
         }
+        .pd-btn-add-cart {
+          flex: 1.5;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          background: var(--bg-2);
+          border: 2px solid var(--primary);
+          color: var(--primary);
+          border-radius: var(--radius-md);
+          font-size: 14px;
+          font-weight: 700;
+          transition: all 0.2s;
+          cursor: pointer;
+        }
+        .pd-btn-add-cart:hover:not(:disabled) {
+          background: var(--primary-glow);
+          transform: translateY(-1px);
+        }
+        .pd-btn-add-cart:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
         .pd-btn-chat {
           flex: 1;
           height: 48px;
@@ -1278,6 +1249,172 @@ export default function ProductDetail() {
           color: var(--primary);
           border-color: var(--primary-glow);
           background: var(--primary-glow);
+        }
+
+        /* Compact Right Column Styles */
+        .pd-header-block {
+          margin-bottom: 16px;
+        }
+        .pd-sb-name-small {
+          font-size: 13px;
+          color: var(--text-muted);
+          margin-left: 12px;
+        }
+        .pd-status-badge-inline {
+          font-size: 11px;
+          font-weight: 700;
+          margin-left: 12px;
+          padding: 2px 8px;
+          border-radius: 4px;
+        }
+        .pd-status-badge-inline.avail {
+          color: var(--success);
+          background: rgba(16, 185, 129, 0.1);
+        }
+        .pd-status-badge-inline.booked {
+          color: var(--danger);
+          background: rgba(239, 68, 68, 0.1);
+        }
+        .pd-price-row-compact {
+          display: flex;
+          align-items: baseline;
+          gap: 12px;
+          margin-bottom: 16px;
+        }
+        .pd-segment-control-compact {
+          display: flex;
+          gap: 8px;
+          background: var(--bg-3);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 3px;
+          margin-bottom: 16px;
+        }
+        .pd-segment-btn {
+          flex: 1;
+          border: none;
+          background: none;
+          padding: 8px 12px;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text-muted);
+          border-radius: var(--radius-sm);
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .pd-segment-btn.active {
+          background: var(--surface);
+          color: var(--primary);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .pd-config-card {
+          padding: 16px !important;
+          margin-bottom: 16px !important;
+          background: var(--bg-2);
+          border: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .pd-config-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .pd-config-label {
+          font-size: 12px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--text-muted);
+        }
+        .pd-qty-picker-compact {
+          display: flex;
+          align-items: center;
+          background: var(--bg-3);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          height: 32px;
+          overflow: hidden;
+        }
+        .pd-qty-btn-compact {
+          width: 32px;
+          height: 100%;
+          border: none;
+          background: none;
+          cursor: pointer;
+          color: var(--text-muted);
+          font-size: 15px;
+          font-weight: 700;
+          transition: all 0.2s;
+        }
+        .pd-qty-btn-compact:hover:not(:disabled) {
+          background: var(--surface-hov);
+          color: var(--text);
+        }
+        .pd-qty-btn-compact:disabled {
+          opacity: 0.3;
+        }
+        .pd-qty-input-compact {
+          width: 36px;
+          border: none;
+          background: none;
+          text-align: center;
+          color: var(--text);
+          font-weight: 700;
+          font-size: 14px;
+        }
+        .pd-duration-row {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .pd-duration-label-row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13px;
+        }
+        .pd-breakdown-compact {
+          background: var(--bg-3);
+          border-radius: var(--radius-sm);
+          padding: 10px 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .pd-bd-row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13px;
+          color: var(--text-muted);
+        }
+        .pd-bd-row.deposit {
+          color: var(--warning);
+        }
+        .pd-bd-row.total {
+          border-top: 1px dashed var(--border);
+          margin-top: 4px;
+          padding-top: 4px;
+          font-weight: 700;
+          font-size: 15px;
+          color: var(--text);
+        }
+        .pd-bd-row.total span:last-child {
+          color: var(--primary);
+        }
+        .pd-mini-specs {
+          display: flex;
+          justify-content: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--text-muted);
+          margin-top: 12px;
+          padding: 8px;
+          background: var(--bg-3);
+          border-radius: var(--radius-sm);
+          border: 1px solid var(--border);
         }
 
         /* Responsive Breakpoints */

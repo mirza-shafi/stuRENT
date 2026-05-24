@@ -22,8 +22,8 @@ export function CartProvider({ children }) {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3000)
   }, [])
 
-  const addToCart = useCallback((p) => {
-    setCart(c => ({ ...c, [p.id]: { product: p, qty: (c[p.id]?.qty || 0) + 1 } }))
+  const addToCart = useCallback((p, qty = 1) => {
+    setCart(c => ({ ...c, [p.id]: { product: p, qty: (c[p.id]?.qty || 0) + qty } }))
     toast('🛒', `"${p.name.slice(0,25)}..." added!`)
   }, [toast])
 

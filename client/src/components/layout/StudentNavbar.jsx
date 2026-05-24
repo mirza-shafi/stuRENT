@@ -1,5 +1,6 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Package, Plus, Settings, LogOut, LogIn, Menu, X } from 'lucide-react'
+import { Package, Plus, Settings, LogOut, LogIn, Menu, X, ShoppingBag } from 'lucide-react'
+import { useCart } from '../CartWishlist'
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import ThemeToggle from '../ui/ThemeToggle'
@@ -7,6 +8,7 @@ import toast from 'react-hot-toast'
 
 export default function StudentNavbar() {
   const { user, logout } = useAuth()
+  const { cartCount } = useCart()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
 
@@ -30,6 +32,27 @@ export default function StudentNavbar() {
 
         <div className="snav__right">
           <ThemeToggle />
+          <Link to="/cart" className="snav__icon-btn" title="Shopping Cart" style={{ position: 'relative', color: 'var(--text-muted)' }}>
+            <ShoppingBag size={15}/>
+            {cartCount > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-5px',
+                background: 'var(--primary)',
+                color: '#fff',
+                fontSize: '10px',
+                fontWeight: '700',
+                borderRadius: '50%',
+                width: '16px',
+                height: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px solid var(--bg-2)'
+              }}>{cartCount}</span>
+            )}
+          </Link>
           {user ? (
             <>
               {user.is_staff && <Link to="/dashboard" className="btn btn--ghost btn--sm">Admin Panel</Link>}

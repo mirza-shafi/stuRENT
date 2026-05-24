@@ -15,6 +15,8 @@ import TrackOrder     from './pages/student/TrackOrder'
 import Profile        from './pages/student/Profile'
 import Chat           from './pages/student/Chat'
 import AddProduct     from './pages/products/AddProduct'
+import Cart           from './pages/student/Cart'
+import { CartProvider } from './components/CartWishlist'
 
 import Login          from './pages/auth/Login'
 import Register       from './pages/auth/Register'
@@ -55,13 +57,15 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Public */}
+        <CartProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Public */}
             <Route path="/"           element={<Home />} />
             <Route path="/products"   element={<AllProducts />} />
             <Route path="/browse"     element={<Navigate to="/products" replace />} />
             <Route path="/products/product-details/:id" element={<PublicRoute><ProductDetail /></PublicRoute>} />
+            <Route path="/cart"       element={<PublicRoute><Cart /></PublicRoute>} />
 
             {/* Student protected */}
             <Route path="/my-orders" element={<StudentRoute><MyOrders /></StudentRoute>} />
@@ -86,10 +90,9 @@ export default function App() {
             <Route path="/admin/orders"    element={<AdminRoute><OrderList /></AdminRoute>} />
             <Route path="/admin/settings"  element={<AdminRoute><AdminSettings /></AdminRoute>} />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
-
+            </Routes>
+          </BrowserRouter>
+        </CartProvider>
         <Toaster
           position="top-right"
           toastOptions={{

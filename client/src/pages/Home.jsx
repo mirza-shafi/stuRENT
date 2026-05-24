@@ -18,7 +18,7 @@ const SLIDES = [
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace('/api/v1', '')
 
 export default function HomePage() {
-  return <CartProvider><HomePageInner /></CartProvider>
+  return <HomePageInner />
 }
 
 function HomePageInner() {
@@ -444,7 +444,7 @@ function NavActions({ user }) {
 
       {/* Cart → Checkout */}
       <div className="hp-na-wrap">
-        <button className="hp-na-btn hp-na-btn--cart" title="Cart / Checkout" onClick={() => setCartOpen(true)}>
+        <button className="hp-na-btn hp-na-btn--cart" title="Cart / Checkout" onClick={() => navigate('/cart')}>
           <span className="hp-na-icon">🛒</span>
           <span className="hp-na-label">Checkout</span>
           {cartCount > 0 && <span className="hp-badge">{cartCount}</span>}
