@@ -5,6 +5,24 @@ import ThemeToggle from './ThemeToggle'
 import toast from 'react-hot-toast'
 import { X } from 'lucide-react'
 
+function Field({ name, label, type = 'text', placeholder, value, onChange, error }) {
+  return (
+    <div className="form-group" style={{ marginBottom: 10, flex: 1 }}>
+      <label className="form-label" style={{ marginBottom: 4, fontSize: 11, fontWeight: 700 }}>{label}</label>
+      <input 
+        name={name} 
+        type={type} 
+        className="form-input" 
+        placeholder={placeholder} 
+        value={value} 
+        onChange={onChange} 
+        style={{ borderRadius: 10, padding: '10px 14px', fontSize: 13, height: 38 }} 
+      />
+      {error && <p className="form-error" style={{ fontSize: 11, marginTop: 2, color: 'var(--danger)' }}>{error[0] ?? error}</p>}
+    </div>
+  )
+}
+
 export default function AuthModal() {
   const { showAuthModal, authModalView, setAuthModalView, closeAuthModal, login, register } = useAuth()
   const navigate = useNavigate()
@@ -69,22 +87,6 @@ export default function AuthModal() {
   }
 
   const handleGoogle = () => toast('🚀 Google Sign-Up coming soon!', { icon: '⏳' })
-
-  const Field = ({ name, label, type = 'text', placeholder }) => (
-    <div className="form-group" style={{ marginBottom: 10, flex: 1 }}>
-      <label className="form-label" style={{ marginBottom: 4, fontSize: 11, fontWeight: 700 }}>{label}</label>
-      <input 
-        name={name} 
-        type={type} 
-        className="form-input" 
-        placeholder={placeholder} 
-        value={regForm[name]} 
-        onChange={handleRegChange} 
-        style={{ borderRadius: 10, padding: '10px 14px', fontSize: 13, height: 38 }} 
-      />
-      {regErrors[name] && <p className="form-error" style={{ fontSize: 11, marginTop: 2, color: 'var(--danger)' }}>{regErrors[name][0] ?? regErrors[name]}</p>}
-    </div>
-  )
 
   return (
     <div className="am-overlay" onClick={closeAuthModal}>
@@ -180,18 +182,18 @@ export default function AuthModal() {
 
             <form onSubmit={handleRegSubmit} noValidate>
               <div className="form-grid">
-                <Field name="username" label="Username" placeholder="Choose a username" />
-                <Field name="email" label="Email" type="email" placeholder="you@university.edu" />
+                <Field name="username" label="Username" placeholder="Choose a username" value={regForm.username} onChange={handleRegChange} error={regErrors.username} />
+                <Field name="email" label="Email" type="email" placeholder="you@university.edu" value={regForm.email} onChange={handleRegChange} error={regErrors.email} />
               </div>
 
               <div className="form-grid">
-                <Field name="university_name" label="University Name" placeholder="Your University" />
-                <Field name="student_id" label="Student ID" placeholder="Student ID #" />
+                <Field name="university_name" label="University Name" placeholder="Your University" value={regForm.university_name} onChange={handleRegChange} error={regErrors.university_name} />
+                <Field name="student_id" label="Student ID" placeholder="Student ID #" value={regForm.student_id} onChange={handleRegChange} error={regErrors.student_id} />
               </div>
 
               <div className="form-grid">
-                <Field name="password" label="Password" type="password" placeholder="Min 8 chars" />
-                <Field name="password_confirm" label="Confirm Password" type="password" placeholder="Repeat" />
+                <Field name="password" label="Password" type="password" placeholder="Min 8 chars" value={regForm.password} onChange={handleRegChange} error={regErrors.password} />
+                <Field name="password_confirm" label="Confirm Password" type="password" placeholder="Repeat" value={regForm.password_confirm} onChange={handleRegChange} error={regErrors.password_confirm} />
               </div>
 
               <button type="submit" className="btn btn--primary btn--full" disabled={regLoading} style={{ padding: '11px', borderRadius: 10, fontSize: 14, marginTop: 8, height: 42 }}>

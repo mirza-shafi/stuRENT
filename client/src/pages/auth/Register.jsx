@@ -4,6 +4,16 @@ import { useAuth } from '../../context/AuthContext'
 import ThemeToggle from '../../components/ui/ThemeToggle'
 import toast from 'react-hot-toast'
 
+function Field({ name, label, type = 'text', placeholder, value, onChange, error }) {
+  return (
+    <div className="form-group" style={{ flex: 1, minWidth: 0, marginBottom: 10 }}>
+      <label className="form-label" style={{ marginBottom: 4, fontSize: 11, fontWeight: 700 }}>{label}</label>
+      <input name={name} type={type} className="form-input" placeholder={placeholder} value={value} onChange={onChange} style={{ borderRadius: 10, padding: '10px 14px', fontSize: 13, height: 38 }} />
+      {error && <p className="form-error" style={{ fontSize: 11, marginTop: 2, color: 'var(--danger)' }}>{error[0] ?? error}</p>}
+    </div>
+  )
+}
+
 const INIT = { username: '', email: '', password: '', password_confirm: '', university_name: '', student_id: '' }
 
 export default function Register() {
@@ -23,14 +33,6 @@ export default function Register() {
   }
 
   const handleGoogle = () => toast('🚀 Google Sign-Up coming soon!', { icon: '⏳' })
-
-  const Field = ({ name, label, type = 'text', placeholder }) => (
-    <div className="form-group" style={{ flex: 1, minWidth: 0, marginBottom: 10 }}>
-      <label className="form-label" style={{ marginBottom: 4, fontSize: 11, fontWeight: 700 }}>{label}</label>
-      <input name={name} type={type} className="form-input" placeholder={placeholder} value={form[name]} onChange={handleChange} style={{ borderRadius: 10, padding: '10px 14px', fontSize: 13, height: 38 }} />
-      {errors[name] && <p className="form-error" style={{ fontSize: 11, marginTop: 2 }}>{errors[name][0] ?? errors[name]}</p>}
-    </div>
-  )
 
   return (
     <div className="auth-page">
@@ -61,18 +63,18 @@ export default function Register() {
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="form-grid">
-            <Field name="username" label="Username" placeholder="Choose a username" />
-            <Field name="email" label="Email" type="email" placeholder="you@university.edu" />
+            <Field name="username" label="Username" placeholder="Choose a username" value={form.username} onChange={handleChange} error={errors.username} />
+            <Field name="email" label="Email" type="email" placeholder="you@university.edu" value={form.email} onChange={handleChange} error={errors.email} />
           </div>
 
           <div className="form-grid">
-            <Field name="university_name" label="University Name" placeholder="Your University" />
-            <Field name="student_id" label="Student ID" placeholder="Student ID #" />
+            <Field name="university_name" label="University Name" placeholder="Your University" value={form.university_name} onChange={handleChange} error={errors.university_name} />
+            <Field name="student_id" label="Student ID" placeholder="Student ID #" value={form.student_id} onChange={handleChange} error={errors.student_id} />
           </div>
 
           <div className="form-grid">
-            <Field name="password" label="Password" type="password" placeholder="Min 8 chars" />
-            <Field name="password_confirm" label="Confirm Password" type="password" placeholder="Repeat" />
+            <Field name="password" label="Password" type="password" placeholder="Min 8 chars" value={form.password} onChange={handleChange} error={errors.password} />
+            <Field name="password_confirm" label="Confirm Password" type="password" placeholder="Repeat" value={form.password_confirm} onChange={handleChange} error={errors.password_confirm} />
           </div>
 
           <button id="register-submit" type="submit" className="btn btn--primary btn--full" disabled={loading} style={{ padding: '11px', borderRadius: 10, fontSize: 14, marginTop: 8, height: 42 }}>
