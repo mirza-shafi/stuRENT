@@ -24,7 +24,7 @@ export default function StudentNavbar() {
         <Link to="/" className="snav__logo">stu<span>RENT</span></Link>
 
         <nav className="snav__links">
-          {link('/browse', <Package size={15}/>, 'Browse')}
+          {link('/products', <Package size={15}/>, 'Browse')}
           {user && link('/my-orders', <ShoppingBag size={15}/>, 'My Orders')}
           {user && link('/messages',  <MessageCircle size={15}/>, 'Messages')}
         </nav>
@@ -52,7 +52,7 @@ export default function StudentNavbar() {
 
       {open && (
         <div className="snav__mobile">
-          {link('/browse', null, '🔍 Browse')}
+          {link('/products', null, '🔍 Browse')}
           {user && link('/my-orders', null, '📦 My Orders')}
           {user && link('/messages',  null, '💬 Messages')}
           {user && link('/profile',   null, '👤 Profile')}

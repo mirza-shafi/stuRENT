@@ -42,7 +42,7 @@ function AdminRoute({ children }) {
 function GuestRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return null
-  return user ? <Navigate to="/browse" replace /> : children
+  return user ? <Navigate to="/products" replace /> : children
 }
 
 function PublicRoute({ children }) {
@@ -58,7 +58,7 @@ export default function App() {
             {/* Public */}
             <Route path="/"           element={<Home />} />
             <Route path="/products"   element={<AllProducts />} />
-            <Route path="/browse"     element={<PublicRoute><Storefront /></PublicRoute>} />
+            <Route path="/browse"     element={<Navigate to="/products" replace />} />
             <Route path="/browse/:id" element={<PublicRoute><ProductDetail /></PublicRoute>} />
 
             {/* Student protected */}

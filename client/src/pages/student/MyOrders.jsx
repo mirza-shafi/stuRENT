@@ -25,7 +25,7 @@ export default function MyOrders() {
           <h1 className="page-title">My Orders</h1>
           <p className="page-subtitle">Track the status of your rental orders</p>
         </div>
-        <Link to="/browse" className="btn btn--primary btn--sm">
+        <Link to="/products" className="btn btn--primary btn--sm">
           <Package size={14} /> Browse More
         </Link>
       </div>
@@ -40,7 +40,7 @@ export default function MyOrders() {
           <ShoppingBag size={56} className="empty-state__icon" />
           <p className="empty-state__title">No orders yet</p>
           <p className="text-muted text-sm">Browse our catalog and rent your first item!</p>
-          <Link to="/browse" className="btn btn--primary" style={{ marginTop: 'var(--space-4)' }}>
+          <Link to="/products" className="btn btn--primary" style={{ marginTop: 'var(--space-4)' }}>
             Browse Items <ArrowRight size={14} />
           </Link>
         </div>

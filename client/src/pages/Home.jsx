@@ -101,7 +101,7 @@ function HomePageInner() {
           )}
 
           <div className="hp-nav">
-            <Link to="/" className="hp-nav-link" style={{color:'#fff', fontWeight:700}}>🏠 Home</Link>
+            <Link to="/products" className="hp-nav-link">📋 All Products</Link>
           </div>
 
           <div className="hp-search">
@@ -115,9 +115,9 @@ function HomePageInner() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search products, housing, rentals..."
-              onKeyDown={e => e.key==='Enter' && navigate(`/browse?q=${encodeURIComponent(query)}`)}
+              onKeyDown={e => e.key==='Enter' && navigate(`/products?q=${encodeURIComponent(query)}`)}
             />
-            <button className="hp-search-btn" onClick={() => navigate(`/browse?q=${encodeURIComponent(query)}`)}>🔍</button>
+            <button className="hp-search-btn" onClick={() => navigate(`/products?q=${encodeURIComponent(query)}`)}>🔍</button>
           </div>
 
           <div className="hp-actions">
@@ -154,7 +154,7 @@ function HomePageInner() {
               <span className="now">{s.price[0]}</span>
             </div>
             <div style={{display:'flex', gap:12, flexWrap:'wrap', alignItems:'center'}}>
-              <Link to="/browse" className="hp-btn">{s.price[1]} →</Link>
+              <Link to="/products" className="hp-btn">{s.price[1]} →</Link>
               <Link to="/products" className="hp-btn" style={{background:'rgba(255,255,255,.15)', border:'1.5px solid rgba(255,255,255,.4)', backdropFilter:'blur(8px)'}}>📋 All Products</Link>
             </div>
           </div>
@@ -166,7 +166,7 @@ function HomePageInner() {
           </div>
         </div>
         <div className="hp-hero-side">
-          <Link to="/browse" className="hp-side-card c1" style={{ textDecoration:'none' }}>
+          <Link to="/products" className="hp-side-card c1" style={{ textDecoration:'none' }}>
             <div>
               <div className="hp-sc-tag">Popular</div>
               <div className="hp-sc-title">Indoor<br/>Essentials</div>
@@ -175,7 +175,7 @@ function HomePageInner() {
             </div>
             <div className="hp-sc-emoji">🪑</div>
           </Link>
-          <Link to="/browse" className="hp-side-card c2" style={{ textDecoration:'none' }}>
+          <Link to="/products" className="hp-side-card c2" style={{ textDecoration:'none' }}>
             <div>
               <div className="hp-sc-tag">Trending</div>
               <div className="hp-sc-title">Outdoor<br/>Adventures</div>
@@ -215,7 +215,7 @@ function HomePageInner() {
             { emoji:'📦', label:'Furniture', count:'Desks & chairs' },
             { emoji:'🛒', label:'For Sale', count:'Buy outright' },
           ].map(c => (
-            <Link key={c.label} to="/browse" className="hp-cat-card" onClick={()=>setCat(c.label)}>
+            <Link key={c.label} to="/products" className="hp-cat-card" onClick={()=>setCat(c.label)}>
               <span style={{ fontSize:30 }}>{c.emoji}</span>
               <span style={{ fontSize:12, fontWeight:500 }}>{c.label}</span>
               <span style={{ fontSize:10, color:'var(--h-muted)' }}>{c.count}</span>
@@ -253,7 +253,7 @@ function HomePageInner() {
 
       {/* BANNER STRIP */}
       <div className="hp-banners">
-        <Link to="/browse" className="hp-banner b1">
+        <Link to="/products" className="hp-banner b1">
           <div className="hp-banner-emoji">🪑</div>
           <div>
             <div className="hp-banner-tag">Top Rentals</div>
@@ -262,7 +262,7 @@ function HomePageInner() {
             <span className="hp-btn-outline">Browse →</span>
           </div>
         </Link>
-        <Link to="/browse" className="hp-banner b2">
+        <Link to="/products" className="hp-banner b2">
           <div className="hp-banner-emoji">📦</div>
           <div>
             <div className="hp-banner-tag">Sell Your Items</div>
@@ -271,7 +271,7 @@ function HomePageInner() {
             <span className="hp-btn-outline">Start Selling →</span>
           </div>
         </Link>
-        <Link to="/browse" className="hp-banner b3">
+        <Link to="/products" className="hp-banner b3">
           <div className="hp-banner-emoji">🏠</div>
           <div>
             <div className="hp-banner-tag">Student Housing</div>
@@ -315,7 +315,7 @@ function HomePageInner() {
           </div>
           <div className="hp-mem-actions">
             <Link to="/register" className="hp-btn" style={{ fontSize:15, padding:'15px 36px' }}>Join for Free →</Link>
-            <Link to="/browse" className="hp-btn-secondary">Browse Listings</Link>
+            <Link to="/products" className="hp-btn-secondary">Browse Listings</Link>
           </div>
         </div>
       </section>
@@ -457,7 +457,7 @@ function NavActions({ user }) {
 
       {/* Auth */}
       {user ? (
-        <Link to="/browse" className="hp-na-auth-btn">📦 Listings</Link>
+        <Link to="/products" className="hp-na-auth-btn">📦 Listings</Link>
       ) : (
         <>
           <Link to="/login" className="hp-na-auth-btn">Sign In</Link>

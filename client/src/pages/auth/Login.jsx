@@ -16,7 +16,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setError(''); setLoading(true)
-    try { await login(form); toast.success('Welcome back!'); navigate('/browse') }
+    try { await login(form); toast.success('Welcome back!'); navigate('/products') }
     catch (err) { setError(err.response?.data?.detail || 'Invalid credentials.') }
     finally { setLoading(false) }
   }

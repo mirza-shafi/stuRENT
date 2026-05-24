@@ -39,7 +39,7 @@ export default function ProductDetail() {
     <div className="empty-state card" style={{ marginTop: 32 }}>
       <Package size={48} className="empty-state__icon" />
       <p className="empty-state__title">Product not found</p>
-      <Link to="/browse" className="btn btn--primary">← Browse</Link>
+      <Link to="/products" className="btn btn--primary">← All Products</Link>
     </div>
   )
 
@@ -48,7 +48,7 @@ export default function ProductDetail() {
   return (
     <div className="fade-in">
       <div style={{ marginBottom: 20 }}>
-        <Link to="/browse" className="btn btn--ghost btn--sm"><ArrowLeft size={14}/> Back to Browse</Link>
+        <Link to="/products" className="btn btn--ghost btn--sm"><ArrowLeft size={14}/> Back to Products</Link>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 32, alignItems: 'start' }}>
