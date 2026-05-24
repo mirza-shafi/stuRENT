@@ -13,7 +13,7 @@ const BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').repl
 
 export default function Cart() {
   const { cart, cartCount, cartTotal, removeFromCart, changeQty, confirmCheckout } = useCart()
-  const { user } = useAuth()
+  const { user, openLoginModal } = useAuth()
   const navigate = useNavigate()
 
   // Checkout states
@@ -47,7 +47,7 @@ export default function Cart() {
   const handleProceedToCheckout = () => {
     if (!user) {
       toast.error('Please sign in to proceed to checkout')
-      navigate('/login?redirect=/cart')
+      openLoginModal()
       return
     }
     if (cartCount === 0) {

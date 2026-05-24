@@ -35,6 +35,8 @@ class RegisterView(generics.CreateAPIView):
             user=user,
             name=user.username,
             email=user.email,
+            university_name=request.data.get("university_name", ""),
+            student_id=request.data.get("student_id", ""),
         )
 
         return Response(

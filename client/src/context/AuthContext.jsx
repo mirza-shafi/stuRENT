@@ -45,8 +45,30 @@ export function AuthProvider({ children }) {
     return AuthService.register(formData)
   }, [])
 
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authModalView, setAuthModalView] = useState('login')
+
+  const openLoginModal = useCallback(() => {
+    setAuthModalView('login')
+    setShowAuthModal(true)
+  }, [])
+
+  const openRegisterModal = useCallback(() => {
+    setAuthModalView('register')
+    setShowAuthModal(true)
+  }, [])
+
+  const closeAuthModal = useCallback(() => {
+    setShowAuthModal(false)
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register }}>
+    <AuthContext.Provider value={{
+      user, loading, login, logout, register,
+      showAuthModal, setShowAuthModal,
+      authModalView, setAuthModalView,
+      openLoginModal, openRegisterModal, closeAuthModal
+    }}>
       {children}
     </AuthContext.Provider>
   )

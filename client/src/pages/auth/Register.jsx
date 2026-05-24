@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import ThemeToggle from '../../components/ui/ThemeToggle'
 import toast from 'react-hot-toast'
 
-const INIT = { username: '', email: '', password: '', password_confirm: '' }
+const INIT = { username: '', email: '', password: '', password_confirm: '', university_name: '', student_id: '' }
 
 export default function Register() {
   const { register } = useAuth()
@@ -25,84 +25,214 @@ export default function Register() {
   const handleGoogle = () => toast('🚀 Google Sign-Up coming soon!', { icon: '⏳' })
 
   const Field = ({ name, label, type = 'text', placeholder }) => (
-    <div className="form-group">
-      <label className="form-label">{label}</label>
-      <input name={name} type={type} className="form-input" placeholder={placeholder} value={form[name]} onChange={handleChange} style={{ borderRadius: 12 }} />
-      {errors[name] && <p className="form-error">{errors[name][0] ?? errors[name]}</p>}
+    <div className="form-group" style={{ flex: 1, minWidth: 0, marginBottom: 10 }}>
+      <label className="form-label" style={{ marginBottom: 4, fontSize: 11, fontWeight: 700 }}>{label}</label>
+      <input name={name} type={type} className="form-input" placeholder={placeholder} value={form[name]} onChange={handleChange} style={{ borderRadius: 10, padding: '10px 14px', fontSize: 13, height: 38 }} />
+      {errors[name] && <p className="form-error" style={{ fontSize: 11, marginTop: 2 }}>{errors[name][0] ?? errors[name]}</p>}
     </div>
   )
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', position: 'relative' }}>
-      <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }}><ThemeToggle /></div>
+    <div className="auth-page">
+      {/* Animated background glows */}
+      <div className="auth-glow auth-glow-1" />
+      <div className="auth-glow auth-glow-2" />
 
-      {/* ── LEFT: Illustration panel ── */}
-      <div style={{ width: '45%', background: 'linear-gradient(160deg,#0c4a6e 0%,#0f172a 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 48, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: -60, left: -60, width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle,rgba(6,182,212,0.25),transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -80, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle,rgba(99,102,241,0.2),transparent 70%)', pointerEvents: 'none' }} />
+      {/* Theme toggle */}
+      <div className="auth-theme-toggle"><ThemeToggle /></div>
 
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 320 }}>
-          <div style={{ fontSize: 56, marginBottom: 20 }}>🎓</div>
-          <h2 style={{ fontSize: 32, fontWeight: 900, color: '#fff', lineHeight: 1.15, marginBottom: 14 }}>
-            Join the student<br />
-            <span style={{ background: 'linear-gradient(135deg,#38bdf8,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>rental community</span>
-          </h2>
-          <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 14, lineHeight: 1.7, marginBottom: 32 }}>
-            Rent, buy, and sell items with students near you. Post your listings and earn money while you study.
-          </p>
+      <div className="auth-card">
+        {/* Logo */}
+        <Link to="/" className="auth-logo">
+          <div className="auth-logo-box">S</div>
+          <span className="auth-logo-text">stu<span>RENT</span></span>
+        </Link>
 
-          {/* Feature list */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'left' }}>
-            {[
-              { icon: '🏠', text: 'Find student housing & rooms' },
-              { icon: '📦', text: 'Post and manage your listings' },
-              { icon: '💳', text: 'Built-in wallet & secure payments' },
-              { icon: '💬', text: 'Chat directly with buyers/sellers' },
-              { icon: '⭐', text: 'Trusted student community' },
-            ].map(f => (
-              <div key={f.text} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,.07)', borderRadius: 10, padding: '10px 14px' }}>
-                <span style={{ fontSize: 18 }}>{f.icon}</span>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,.8)' }}>{f.text}</span>
-              </div>
-            ))}
+        <h1 className="auth-title">Create Account</h1>
+        <p className="auth-subtitle">Join thousands of students today</p>
+
+        {/* Google */}
+        <button onClick={handleGoogle} className="btn btn--google auth-google-btn">
+          <svg width="16" height="16" viewBox="0 0 18 18" style={{ marginRight: 8 }}><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
+          Continue with Google
+        </button>
+
+        <div className="form-divider" style={{ margin: '12px 0' }}>or continue with details</div>
+
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="form-grid">
+            <Field name="username" label="Username" placeholder="Choose a username" />
+            <Field name="email" label="Email" type="email" placeholder="you@university.edu" />
           </div>
-        </div>
-        <div style={{ position: 'absolute', bottom: 24, fontSize: 12, color: 'rgba(255,255,255,.3)' }}>stuRENT · Student Marketplace</div>
-      </div>
 
-      {/* ── RIGHT: Form ── */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 40px' }}>
-        <div style={{ width: '100%', maxWidth: 380 }}>
-          <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 28, textDecoration: 'none' }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: '#fff', fontWeight: 800 }}>S</div>
-            <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--text)' }}>stu<span style={{ background: 'linear-gradient(135deg,#6366f1,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>RENT</span></span>
-          </Link>
+          <div className="form-grid">
+            <Field name="university_name" label="University Name" placeholder="Your University" />
+            <Field name="student_id" label="Student ID" placeholder="Student ID #" />
+          </div>
 
-          <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 4 }}>Create Account</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>Join thousands of students today</p>
+          <div className="form-grid">
+            <Field name="password" label="Password" type="password" placeholder="Min 8 chars" />
+            <Field name="password_confirm" label="Confirm Password" type="password" placeholder="Repeat" />
+          </div>
 
-          <button onClick={handleGoogle} className="btn btn--google" style={{ marginBottom: 8, borderRadius: 12 }}>
-            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
-            Continue with Google
+          <button id="register-submit" type="submit" className="btn btn--primary btn--full" disabled={loading} style={{ padding: '11px', borderRadius: 10, fontSize: 14, marginTop: 8, height: 42 }}>
+            {loading ? <span className="spinner" /> : 'Create Account →'}
           </button>
+        </form>
 
-          <div className="form-divider">or</div>
-
-          <form onSubmit={handleSubmit} noValidate>
-            <Field name="username"         label="Username"         placeholder="Choose a username" />
-            <Field name="email"            label="Email"            type="email"    placeholder="you@university.edu" />
-            <Field name="password"         label="Password"         type="password" placeholder="Min 8 characters" />
-            <Field name="password_confirm" label="Confirm Password" type="password" placeholder="Repeat password" />
-            <button id="register-submit" type="submit" className="btn btn--primary btn--full" disabled={loading} style={{ padding: '13px', borderRadius: 12, fontSize: 15 }}>
-              {loading ? <span className="spinner" /> : 'Create Account →'}
-            </button>
-          </form>
-
-          <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--text-muted)' }}>
-            Already have an account? <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>Sign in</Link>
-          </p>
-        </div>
+        <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: 'var(--text-muted)' }}>
+          Already have an account? <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>Sign in</Link>
+        </p>
       </div>
+
+      <style>{`
+        .auth-page {
+          display: flex;
+          min-height: 100vh;
+          align-items: center;
+          justify-content: center;
+          background: radial-gradient(circle at center, var(--bg-3) 0%, var(--bg) 100%);
+          position: relative;
+          overflow: hidden;
+          padding: 24px;
+        }
+
+        .auth-theme-toggle {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          z-index: 10;
+        }
+
+        .auth-glow {
+          position: absolute;
+          width: 300px;
+          height: 300px;
+          border-radius: 50%;
+          filter: blur(80px);
+          opacity: 0.12;
+          pointer-events: none;
+          z-index: 1;
+          transform: translate3d(0, 0, 0);
+          will-change: transform;
+        }
+        .auth-glow-1 {
+          background: var(--primary);
+          top: 10%;
+          left: 15%;
+          animation: floatGlow1 8s ease-in-out infinite alternate;
+        }
+        .auth-glow-2 {
+          background: var(--accent);
+          bottom: 10%;
+          right: 15%;
+          animation: floatGlow2 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatGlow1 {
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(40px, 40px, 0); }
+        }
+        @keyframes floatGlow2 {
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-40px, -40px, 0); }
+        }
+
+        .auth-card {
+          width: 100%;
+          max-width: 480px;
+          background: var(--bg-2);
+          border: 1px solid var(--border);
+          border-radius: 20px;
+          padding: 36px;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+          position: relative;
+          z-index: 2;
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+          will-change: transform, opacity;
+        }
+
+        @keyframes slideUpFade {
+          from {
+            opacity: 0;
+            transform: translate3d(0, 20px, 0);
+          }
+          to {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+          }
+        }
+
+        .auth-logo {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 24px;
+          text-decoration: none;
+        }
+        .auth-logo-box {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: linear-gradient(135deg, var(--primary), var(--accent));
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+          color: #fff;
+          font-weight: 800;
+        }
+        .auth-logo-text {
+          font-weight: 800;
+          font-size: 16px;
+          color: var(--text);
+        }
+        .auth-logo-text span {
+          background: linear-gradient(135deg, var(--primary), var(--accent));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .auth-title {
+          font-size: 24px;
+          font-weight: 800;
+          margin-bottom: 4px;
+          color: var(--text);
+        }
+        .auth-subtitle {
+          color: var(--text-muted);
+          font-size: 13px;
+          margin-bottom: 20px;
+        }
+
+        .auth-google-btn {
+          width: 100%;
+          border-radius: 10px !important;
+          padding: 8px 16px !important;
+          font-size: 13px !important;
+          height: 38px !important;
+          margin-bottom: 8px !important;
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        @media (max-width: 520px) {
+          .form-grid {
+            grid-template-columns: 1fr;
+            gap: 0;
+          }
+          .auth-card {
+            padding: 24px 20px;
+          }
+        }
+      `}</style>
     </div>
   )
 }

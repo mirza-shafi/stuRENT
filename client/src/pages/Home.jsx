@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import StudentService from '../services/studentService'
 import { CartProvider, useCart, CartWishlistUI } from '../components/CartWishlist'
+import toast from 'react-hot-toast'
 import '../styles/home.css'
 
 const CATS = [
@@ -22,7 +23,7 @@ export default function HomePage() {
 }
 
 function HomePageInner() {
-  const { user } = useAuth()
+  const { user, openLoginModal, openRegisterModal } = useAuth()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [cat, setCat] = useState('all')
@@ -132,7 +133,14 @@ function HomePageInner() {
               <span>{c.emoji}</span> {c.label}
             </button>
           ))}
-          <button className="hp-cat-btn" onClick={()=>navigate('/products/add-product')}>✨ Be a Vendor</button>
+          <button className="hp-cat-btn" onClick={() => {
+            if (user) {
+              navigate('/products/add-product')
+            } else {
+              toast.error('Please sign in to post a listing!')
+              openLoginModal()
+            }
+          }}>✨ Be a Vendor</button>
           <button className={`hp-cat-btn ${cat==='buy'?'active':''}`} onClick={()=>setCat('buy')}>🛒 For Sale</button>
           <button className="hp-cat-btn" onClick={()=>navigate('/products')}>🏠 Housing</button>
         </div>
@@ -357,6 +365,7 @@ function HomePageInner() {
 
 function NavActions({ user }) {
   const { cartCount, wish, setCartOpen, setWishOpen } = useCart()
+  const { openLoginModal, openRegisterModal } = useAuth()
   const navigate = useNavigate()
   const [openDrop, setOpenDrop] = useState(null)
 
@@ -435,7 +444,7 @@ function NavActions({ user }) {
             ) : (
               <div className="hp-na-drop-info">
                 <div className="hp-na-info-row" style={{marginBottom:10}}>Sign in to track your orders.</div>
-                <Link to="/login" className="hp-na-drop-btn" onClick={() => setOpenDrop(null)}>Sign In</Link>
+                <button className="hp-na-drop-btn" onClick={() => { setOpenDrop(null); openLoginModal() }}>Sign In</button>
               </div>
             )}
           </div>
@@ -459,8 +468,8 @@ function NavActions({ user }) {
         <Link to="/products" className="hp-na-auth-btn">📦 Listings</Link>
       ) : (
         <>
-          <Link to="/login" className="hp-na-auth-btn">Sign In</Link>
-          <Link to="/register" className="hp-btn" style={{ padding:'7px 16px', fontSize:12 }}>Join Now</Link>
+          <button onClick={openLoginModal} className="hp-na-auth-btn" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Sign In</button>
+          <button onClick={openRegisterModal} className="hp-btn" style={{ padding:'7px 16px', fontSize:12 }}>Join Now</button>
         </>
       )}
     </div>

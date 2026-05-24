@@ -22,6 +22,7 @@ import Login          from './pages/auth/Login'
 import Register       from './pages/auth/Register'
 import AdminLogin     from './pages/auth/AdminLogin'
 import AdminRegister  from './pages/auth/AdminRegister'
+import AuthModal      from './components/ui/AuthModal'
 
 import Dashboard      from './pages/Dashboard'
 import CustomerList   from './pages/customers/CustomerList'
@@ -91,6 +92,7 @@ export default function App() {
             <Route path="/admin/settings"  element={<AdminRoute><AdminSettings /></AdminRoute>} />
 
             </Routes>
+            <AuthModal />
           </BrowserRouter>
         </CartProvider>
         <Toaster

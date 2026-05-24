@@ -7,18 +7,36 @@ import ThemeToggle from '../ui/ThemeToggle'
 import toast from 'react-hot-toast'
 
 export default function StudentNavbar() {
-  const { user, logout } = useAuth()
+  const { user, logout, openLoginModal, openRegisterModal } = useAuth()
   const { cartCount } = useCart()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
 
   const handleLogout = async () => { await logout(); toast.success('Logged out'); navigate('/') }
 
-  const link = (to, icon, label) => (
-    <NavLink to={to} className={({ isActive }) => `student-nav__link${isActive ? ' active' : ''}`} onClick={() => setOpen(false)}>
-      {icon} {label}
-    </NavLink>
-  )
+  const link = (to, icon, label) => {
+    if (to === '/products/add-product' && !user) {
+      return (
+        <button
+          key={label}
+          className="student-nav__link"
+          onClick={() => {
+            toast.error('Please sign in to post a listing!')
+            openLoginModal()
+            setOpen(false)
+          }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          {icon} {label}
+        </button>
+      )
+    }
+    return (
+      <NavLink to={to} className={({ isActive }) => `student-nav__link${isActive ? ' active' : ''}`} onClick={() => setOpen(false)}>
+        {icon} {label}
+      </NavLink>
+    )
+  }
 
   return (
     <header className="snav">
@@ -64,8 +82,8 @@ export default function StudentNavbar() {
             </>
           ) : (
             <>
-              <Link to="/login"    className="btn btn--ghost btn--sm"><LogIn size={14}/> Sign In</Link>
-              <Link to="/register" className="btn btn--primary btn--sm">Sign Up</Link>
+              <button onClick={openLoginModal} className="btn btn--ghost btn--sm"><LogIn size={14}/> Sign In</button>
+              <button onClick={openRegisterModal} className="btn btn--primary btn--sm">Sign Up</button>
             </>
           )}
           <button className="snav__burger" onClick={() => setOpen(v => !v)}>{open ? <X size={20}/> : <Menu size={20}/>}</button>
@@ -77,8 +95,8 @@ export default function StudentNavbar() {
           {link('/products', null, '📋 All Products')}
           {link('/products/add-product', null, '✨ Be a Vendor')}
           {user && link('/profile',   null, '👤 Profile')}
-          {!user && <Link to="/login"    className="btn btn--ghost btn--full" onClick={()=>setOpen(false)}>Sign In</Link>}
-          {!user && <Link to="/register" className="btn btn--primary btn--full" onClick={()=>setOpen(false)}>Sign Up</Link>}
+          {!user && <button className="btn btn--ghost btn--full" onClick={() => { setOpen(false); openLoginModal() }}>Sign In</button>}
+          {!user && <button className="btn btn--primary btn--full" onClick={() => { setOpen(false); openRegisterModal() }}>Sign Up</button>}
           {user  && <button className="btn btn--danger btn--full" onClick={handleLogout}>Logout</button>}
         </div>
       )}
