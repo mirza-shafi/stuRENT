@@ -1,18 +1,12 @@
-import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft,
   Package,
-  Clock,
   CheckCircle,
   Truck,
   Phone,
   MessageCircle,
   MapPin,
-  Calendar,
-  CreditCard,
-  User,
-  ShieldAlert
+  Check
 } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import StudentService from '../../services/studentService'
@@ -52,8 +46,20 @@ export default function TrackOrder() {
     toast.success('Calling student support helpline: (555) 019-RENT')
   }
 
-  const orderDate = new Date(order.date_created).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+  const orderDateObj = new Date(order.date_created)
+  const orderDateFormatted = orderDateObj.toLocaleDateString('en-US', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  })
+  const orderTimeFormatted = orderDateObj.toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit'
+  })
+  const fullOrderDate = `${orderDateFormatted}, ${orderTimeFormatted}`
+
+  // Simulated meet estimation (e.g. 1 day after creation or show "Estimated" state)
+  const estDateObj = new Date(orderDateObj)
+  estDateObj.setDate(estDateObj.getDate() + 1)
+  const estDateFormatted = estDateObj.toLocaleDateString('en-US', {
+    day: 'numeric', month: 'long', year: 'numeric'
   })
 
   return (
@@ -68,14 +74,14 @@ export default function TrackOrder() {
       </nav>
 
       {/* ── Header ── */}
-      <div className="to-header">
-        <div>
-          <h1 className="to-title">Order #{order.id} Status</h1>
-          <p className="to-subtitle">
-            Secure Payment via <span className="to-highlight">Credit Card</span> · Ordered on {orderDate}
+      <div className="to-header-wrap">
+        <div className="to-header-left">
+          <h2>Order #{order.id} Status</h2>
+          <p>
+            Secure Payment via <span>Credit Card</span> · Ordered on {fullOrderDate}
           </p>
         </div>
-        <button className="to-support-btn" onClick={handleSupportCall}>
+        <button className="to-call-btn" onClick={handleSupportCall}>
           <Phone size={14} /> Call Support
         </button>
       </div>
@@ -83,8 +89,8 @@ export default function TrackOrder() {
       {/* ── Content Grid ── */}
       <div className="to-grid">
         {/* Left Column — Handoff Map & Pickup Info */}
-        <div className="to-col-map">
-          <div className="to-map-card card">
+        <div className="col-map-wrap">
+          <div className="to-map-card">
             <div className="to-map-header">
               <MapPin size={16} />
               <span>Campus Handoff Map</span>
@@ -138,54 +144,58 @@ export default function TrackOrder() {
         </div>
 
         {/* Right Column — Vertical Tracking Timeline */}
-        <div className="to-col-timeline">
-          <div className="to-timeline card">
+        <div className="col-timeline-wrap">
+          <div className="to-timeline-vertical">
             {/* Step 1 */}
-            <div className={`to-timeline-item ${stepConfirmed ? 'done' : ''}`}>
-              <div className="to-t-left">
-                <span className="to-t-time">Step 1</span>
+            <div className="to-timeline-item">
+              <div className="to-timeline-item-date">
+                <p>{orderDateFormatted}<br className="d-none d-md-block" /> {orderTimeFormatted}</p>
               </div>
-              <div className="to-t-middle">
-                <span className="to-t-icon">
-                  <CheckCircle size={14} />
-                </span>
-                <span className="to-t-line"></span>
+              <div className="to-timeline-item-bar">
+                <div className="to-icon-item bg-success">
+                  <Check size={14} strokeWidth={3} />
+                </div>
+                <span className="to-timeline-bar border-success"></span>
               </div>
-              <div className="to-t-right">
+              <div className="to-timeline-item-content">
                 <h4>Order Placed</h4>
                 <p>We received your request. Escrow hold is successfully initiated.</p>
               </div>
             </div>
 
             {/* Step 2 */}
-            <div className={`to-timeline-item ${stepProcessing ? 'done' : ''}`}>
-              <div className="to-t-left">
-                <span className="to-t-time">Step 2</span>
+            <div className="to-timeline-item">
+              <div className="to-timeline-item-date">
+                <p>{orderDateFormatted}<br className="d-none d-md-block" /> {orderTimeFormatted}</p>
               </div>
-              <div className="to-t-middle">
-                <span className="to-t-icon">
-                  <CheckCircle size={14} />
-                </span>
-                <span className="to-t-line"></span>
+              <div className="to-timeline-item-bar">
+                <div className="to-icon-item bg-success">
+                  <Check size={14} strokeWidth={3} />
+                </div>
+                <span className={`to-timeline-bar ${stepOutForHandoff ? 'border-success' : isPending ? 'border-warning' : 'border-dashed'}`}></span>
               </div>
-              <div className="to-t-right">
+              <div className="to-timeline-item-content">
                 <h4>Confirmed by Owner</h4>
                 <p>Owner approved the rental request and is preparing the item.</p>
               </div>
             </div>
 
             {/* Step 3 */}
-            <div className={`to-timeline-item ${stepOutForHandoff ? 'done' : isPending ? 'active' : ''}`}>
-              <div className="to-t-left">
-                <span className="to-t-time">Step 3</span>
+            <div className="to-timeline-item">
+              <div className="to-timeline-item-date">
+                {stepOutForHandoff ? (
+                  <p>{orderDateFormatted}<br className="d-none d-md-block" /> {orderTimeFormatted}</p>
+                ) : (
+                  <p>Estimated meet<br className="d-none d-md-block" /> {estDateFormatted}</p>
+                )}
               </div>
-              <div className="to-t-middle">
-                <span className="to-t-icon">
-                  {stepOutForHandoff ? <CheckCircle size={14} /> : <Truck size={14} />}
-                </span>
-                <span className="to-t-line"></span>
+              <div className="to-timeline-item-bar">
+                <div className={`to-icon-item ${stepOutForHandoff ? 'bg-success' : isPending ? 'bg-warning' : 'bg-quaternary'}`}>
+                  {stepOutForHandoff ? <Check size={14} strokeWidth={3} /> : <Truck size={14} />}
+                </div>
+                <span className={`to-timeline-bar ${stepDelivered ? 'border-success' : isTransit ? 'border-warning' : 'border-dashed'}`}></span>
               </div>
-              <div className="to-t-right">
+              <div className="to-timeline-item-content">
                 <h4>Ready for Campus Handoff</h4>
                 <p>
                   {stepOutForHandoff 
@@ -197,16 +207,21 @@ export default function TrackOrder() {
             </div>
 
             {/* Step 4 */}
-            <div className={`to-timeline-item ${stepDelivered ? 'done' : isTransit ? 'active' : 'pending'}`}>
-              <div className="to-t-left">
-                <span className="to-t-time">Step 4</span>
+            <div className="to-timeline-item">
+              <div className="to-timeline-item-date">
+                {stepDelivered ? (
+                  <p>{orderDateFormatted}<br className="d-none d-md-block" /> {orderTimeFormatted}</p>
+                ) : (
+                  <p>Estimated meet<br className="d-none d-md-block" /> {estDateFormatted}</p>
+                )}
               </div>
-              <div className="to-t-middle">
-                <span className="to-t-icon">
-                  <CheckCircle size={14} />
-                </span>
+              <div className="to-timeline-item-bar">
+                <div className={`to-icon-item ${stepDelivered ? 'bg-success' : isTransit ? 'bg-warning' : 'bg-quaternary'}`}>
+                  {stepDelivered ? <Check size={14} strokeWidth={3} /> : <CheckCircle size={14} />}
+                </div>
+                <span className="to-timeline-bar"></span>
               </div>
-              <div className="to-t-right">
+              <div className="to-timeline-item-content">
                 <h4>Item Handoff Completed</h4>
                 <p>
                   {isDelivered 
@@ -219,7 +234,7 @@ export default function TrackOrder() {
           </div>
 
           {/* Action Row */}
-          <div className="to-buttons-row">
+          <div className="to-actions-row">
             <Link to={`/products/product-details/${order.product_id || 2}`} className="to-btn-outline">
               <Package size={14} /> View Product
             </Link>
@@ -233,10 +248,10 @@ export default function TrackOrder() {
       {/* ── Scoped Styling ── */}
       <style>{`
         .to-container {
-          max-width: 1200px;
+          max-width: 1140px;
           margin: 0 auto;
-          padding: 20px 10px 80px;
-          font-family: 'DM Sans', var(--font);
+          padding: 40px 15px 80px;
+          font-family: var(--font);
         }
         
         /* Breadcrumbs */
@@ -245,79 +260,76 @@ export default function TrackOrder() {
         }
         .to-breadcrumb ol {
           display: flex;
-          flex-wrap: wrap;
           list-style: none;
-          gap: 6px;
-          align-items: center;
+          padding: 0;
+          margin: 0;
+          gap: 8px;
           font-size: 13px;
           color: var(--text-muted);
         }
         .to-breadcrumb li a {
           color: var(--primary);
-          transition: color 0.15s;
+          text-decoration: none;
+          transition: color var(--transition);
         }
         .to-breadcrumb li a:hover {
           color: var(--primary-hov);
           text-decoration: underline;
         }
-        .to-breadcrumb li::after {
+        .to-breadcrumb li:not(:last-child)::after {
           content: '/';
-          margin-left: 6px;
+          margin-left: 8px;
           color: var(--text-dim);
         }
-        .to-breadcrumb li.active::after {
-          content: '';
-        }
         .to-breadcrumb li.active {
-          color: var(--text);
-          font-weight: 500;
+          color: var(--text-muted);
         }
 
         /* Header */
-        .to-header {
+        .to-header-wrap {
           display: flex;
-          align-items: center;
           justify-content: space-between;
-          margin-bottom: 32px;
-          gap: 20px;
+          align-items: flex-end;
+          margin-bottom: 40px;
           flex-wrap: wrap;
+          gap: 20px;
         }
-        .to-title {
-          font-size: 28px;
+        .to-header-left h2 {
+          font-size: 32px;
           font-weight: 800;
           color: var(--text);
-          letter-spacing: -0.5px;
-          line-height: 1.2;
-          margin-bottom: 6px;
+          margin: 0 0 8px 0;
+          letter-spacing: -0.02em;
         }
-        .to-subtitle {
-          font-size: 14px;
+        .to-header-left p {
           color: var(--text-muted);
+          font-size: 14px;
+          margin: 0;
         }
-        .to-highlight {
-          color: var(--primary);
-          font-weight: 600;
+        .to-header-left p span {
+          color: var(--text);
+          font-weight: 700;
         }
-        .to-support-btn {
+        .to-call-btn {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          border: 1px solid var(--border);
-          background: var(--bg-2);
-          color: var(--text);
           padding: 10px 20px;
           border-radius: var(--radius-md);
-          font-size: 13.5px;
-          font-weight: 600;
-          transition: all 0.2s;
-        }
-        .to-support-btn:hover {
-          background: var(--surface-hov);
-          border-color: var(--primary);
+          border: 1px solid var(--primary);
           color: var(--primary);
+          background: transparent;
+          font-weight: 600;
+          font-size: 14px;
+          transition: all var(--transition);
+        }
+        .to-call-btn:hover {
+          background: var(--primary);
+          color: #fff;
+          box-shadow: 0 4px 12px var(--primary-glow);
         }
 
-        /* Layout Grid */
+        /* Grid Layout */
         .to-grid {
           display: grid;
           grid-template-columns: 1.1fr 1fr;
@@ -325,43 +337,63 @@ export default function TrackOrder() {
           align-items: start;
         }
 
+        @media (max-width: 992px) {
+          .to-grid {
+            grid-template-columns: 1fr;
+            gap: 40px;
+          }
+        }
+
         /* Left column map */
         .to-map-card {
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
           overflow: hidden;
           background: var(--bg-2);
-          border: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          box-shadow: var(--shadow);
         }
         .to-map-header {
           display: flex;
           align-items: center;
           gap: 8px;
           font-weight: 700;
-          font-size: 14.5px;
+          font-size: 15px;
           padding: 16px 20px;
           border-bottom: 1px solid var(--border);
           color: var(--text);
         }
         .to-map-visual {
-          padding: 12px;
+          padding: 16px;
           background: var(--bg-3);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border-bottom: 1px solid var(--border);
         }
         .to-svg-map {
           width: 100%;
           border-radius: var(--radius-md);
-          box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+          background: #e2f0d9;
         }
         .to-map-details {
           padding: 20px;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 16px;
         }
         .to-md-row {
           display: flex;
           justify-content: space-between;
+          align-items: center;
           font-size: 14px;
           border-bottom: 1px solid var(--border);
-          padding-bottom: 8px;
+          padding-bottom: 12px;
+        }
+        .to-md-row:last-of-type {
+          border-bottom: none;
+          padding-bottom: 0;
         }
         .to-md-row strong {
           color: var(--text);
@@ -373,17 +405,17 @@ export default function TrackOrder() {
         .to-badge-code {
           color: var(--primary) !important;
           background: var(--primary-glow);
-          padding: 2px 8px;
-          border-radius: 6px;
+          padding: 4px 10px;
+          border-radius: var(--radius-sm);
           font-family: monospace;
-          font-weight: 700 !important;
+          font-weight: 700;
           font-size: 13px;
         }
         .to-md-tip {
-          font-size: 12px;
+          font-size: 12.5px;
           color: var(--text-dim);
           line-height: 1.5;
-          margin-top: 4px;
+          margin: 0;
         }
 
         /* Marker pulse animation */
@@ -397,172 +429,170 @@ export default function TrackOrder() {
         }
 
         /* Right column Timeline */
-        .to-timeline {
-          padding: 24px;
-          background: var(--bg-2);
-          border: 1px solid var(--border);
+        .to-timeline-vertical {
           display: flex;
           flex-direction: column;
-          gap: 0;
         }
         .to-timeline-item {
           display: flex;
-          gap: 0;
+          flex-direction: row;
+          position: relative;
         }
-        .to-t-left {
-          width: 60px;
+        
+        .to-timeline-item-date {
+          width: 120px;
           text-align: right;
-          padding-right: 16px;
-          padding-top: 2px;
+          padding-right: 24px;
+          padding-top: 4px;
+          flex-shrink: 0;
         }
-        .to-t-time {
+        .to-timeline-item-date p {
           font-size: 12px;
-          font-weight: 700;
-          color: var(--text-dim);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
+          font-weight: 600;
+          color: var(--text-muted);
+          line-height: 1.4;
+          margin: 0;
         }
-        .to-t-middle {
+
+        .to-timeline-item-bar {
           display: flex;
           flex-direction: column;
           align-items: center;
           width: 32px;
+          flex-shrink: 0;
           position: relative;
         }
-        .to-t-icon {
-          width: 24px;
-          height: 24px;
+        .to-icon-item {
+          width: 28px;
+          height: 28px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 2;
-          background: var(--bg-3);
-          border: 2px solid var(--border);
-          color: var(--text-dim);
-          transition: all 0.25s;
+          color: #fff;
+          font-size: 12px;
+          box-shadow: 0 0 0 4px var(--bg);
+          transition: all var(--transition);
         }
-        .to-t-line {
+        .to-icon-item.bg-success {
+          background-color: var(--success);
+        }
+        .to-icon-item.bg-warning {
+          background-color: var(--warning);
+          box-shadow: 0 0 10px rgba(245, 158, 11, 0.35), 0 0 0 4px var(--bg);
+        }
+        .to-icon-item.bg-quaternary {
+          background-color: var(--text-dim);
+          color: var(--text-muted);
+        }
+
+        .to-timeline-bar {
           width: 2px;
-          flex: 1;
-          background: var(--border);
-          margin: 4px 0;
+          position: absolute;
+          top: 28px;
+          bottom: -28px;
           z-index: 1;
         }
-        .to-t-right {
+        .to-timeline-bar.border-success {
+          background-color: var(--success);
+        }
+        .to-timeline-bar.border-warning {
+          background-color: var(--warning);
+        }
+        .to-timeline-bar.border-dashed {
+          border-left: 2px dashed var(--border);
+          background-color: transparent;
+        }
+
+        .to-timeline-item:last-child .to-timeline-bar {
+          display: none;
+        }
+
+        .to-timeline-item-content {
           flex: 1;
-          padding-left: 16px;
-          padding-bottom: 32px;
+          padding-left: 24px;
+          padding-bottom: 48px;
         }
-        .to-t-right h4 {
-          font-size: 15px;
-          font-weight: 700;
-          color: var(--text-muted);
-          margin-bottom: 4px;
-          transition: color 0.25s;
-        }
-        .to-t-right p {
-          font-size: 12.5px;
-          color: var(--text-dim);
-          line-height: 1.5;
-        }
-
-        /* Timeline States */
-        .to-timeline-item.done .to-t-icon {
-          background: var(--success);
-          border-color: var(--success);
-          color: #fff;
-        }
-        .to-timeline-item.done .to-t-line {
-          background: var(--success);
-        }
-        .to-timeline-item.done .to-t-right h4 {
-          color: var(--text);
-        }
-        .to-timeline-item.done .to-t-right p {
-          color: var(--text-muted);
-        }
-
-        .to-timeline-item.active .to-t-icon {
-          background: var(--warning);
-          border-color: var(--warning);
-          color: #fff;
-          box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
-        }
-        .to-timeline-item.active .to-t-line {
-          border-right: 2px dashed var(--border);
-          background: none;
-        }
-        .to-timeline-item.active .to-t-right h4 {
-          color: var(--warning);
-        }
-
-        .to-timeline-item.pending .to-t-icon {
-          background: var(--bg-3);
-          border-color: var(--border);
-          color: var(--text-dim);
-        }
-        .to-timeline-item.pending .to-t-line {
-          background: var(--border);
-        }
-
-        /* Timeline last element fix */
-        .to-timeline-item:last-child .to-t-right {
+        .to-timeline-item:last-child .to-timeline-item-content {
           padding-bottom: 0;
         }
+        .to-timeline-item-content h4 {
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--text);
+          margin: 0 0 6px 0;
+        }
+        .to-timeline-item-content p {
+          font-size: 13.5px;
+          color: var(--text-muted);
+          line-height: 1.5;
+          margin: 0;
+        }
 
-        /* Buttons row */
-        .to-buttons-row {
+        /* Action Buttons Row */
+        .to-actions-row {
           display: flex;
-          gap: 12px;
-          margin-top: 20px;
+          gap: 16px;
+          margin-top: 32px;
+          padding-left: 144px; /* Align with timeline content */
         }
         .to-btn-primary {
-          flex: 1.5;
-          height: 44px;
-          display: flex;
+          display: inline-flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
-          background: var(--primary);
-          color: #fff;
+          padding: 11px 24px;
           border-radius: var(--radius-md);
           font-size: 14px;
-          font-weight: 700;
-          box-shadow: 0 4px 12px var(--primary-glow);
-          transition: all 0.2s;
+          font-weight: 600;
+          background: var(--primary);
+          color: #fff;
+          transition: all var(--transition);
         }
         .to-btn-primary:hover {
           background: var(--primary-hov);
           transform: translateY(-1px);
-          box-shadow: 0 6px 16px var(--primary-glow);
+          box-shadow: 0 4px 12px var(--primary-glow);
         }
         .to-btn-outline {
-          flex: 1;
-          height: 44px;
-          display: flex;
+          display: inline-flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
-          background: var(--bg-2);
-          border: 1px solid var(--border);
-          color: var(--text);
+          padding: 11px 24px;
           border-radius: var(--radius-md);
           font-size: 14px;
-          font-weight: 700;
-          transition: all 0.2s;
-          text-decoration: none;
+          font-weight: 600;
+          border: 1px solid var(--border);
+          color: var(--text);
+          background: transparent;
+          transition: all var(--transition);
         }
         .to-btn-outline:hover {
-          background: var(--surface-hov);
           border-color: var(--primary);
+          background: var(--surface-hov);
         }
 
-        /* Responsive */
-        @media (max-width: 900px) {
-          .to-grid {
-            grid-template-columns: 1fr;
-            gap: 24px;
+        /* Responsive styling */
+        @media (max-width: 768px) {
+          .to-header-wrap {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          .to-call-btn {
+            width: 100%;
+            justify-content: center;
+          }
+          .to-timeline-item-date {
+            width: 90px;
+            padding-right: 12px;
+          }
+          .to-actions-row {
+            padding-left: 0;
+          }
+          .to-actions-row > * {
+            flex: 1;
           }
         }
       `}</style>

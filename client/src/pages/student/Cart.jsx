@@ -57,7 +57,7 @@ export default function Cart() {
     setStep('checkout')
   }
 
-  const handlePay = (e) => {
+  const handlePay = async (e) => {
     e.preventDefault()
     if (shippingMethod === 'pickup' && !pickupTime) {
       toast.error('Please specify a preferred pickup time')
@@ -68,12 +68,11 @@ export default function Cart() {
       return
     }
 
-    toast.loading('Processing escrow payment...', { duration: 1500 })
-    setTimeout(() => {
-      confirmCheckout()
-      toast.success('Order placed successfully! Redirecting to orders...', { icon: '🎉' })
+    const note = `Method: ${shippingMethod === 'pickup' ? 'Pickup' : 'Delivery'}. Details: ${shippingMethod === 'pickup' ? pickupTime : address}`
+    const success = await confirmCheckout(note)
+    if (success) {
       navigate('/my-orders')
-    }, 1500)
+    }
   }
 
   return (

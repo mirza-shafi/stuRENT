@@ -1,8 +1,8 @@
-/**
- * CartWishlist.jsx — Shared cart + wishlist drawers with checkout modal
- */
 import { useState, useCallback, createContext, useContext } from 'react'
 import { Link } from 'react-router-dom'
+import { default as hotToast } from 'react-hot-toast'
+import StudentService from '../services/studentService'
+import { useAuth } from '../context/AuthContext'
 
 const BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace('/api/v1', '')
 const Ctx = createContext()
@@ -15,6 +15,7 @@ export function CartProvider({ children }) {
   const [wishOpen, setWishOpen] = useState(false)
   const [checkoutModal, setCheckoutModal] = useState(false)
   const [toasts, setToasts] = useState([])
+  const { user, openLoginModal } = useAuth()
 
   const toast = useCallback((icon, msg) => {
     const id = Date.now()
@@ -44,16 +45,47 @@ export function CartProvider({ children }) {
   const cartTotal = Object.values(cart).reduce((a, c) => a + c.product.price * c.qty, 0)
 
   const checkout = useCallback(() => {
+    if (!user) {
+      hotToast.error('Please sign in to proceed to checkout')
+      openLoginModal()
+      setCartOpen(false)
+      return
+    }
     if (!cartCount) { toast('⚠️', 'Cart is empty!'); return }
     setCartOpen(false)
     setCheckoutModal(true)
-  }, [cartCount, toast])
+  }, [user, cartCount, toast, openLoginModal])
 
-  const confirmCheckout = useCallback(() => {
-    setCart({})
-    setCheckoutModal(false)
-    toast('🎉', 'Order placed successfully!')
-  }, [toast])
+  const confirmCheckout = useCallback(async (note = '') => {
+    const noteStr = typeof note === 'string' ? note : ''
+    const toastId = hotToast.loading('Processing escrow payment...')
+    try {
+      const items = Object.values(cart)
+      if (items.length === 0) {
+        hotToast.dismiss(toastId)
+        hotToast.error('Your cart is empty')
+        return false
+      }
+      for (const item of items) {
+        for (let i = 0; i < item.qty; i++) {
+          await StudentService.rent({
+            product_id: item.product.id,
+            note: noteStr
+          })
+        }
+      }
+      setCart({})
+      setCheckoutModal(false)
+      hotToast.dismiss(toastId)
+      hotToast.success('Order placed successfully!', { icon: '🎉' })
+      return true
+    } catch (err) {
+      hotToast.dismiss(toastId)
+      hotToast.error(err.response?.data?.error || 'Failed to place order. Please try again.')
+      console.error(err)
+      return false
+    }
+  }, [cart])
 
   const val = { cart, wish, cartCount, cartTotal, addToCart, removeFromCart, changeQty, toggleWish, cartOpen, setCartOpen, wishOpen, setWishOpen, checkout, checkoutModal, setCheckoutModal, confirmCheckout, toasts }
 
