@@ -172,7 +172,7 @@ function BrowseCard({ product: p, inWish, onWish, onCart }) {
 
         {/* Actions */}
         <div style={{ display:'flex', gap:8 }}>
-          <Link to={`/browse/${p.id}`} style={{ flex:1, background:'#6366f1', color:'#fff', padding:'9px 0', borderRadius:8, fontSize:12, fontWeight:700, textDecoration:'none', textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:4, transition:'background .2s' }}
+          <Link to={`/products/product-details/${p.id}`} style={{ flex:1, background:'#6366f1', color:'#fff', padding:'9px 0', borderRadius:8, fontSize:12, fontWeight:700, textDecoration:'none', textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:4, transition:'background .2s' }}
             onMouseEnter={e => e.currentTarget.style.background='#4f46e5'}
             onMouseLeave={e => e.currentTarget.style.background='#6366f1'}>
             View Details <ArrowRight size={12} />

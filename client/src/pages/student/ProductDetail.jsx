@@ -1,11 +1,25 @@
 import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Package, MessageCircle, ShoppingCart, Tag, Star } from 'lucide-react'
+import {
+  Package,
+  MessageCircle,
+  ShoppingCart,
+  Star,
+  Heart,
+  Share2,
+  ShieldCheck,
+  Truck,
+  RotateCcw,
+  Calendar,
+  ThumbsUp
+} from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { useAuth } from '../../context/AuthContext'
 import StudentService from '../../services/studentService'
 import PaymentModal from '../../components/ui/PaymentModal'
 import toast from 'react-hot-toast'
+
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace('/api/v1', '')
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -13,26 +27,15 @@ export default function ProductDetail() {
   const navigate = useNavigate()
 
   const { data: product, loading } = useApi(
-    () => StudentService.getProduct(id).then(r => r.data), [id]
+    () => StudentService.getProduct(id), [id]
   )
 
-  const [mode, setMode]         = useState('rent') // 'rent' | 'buy'
-  const [days, setDays]         = useState(1)
-  const [showPay, setShowPay]   = useState(false)
-
-  const rentTotal = product ? (parseFloat(product.price) * days).toFixed(2) : '0.00'
-  const buyPrice  = product?.buy_price || (parseFloat(product?.price || 0) * 30).toFixed(2)
-
-  const handleAction = () => {
-    if (!user) { toast.error('Please sign in first'); navigate('/login'); return }
-    setShowPay(true)
-  }
-
-  const handleMessage = () => {
-    if (!user) { toast.error('Please sign in to message'); navigate('/login'); return }
-    navigate('/messages')
-    toast('Opening messages...', { icon: '💬' })
-  }
+  const [mode, setMode]             = useState(null) // 'rent' | 'buy' (resolved dynamically)
+  const [days, setDays]             = useState(3)
+  const [quantity, setQuantity]     = useState(1)
+  const [showPay, setShowPay]       = useState(false)
+  const [inWish, setInWish]         = useState(false)
+  const [activeTab, setActiveTab]   = useState('description') // 'description' | 'specifications' | 'reviews'
 
   if (loading) return <div className="loading-screen"><span className="spinner" /></div>
   if (!product) return (
@@ -43,110 +46,1249 @@ export default function ProductDetail() {
     </div>
   )
 
+  // Resolve pricing & availability details
+  const isRentAvailable = product.listing_type === 'Rent' || product.listing_type === 'Both' || !product.listing_type
+  const isBuyAvailable  = product.listing_type === 'Buy' || product.listing_type === 'Both'
+  const currentMode     = mode || (isRentAvailable ? 'rent' : 'buy')
+
+  const basePrice       = parseFloat(product.price)
+  const rentOriginal    = (basePrice * 1.25).toFixed(2)
+  const rentDiscount    = 20 // 20% off mock
+
+  const buyPrice        = product.buy_price || (basePrice * 30).toFixed(2)
+  const buyOriginal     = (parseFloat(buyPrice) * 1.15).toFixed(2)
+  const buyDiscount     = 15 // 15% off mock
+
+  const currentPrice    = currentMode === 'rent' ? basePrice : parseFloat(buyPrice)
+  const currentOriginal = currentMode === 'rent' ? rentOriginal : buyOriginal
+  const currentDiscount = currentMode === 'rent' ? rentDiscount : buyDiscount
+
+  const rentTotal       = (basePrice * days * quantity).toFixed(2)
+  const buyTotal        = (parseFloat(buyPrice) * quantity).toFixed(2)
+  const overallTotal    = currentMode === 'rent' ? rentTotal : buyTotal
+
+  const handleAction = () => {
+    if (!user) { toast.error('Please sign in first'); navigate('/login'); return }
+    setShowPay(true)
+  }
+
+  const handleMessage = () => {
+    if (!user) { toast.error('Please sign in to message'); navigate('/login'); return }
+    navigate('/messages')
+    toast('Opening chat with owner...', { icon: '💬' })
+  }
+
+  const toggleWishlist = () => {
+    setInWish(prev => {
+      const next = !prev
+      toast(next ? 'Added to Wishlist' : 'Removed from Wishlist', { icon: next ? '❤️' : '💔' })
+      return next
+    })
+  }
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href)
+    toast.success('Product link copied to clipboard!')
+  }
+
+  // Get emoji based on category
+  const categoryEmoji = product.category === 'Indoor' ? '🪑' : product.category === 'Housing' ? '🏠' : '🏕️'
   const catColor = product.category === 'Indoor' ? 'var(--primary)' : '#ef4444'
 
   return (
-    <div className="fade-in">
-      <div style={{ marginBottom: 20 }}>
-        <Link to="/products" className="btn btn--ghost btn--sm"><ArrowLeft size={14}/> Back to Products</Link>
-      </div>
+    <div className="pd-container fade-in">
+      {/* ── Breadcrumb Navigation ── */}
+      <nav className="pd-breadcrumb" aria-label="breadcrumb">
+        <ol>
+          <li><Link to="/">Home</Link></li>
+          <li><Link to="/products">Products</Link></li>
+          <li><Link to={`/products?category=${product.category}`}>{product.category}</Link></li>
+          <li className="active" aria-current="page">{product.name}</li>
+        </ol>
+      </nav>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 32, alignItems: 'start' }}>
-        {/* Left — Product visual */}
-        <div className="card" style={{ overflow: 'hidden', position: 'sticky', top: 80 }}>
-          <div style={{ height: 220, background: `${catColor}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid var(--border)', fontSize: 72 }}>
-            {product.category === 'Indoor' ? '🪑' : '🏕️'}
-          </div>
-          <div style={{ padding: 20 }}>
-            <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
-              {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s<=4?'var(--warning)':'none'} color="var(--warning)" />)}
-              <span className="text-xs text-muted" style={{ marginLeft: 6 }}>4.0 (12 reviews)</span>
-            </div>
-            {product.tags?.length > 0 && (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {product.tags.map(t => (
-                  <span key={t.id} style={{ fontSize: 11, color: 'var(--text-dim)', background: 'var(--surface)', border: '1px solid var(--border)', padding: '2px 8px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <Tag size={9}/> {t.name}
-                  </span>
-                ))}
+      {/* ── Main Details Layout ── */}
+      <div className="pd-layout">
+        {/* Left Column — Visuals */}
+        <div className="pd-visual-col">
+          <div className="pd-image-box card">
+            {product.image ? (
+              <img src={`${BASE_URL}${product.image}`} alt={product.name} className="pd-main-img" />
+            ) : (
+              <div className="pd-emoji-placeholder">
+                <span className="pd-emoji">{categoryEmoji}</span>
               </div>
             )}
+            <span className={`pd-status-badge ${product.is_available ? 'avail' : 'booked'}`}>
+              {product.is_available ? 'Available' : 'Booked'}
+            </span>
+          </div>
+
+          {/* Gallery Thumbnails (Decorative fallback styles matching Phoenix) */}
+          <div className="pd-thumbs">
+            <div className="pd-thumb active">
+              {product.image ? <img src={`${BASE_URL}${product.image}`} alt="" /> : <span>{categoryEmoji}</span>}
+            </div>
+            <div className="pd-thumb">
+              <span>🌟</span>
+            </div>
+            <div className="pd-thumb">
+              <span>📸</span>
+            </div>
+            <div className="pd-thumb">
+              <span>📐</span>
+            </div>
+          </div>
+
+          {/* Action Row Below Image */}
+          <div className="pd-visual-actions">
+            <button className={`pd-wishlist-btn ${inWish ? 'active' : ''}`} onClick={toggleWishlist}>
+              <Heart size={16} fill={inWish ? 'var(--danger)' : 'none'} color={inWish ? 'var(--danger)' : 'currentColor'} />
+              {inWish ? 'Wishlisted' : 'Add to Wishlist'}
+            </button>
+            <button className="pd-share-btn" onClick={handleShare}>
+              <Share2 size={16} /> Share Link
+            </button>
           </div>
         </div>
 
-        {/* Right — Details + action */}
-        <div>
-          <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: catColor, background: `${catColor}18`, padding: '3px 10px', borderRadius: 999, marginBottom: 10, display: 'inline-block' }}>
-            {product.category}
-          </span>
-          <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8, lineHeight: 1.2 }}>{product.name}</h1>
-          {product.description && (
-            <p style={{ color: 'var(--text-muted)', fontSize: 15, lineHeight: 1.7, marginBottom: 24 }}>{product.description}</p>
-          )}
-
-          {/* Mode toggle: Rent / Buy */}
-          <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: 10, padding: 4, marginBottom: 20, border: '1px solid var(--border)', width: 'fit-content' }}>
-            {['rent','buy'].map(m => (
-              <button key={m} onClick={() => setMode(m)} style={{ padding: '8px 24px', borderRadius: 8, fontWeight: 700, fontSize: 14, transition: 'all .2s', background: mode === m ? 'var(--primary)' : 'none', color: mode === m ? '#fff' : 'var(--text-muted)', cursor: 'pointer', border: 'none' }}>
-                {m === 'rent' ? '📅 Rent' : '🛒 Buy'}
-              </button>
-            ))}
+        {/* Right Column — Details & Selection */}
+        <div className="pd-details-col">
+          {/* Tag & Rating */}
+          <div className="pd-meta-row">
+            <span className="pd-category-badge" style={{ color: catColor, background: `${catColor}15` }}>
+              {product.category}
+            </span>
+            <span className="pd-bestseller-badge">
+              🏆 Campus Favorite
+            </span>
           </div>
 
-          {/* Rent calculator */}
-          {mode === 'rent' && (
-            <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-              <div style={{ fontWeight: 700, marginBottom: 12 }}>Rental Calculator</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                <label style={{ fontSize: 14, color: 'var(--text-muted)', minWidth: 80 }}>Days: {days}</label>
-                <input type="range" min={1} max={30} value={days} onChange={e => setDays(Number(e.target.value))} style={{ flex: 1, accentColor: 'var(--primary)' }} />
+          <h1 className="pd-title">{product.name}</h1>
+
+          {/* Star Ratings */}
+          <div className="pd-rating-box">
+            <div className="pd-stars">
+              {[1, 2, 3, 4, 5].map(s => (
+                <Star key={s} size={15} fill={s <= 4 ? 'var(--warning)' : 'none'} color="var(--warning)" />
+              ))}
+            </div>
+            <span className="pd-rating-text">4.2 (18 student reviews)</span>
+          </div>
+
+          {/* Price Block */}
+          <div className="pd-price-card card">
+            <div className="pd-price-row">
+              <div className="pd-current-price">
+                ${currentPrice.toFixed(2)}
+                <span className="pd-price-unit">{currentMode === 'rent' ? '/day' : '/unit'}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--surface)', borderRadius: 8, padding: '12px 16px' }}>
-                <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>${product.price}/day × {days} day{days>1?'s':''}</span>
-                <span style={{ fontWeight: 800, fontSize: 20, color: 'var(--primary)' }}>${rentTotal}</span>
+              <div className="pd-old-price">${currentOriginal}</div>
+              <div className="pd-discount-tag">{currentDiscount}% off</div>
+            </div>
+            <p className="pd-price-sub">
+              {currentMode === 'rent' 
+                ? 'Rent for flexible duration. Security deposit is fully refundable.' 
+                : 'One-time payment to purchase. Own the item permanently.'
+              }
+            </p>
+          </div>
+
+          {/* Listing Specs Short List */}
+          <div className="pd-specs-short">
+            <div className="pd-spec-item">
+              <ShieldCheck size={16} className="pd-spec-icon green" />
+              <span>Campus Protected Guarantee included</span>
+            </div>
+            <div className="pd-spec-item">
+              <Truck size={16} className="pd-spec-icon blue" />
+              <span>Free on-campus handoff & pickup</span>
+            </div>
+            <div className="pd-spec-item">
+              <RotateCcw size={16} className="pd-spec-icon orange" />
+              <span>Cancel or adjust reservation up to 24h before</span>
+            </div>
+          </div>
+
+          {/* Rent/Buy Segment Control */}
+          {(isRentAvailable && isBuyAvailable) && (
+            <div className="pd-segment-section">
+              <label className="pd-label">Listing Option</label>
+              <div className="pd-segment-control">
+                <button 
+                  className={`pd-segment-btn ${currentMode === 'rent' ? 'active' : ''}`}
+                  onClick={() => toggleMode('rent')}
+                >
+                  📅 Rent Listing
+                </button>
+                <button 
+                  className={`pd-segment-btn ${currentMode === 'buy' ? 'active' : ''}`}
+                  onClick={() => toggleMode('buy')}
+                >
+                  🛒 Purchase Item
+                </button>
               </div>
             </div>
           )}
 
-          {/* Buy price */}
-          {mode === 'buy' && (
-            <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-              <div style={{ fontWeight: 700, marginBottom: 8 }}>Purchase Price</div>
-              <div style={{ fontWeight: 800, fontSize: 32, color: 'var(--success)' }}>${buyPrice}</div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>One-time payment — item is yours</div>
+          {/* Quantity and Form Options */}
+          <div className="pd-options-row">
+            <div className="pd-qty-section">
+              <label className="pd-label">Quantity</label>
+              <div className="pd-qty-picker">
+                <button 
+                  className="pd-qty-btn" 
+                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                  disabled={quantity <= 1}
+                >
+                  -
+                </button>
+                <input 
+                  type="number" 
+                  className="pd-qty-input" 
+                  value={quantity} 
+                  onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} 
+                />
+                <button 
+                  className="pd-qty-btn" 
+                  onClick={() => setQuantity(q => q + 1)}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Seller Info Short Card */}
+            <div className="pd-seller-badge card">
+              <div className="pd-sb-avatar">
+                {product.owner?.username?.[0]?.toUpperCase() || 'S'}
+              </div>
+              <div className="pd-sb-info">
+                <span className="pd-sb-title">Seller / Owner</span>
+                <span className="pd-sb-name">{product.owner?.username || 'Verified Student'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Rent Duration Calculator (Only if in Rent mode) */}
+          {currentMode === 'rent' && (
+            <div className="pd-calc-card card">
+              <div className="pd-calc-header">
+                <Calendar size={15} />
+                <span>Rental Calculator</span>
+              </div>
+              <div className="pd-calc-body">
+                <div className="pd-slider-row">
+                  <span>Duration: <strong>{days} day{days > 1 ? 's' : ''}</strong></span>
+                  <span className="pd-slider-hint">Min 1 day · Max 30 days</span>
+                </div>
+                <input 
+                  type="range" 
+                  min={1} 
+                  max={30} 
+                  value={days} 
+                  onChange={e => setDays(Number(e.target.value))} 
+                  className="pd-range" 
+                />
+                <div className="pd-calc-breakdown">
+                  <div className="pd-breakdown-row">
+                    <span>Base Daily Rate</span>
+                    <span>${basePrice.toFixed(2)}</span>
+                  </div>
+                  <div className="pd-breakdown-row">
+                    <span>Quantity</span>
+                    <span>× {quantity}</span>
+                  </div>
+                  <div className="pd-breakdown-row">
+                    <span>Rental Duration</span>
+                    <span>× {days} days</span>
+                  </div>
+                  <div className="pd-breakdown-row pd-breakdown-total">
+                    <span>Calculated Total</span>
+                    <span>${rentTotal}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Action buttons */}
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button id="action-btn" className="btn btn--primary btn--lg" style={{ flex: 1, justifyContent: 'center' }} onClick={handleAction}>
-              <ShoppingCart size={16}/> {mode === 'rent' ? `Rent for $${rentTotal}` : `Buy for $${buyPrice}`}
+          {/* Buy Details Info Card */}
+          {currentMode === 'buy' && (
+            <div className="pd-calc-card card">
+              <div className="pd-calc-header">
+                <ShoppingCart size={15} />
+                <span>Purchase Price Details</span>
+              </div>
+              <div className="pd-calc-body">
+                <div className="pd-calc-breakdown">
+                  <div className="pd-breakdown-row">
+                    <span>Base Buy Price</span>
+                    <span>${parseFloat(buyPrice).toFixed(2)}</span>
+                  </div>
+                  <div className="pd-breakdown-row">
+                    <span>Quantity</span>
+                    <span>× {quantity}</span>
+                  </div>
+                  <div className="pd-breakdown-row pd-breakdown-total">
+                    <span>Total Purchase Cost</span>
+                    <span>${buyTotal}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Buttons Area */}
+          <div className="pd-action-buttons">
+            <button 
+              id="action-btn" 
+              className="pd-btn-checkout" 
+              onClick={handleAction}
+              disabled={!product.is_available}
+            >
+              <ShoppingCart size={16} />
+              {currentMode === 'rent' ? `Rent Now — $${overallTotal}` : `Buy Now — $${overallTotal}`}
             </button>
-            <button className="btn btn--ghost btn--lg" onClick={handleMessage} title="Message seller">
-              <MessageCircle size={16}/> Chat
+
+            <button className="pd-btn-chat" onClick={handleMessage}>
+              <MessageCircle size={16} />
+              Chat
             </button>
           </div>
 
-          <p style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 10, textAlign: 'center' }}>
-            🔒 Secure payment · Cancel anytime
+          <p className="pd-security-note">
+            🔒 Secure transaction escrow · Student community guarantee · Pick up on-campus
           </p>
         </div>
       </div>
 
-      {/* Payment modal */}
+      {/* ── Tabs Content Block (Description, Specifications, Reviews) ── */}
+      <div className="pd-tabs-section">
+        <ul className="pd-tabs-header">
+          <li>
+            <button 
+              className={activeTab === 'description' ? 'active' : ''} 
+              onClick={() => setActiveTab('description')}
+            >
+              Description
+            </button>
+          </li>
+          <li>
+            <button 
+              className={activeTab === 'specifications' ? 'active' : ''} 
+              onClick={() => setActiveTab('specifications')}
+            >
+              Specifications
+            </button>
+          </li>
+          <li>
+            <button 
+              className={activeTab === 'reviews' ? 'active' : ''} 
+              onClick={() => setActiveTab('reviews')}
+            >
+              Ratings & Reviews (18)
+            </button>
+          </li>
+        </ul>
+
+        <div className="pd-tabs-content card">
+          {activeTab === 'description' && (
+            <div className="pd-tab-panel">
+              <h3>Product Description</h3>
+              <p className="pd-desc-text">
+                {product.description || 'No description provided for this listing.'}
+              </p>
+              <div className="pd-desc-info-block">
+                <h4>Handoff & Location details</h4>
+                <p>
+                  This item is listed for local student exchange. Standard exchange happens at the campus library lobby or student union hall. Please message the seller to confirm a meeting time and place.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'specifications' && (
+            <div className="pd-tab-panel">
+              <table className="pd-spec-table">
+                <tbody>
+                  <tr>
+                    <th>Category</th>
+                    <td>{product.category}</td>
+                  </tr>
+                  <tr>
+                    <th>Listing Type</th>
+                    <td>{product.listing_type || 'Rent only'}</td>
+                  </tr>
+                  <tr>
+                    <th>Refundable Security Deposit</th>
+                    <td>{currentMode === 'rent' ? `$${(basePrice * 5).toFixed(2)}` : 'None (Purchased item)'}</td>
+                  </tr>
+                  <tr>
+                    <th>Condition</th>
+                    <td>Excellent (Verified gently used)</td>
+                  </tr>
+                  <tr>
+                    <th>Campus Handoff</th>
+                    <td>Available (Free at main campus library/quad)</td>
+                  </tr>
+                  <tr>
+                    <th>Available to</th>
+                    <td>All verified university students</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeTab === 'reviews' && (
+            <div className="pd-tab-panel">
+              <div className="pd-reviews-summary">
+                <div className="pd-rs-score">
+                  <h2>4.2</h2>
+                  <div className="pd-stars">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <Star key={s} size={14} fill={s <= 4 ? 'var(--warning)' : 'none'} color="var(--warning)" />
+                    ))}
+                  </div>
+                  <span>18 Ratings</span>
+                </div>
+                <div className="pd-rs-bars">
+                  <div className="pd-rs-bar-row">
+                    <span>5 stars</span>
+                    <div className="pd-rs-bar-fill"><div style={{ width: '70%', background: 'var(--warning)' }} /></div>
+                    <span>70%</span>
+                  </div>
+                  <div className="pd-rs-bar-row">
+                    <span>4 stars</span>
+                    <div className="pd-rs-bar-fill"><div style={{ width: '15%', background: 'var(--warning)' }} /></div>
+                    <span>15%</span>
+                  </div>
+                  <div className="pd-rs-bar-row">
+                    <span>3 stars</span>
+                    <div className="pd-rs-bar-fill"><div style={{ width: '10%', background: 'var(--warning)' }} /></div>
+                    <span>10%</span>
+                  </div>
+                  <div className="pd-rs-bar-row">
+                    <span>2 stars</span>
+                    <div className="pd-rs-bar-fill"><div style={{ width: '5%', background: 'var(--warning)' }} /></div>
+                    <span>5%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pd-reviews-list">
+                <div className="pd-review-card">
+                  <div className="pd-rc-header">
+                    <span className="pd-rc-avatar">RJ</span>
+                    <div>
+                      <div className="pd-rc-name">Ryan Jones</div>
+                      <div className="pd-rc-date">May 14, 2026</div>
+                    </div>
+                    <div className="pd-stars">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <Star key={s} size={11} fill={s <= 5 ? 'var(--warning)' : 'none'} color="var(--warning)" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="pd-rc-comment">
+                    Excellent item, very clean and exactly as described. The owner met me right at the quad and made the whole process smooth. Definitely renting again!
+                  </p>
+                  <button className="pd-rc-helpful"><ThumbsUp size={11} /> Helpful (4)</button>
+                </div>
+
+                <div className="pd-review-card">
+                  <div className="pd-rc-header">
+                    <span className="pd-rc-avatar">AL</span>
+                    <div>
+                      <div className="pd-rc-name">Ashley Lopez</div>
+                      <div className="pd-rc-date">May 02, 2026</div>
+                    </div>
+                    <div className="pd-stars">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <Star key={s} size={11} fill={s <= 4 ? 'var(--warning)' : 'none'} color="var(--warning)" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="pd-rc-comment">
+                    Worked perfectly for my weekend camping trip. Small wear and tear but doesn't affect functionality at all. Very reasonable price.
+                  </p>
+                  <button className="pd-rc-helpful"><ThumbsUp size={11} /> Helpful (2)</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Payment modal ── */}
       {showPay && (
         <PaymentModal
-          product={{ ...product, buy_price: buyPrice }}
+          product={{
+            ...product,
+            price: (basePrice * quantity).toFixed(2),
+            buy_price: (parseFloat(buyPrice) * quantity).toFixed(2)
+          }}
           rentDays={days}
-          mode={mode}
+          mode={currentMode}
           onClose={() => setShowPay(false)}
           onSuccess={() => { setTimeout(() => { setShowPay(false); navigate('/my-orders') }, 1500) }}
         />
       )}
 
+      {/* ── Scoped Styling ── */}
       <style>{`
-        @media (max-width: 768px) {
-          div[style*="grid-template-columns: 1fr 1.3fr"] { grid-template-columns: 1fr !important; }
+        /* Page container */
+        .pd-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px 10px 80px;
+          font-family: 'DM Sans', var(--font);
+        }
+
+        /* Breadcrumbs styling matching Phoenix */
+        .pd-breadcrumb {
+          margin-bottom: 24px;
+        }
+        .pd-breadcrumb ol {
+          display: flex;
+          flex-wrap: wrap;
+          list-style: none;
+          gap: 6px;
+          align-items: center;
+          font-size: 13px;
+          color: var(--text-muted);
+        }
+        .pd-breadcrumb li a {
+          color: var(--primary);
+          transition: color 0.15s;
+        }
+        .pd-breadcrumb li a:hover {
+          color: var(--primary-hov);
+          text-decoration: underline;
+        }
+        .pd-breadcrumb li::after {
+          content: '/';
+          margin-left: 6px;
+          color: var(--text-dim);
+        }
+        .pd-breadcrumb li.active::after {
+          content: '';
+        }
+        .pd-breadcrumb li.active {
+          color: var(--text);
+          font-weight: 500;
+        }
+
+        /* Layout columns grid */
+        .pd-layout {
+          display: grid;
+          grid-template-columns: 1.1fr 1.2fr;
+          gap: 40px;
+          align-items: start;
+        }
+
+        /* Visuals left column styling */
+        .pd-visual-col {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .pd-image-box {
+          height: 380px;
+          position: relative;
+          overflow: hidden;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .pd-main-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .pd-emoji-placeholder {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: radial-gradient(circle at center, var(--primary-glow) 0%, transparent 70%);
+        }
+        .pd-emoji {
+          font-size: 110px;
+          transition: transform 0.3s;
+        }
+        .pd-image-box:hover .pd-emoji {
+          transform: scale(1.08) rotate(2deg);
+        }
+        .pd-status-badge {
+          position: absolute;
+          top: 16px;
+          left: 16px;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          padding: 4px 10px;
+          border-radius: var(--radius-full);
+          z-index: 10;
+        }
+        .pd-status-badge.avail {
+          background: rgba(16, 185, 129, 0.9);
+          color: #fff;
+        }
+        .pd-status-badge.booked {
+          background: rgba(239, 68, 68, 0.9);
+          color: #fff;
+        }
+
+        /* Thumbnails row */
+        .pd-thumbs {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+        }
+        .pd-thumb {
+          aspect-ratio: 1.2;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 20px;
+          transition: all 0.2s;
+          overflow: hidden;
+        }
+        .pd-thumb img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .pd-thumb:hover, .pd-thumb.active {
+          border-color: var(--primary);
+          box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* Wishlist and share */
+        .pd-visual-actions {
+          display: grid;
+          grid-template-columns: 1.2fr 1fr;
+          gap: 12px;
+        }
+        .pd-wishlist-btn, .pd-share-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 12px;
+          font-size: 13px;
+          font-weight: 600;
+          transition: all 0.2s;
+          background: var(--bg-2);
+          color: var(--text);
+        }
+        .pd-wishlist-btn:hover {
+          background: rgba(239, 68, 68, 0.08);
+          border-color: rgba(239, 68, 68, 0.3);
+          color: var(--danger);
+        }
+        .pd-wishlist-btn.active {
+          background: rgba(239, 68, 68, 0.12);
+          border-color: var(--danger);
+          color: var(--danger);
+        }
+        .pd-share-btn:hover {
+          background: var(--surface-hov);
+          border-color: var(--primary);
+          color: var(--primary);
+        }
+
+        /* Details column styling */
+        .pd-details-col {
+          display: flex;
+          flex-direction: column;
+        }
+        .pd-meta-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 12px;
+        }
+        .pd-category-badge {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          padding: 3px 10px;
+          border-radius: var(--radius-full);
+        }
+        .pd-bestseller-badge {
+          font-size: 10px;
+          font-weight: 700;
+          color: var(--warning);
+          background: rgba(245, 158, 11, 0.1);
+          padding: 3px 10px;
+          border-radius: var(--radius-full);
+        }
+        .pd-title {
+          font-size: 28px;
+          font-weight: 800;
+          color: var(--text);
+          line-height: 1.25;
+          margin-bottom: 8px;
+          letter-spacing: -0.3px;
+        }
+        .pd-rating-box {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 24px;
+        }
+        .pd-stars {
+          display: flex;
+          gap: 2px;
+        }
+        .pd-rating-text {
+          font-size: 13px;
+          color: var(--text-muted);
+          font-weight: 500;
+        }
+
+        /* Pricing Card */
+        .pd-price-card {
+          padding: 16px 20px;
+          margin-bottom: 20px;
+          background: var(--bg-2);
+          border: 1px solid var(--border);
+        }
+        .pd-price-row {
+          display: flex;
+          align-items: baseline;
+          gap: 12px;
+          margin-bottom: 6px;
+          flex-wrap: wrap;
+        }
+        .pd-current-price {
+          font-size: 32px;
+          font-weight: 800;
+          color: var(--primary);
+          display: flex;
+          align-items: baseline;
+        }
+        .pd-price-unit {
+          font-size: 14px;
+          color: var(--text-muted);
+          font-weight: 500;
+          margin-left: 2px;
+        }
+        .pd-old-price {
+          font-size: 16px;
+          text-decoration: line-through;
+          color: var(--text-muted);
+        }
+        .pd-discount-tag {
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--success);
+          background: rgba(16, 185, 129, 0.12);
+          padding: 2px 8px;
+          border-radius: 6px;
+          text-transform: uppercase;
+        }
+        .pd-price-sub {
+          font-size: 12px;
+          color: var(--text-muted);
+          line-height: 1.5;
+        }
+
+        /* Specs list */
+        .pd-specs-short {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-bottom: 24px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid var(--border);
+        }
+        .pd-spec-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 13.5px;
+          color: var(--text-muted);
+        }
+        .pd-spec-icon {
+          flex-shrink: 0;
+        }
+        .pd-spec-icon.green { color: var(--success); }
+        .pd-spec-icon.blue { color: var(--accent); }
+        .pd-spec-icon.orange { color: var(--warning); }
+
+        /* Segment Section */
+        .pd-segment-section {
+          margin-bottom: 20px;
+        }
+        .pd-label {
+          display: block;
+          font-size: 12px;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          letter-spacing: 0.05em;
+          margin-bottom: 8px;
+        }
+        .pd-segment-control {
+          display: flex;
+          background: var(--bg-3);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 4px;
+          gap: 4px;
+        }
+        .pd-segment-btn {
+          flex: 1;
+          padding: 10px;
+          text-align: center;
+          font-weight: 700;
+          font-size: 13.5px;
+          border-radius: var(--radius-sm);
+          color: var(--text-muted);
+          transition: all 0.2s;
+        }
+        .pd-segment-btn:hover {
+          color: var(--text);
+        }
+        .pd-segment-btn.active {
+          background: var(--primary);
+          color: #fff;
+          box-shadow: 0 2px 8px var(--primary-glow);
+        }
+
+        /* Quantity & Seller layout */
+        .pd-options-row {
+          display: grid;
+          grid-template-columns: 1fr 1.3fr;
+          gap: 20px;
+          margin-bottom: 20px;
+        }
+        .pd-qty-picker {
+          display: flex;
+          align-items: center;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          background: var(--bg-2);
+          overflow: hidden;
+          height: 44px;
+        }
+        .pd-qty-btn {
+          width: 40px;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--text-muted);
+          transition: all 0.2s;
+        }
+        .pd-qty-btn:hover:not(:disabled) {
+          background: var(--surface-hov);
+          color: var(--text);
+        }
+        .pd-qty-btn:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+        }
+        .pd-qty-input {
+          flex: 1;
+          width: 40px;
+          text-align: center;
+          border: none;
+          background: transparent;
+          color: var(--text);
+          font-weight: 700;
+          font-size: 15px;
+        }
+        
+        /* Seller badge */
+        .pd-seller-badge {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 6px 14px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          height: 44px;
+        }
+        .pd-sb-avatar {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--primary), var(--accent));
+          color: #fff;
+          font-weight: 700;
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .pd-sb-info {
+          display: flex;
+          flex-direction: column;
+          line-height: 1.2;
+        }
+        .pd-sb-title {
+          font-size: 9px;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          letter-spacing: 0.05em;
+        }
+        .pd-sb-name {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--text);
+        }
+
+        /* Calculator cards */
+        .pd-calc-card {
+          padding: 16px;
+          margin-bottom: 24px;
+          background: var(--bg-2);
+          border: 1px solid var(--border);
+        }
+        .pd-calc-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 700;
+          font-size: 14px;
+          color: var(--text);
+          margin-bottom: 12px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid var(--border);
+        }
+        .pd-slider-row {
+          display: flex;
+          justify-content: justify;
+          justify-content: space-between;
+          font-size: 13px;
+          margin-bottom: 8px;
+        }
+        .pd-slider-hint {
+          color: var(--text-muted);
+        }
+        .pd-range {
+          width: 100%;
+          accent-color: var(--primary);
+          margin-bottom: 16px;
+          height: 6px;
+          border-radius: var(--radius-full);
+          background: var(--bg-3);
+          outline: none;
+        }
+        .pd-calc-breakdown {
+          background: var(--bg-3);
+          border-radius: var(--radius-md);
+          padding: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .pd-breakdown-row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13px;
+          color: var(--text-muted);
+        }
+        .pd-breakdown-total {
+          border-top: 1px dashed var(--border);
+          margin-top: 6px;
+          padding-top: 6px;
+          font-weight: 800;
+          font-size: 16px;
+          color: var(--text);
+        }
+        .pd-breakdown-total span:last-child {
+          color: var(--primary);
+        }
+
+        /* Action buttons row */
+        .pd-action-buttons {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 12px;
+        }
+        .pd-btn-checkout {
+          flex: 1.8;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          background: var(--primary);
+          color: #fff;
+          border-radius: var(--radius-md);
+          font-size: 14px;
+          font-weight: 700;
+          box-shadow: 0 4px 14px var(--primary-glow);
+          transition: all 0.2s;
+        }
+        .pd-btn-checkout:hover:not(:disabled) {
+          background: var(--primary-hov);
+          transform: translateY(-1px);
+          box-shadow: 0 6px 18px var(--primary-glow);
+        }
+        .pd-btn-checkout:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .pd-btn-chat {
+          flex: 1;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          background: var(--bg-3);
+          border: 1px solid var(--border);
+          color: var(--text);
+          border-radius: var(--radius-md);
+          font-size: 14px;
+          font-weight: 700;
+          transition: all 0.2s;
+        }
+        .pd-btn-chat:hover {
+          background: var(--surface-hov);
+          border-color: var(--primary);
+        }
+        .pd-security-note {
+          font-size: 11px;
+          color: var(--text-dim);
+          text-align: center;
+        }
+
+        /* Bottom tabs layout */
+        .pd-tabs-section {
+          margin-top: 50px;
+        }
+        .pd-tabs-header {
+          display: flex;
+          list-style: none;
+          border-bottom: 1px solid var(--border);
+          gap: 20px;
+          margin-bottom: 16px;
+        }
+        .pd-tabs-header button {
+          padding: 12px 6px;
+          font-size: 14.5px;
+          font-weight: 600;
+          color: var(--text-muted);
+          border-bottom: 2px solid transparent;
+          transition: all 0.15s;
+        }
+        .pd-tabs-header button:hover {
+          color: var(--text);
+        }
+        .pd-tabs-header button.active {
+          color: var(--primary);
+          border-bottom-color: var(--primary);
+          font-weight: 700;
+        }
+        .pd-tabs-content {
+          padding: 24px;
+          background: var(--bg-2);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+        }
+        
+        /* Tabs panel */
+        .pd-tab-panel h3 {
+          font-size: 18px;
+          font-weight: 700;
+          color: var(--text);
+          margin-bottom: 12px;
+        }
+        .pd-desc-text {
+          font-size: 14.5px;
+          color: var(--text-muted);
+          line-height: 1.7;
+          margin-bottom: 20px;
+        }
+        .pd-desc-info-block {
+          background: var(--bg-3);
+          border-left: 3px solid var(--primary);
+          padding: 14px 18px;
+          border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+        .pd-desc-info-block h4 {
+          font-size: 14px;
+          font-weight: 700;
+          color: var(--text);
+          margin-bottom: 4px;
+        }
+        .pd-desc-info-block p {
+          font-size: 13px;
+          color: var(--text-muted);
+          line-height: 1.5;
+        }
+
+        /* Specifications table */
+        .pd-spec-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        .pd-spec-table th, .pd-spec-table td {
+          padding: 12px 16px;
+          border-bottom: 1px solid var(--border);
+          font-size: 14px;
+          text-align: left;
+        }
+        .pd-spec-table th {
+          font-weight: 600;
+          color: var(--text);
+          width: 30%;
+        }
+        .pd-spec-table td {
+          color: var(--text-muted);
+        }
+
+        /* Reviews Panel */
+        .pd-reviews-summary {
+          display: flex;
+          align-items: center;
+          gap: 40px;
+          padding-bottom: 24px;
+          border-bottom: 1px solid var(--border);
+          margin-bottom: 24px;
+          flex-wrap: wrap;
+        }
+        .pd-rs-score {
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+        }
+        .pd-rs-score h2 {
+          font-size: 44px;
+          font-weight: 800;
+          line-height: 1;
+          color: var(--text);
+        }
+        .pd-rs-score span {
+          font-size: 12px;
+          color: var(--text-muted);
+        }
+        .pd-rs-bars {
+          flex: 1;
+          min-width: 200px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .pd-rs-bar-row {
+          display: flex;
+          align-items: center;
+          font-size: 12px;
+          color: var(--text-muted);
+          gap: 10px;
+        }
+        .pd-rs-bar-row span:first-child { width: 50px; text-align: right; }
+        .pd-rs-bar-row span:last-child { width: 30px; }
+        .pd-rs-bar-fill {
+          flex: 1;
+          height: 6px;
+          background: var(--bg-3);
+          border-radius: var(--radius-full);
+          overflow: hidden;
+        }
+        .pd-rs-bar-fill div {
+          height: 100%;
+          border-radius: var(--radius-full);
+        }
+
+        /* Reviews comments list */
+        .pd-reviews-list {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .pd-review-card {
+          padding: 16px;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          background: var(--bg-2);
+        }
+        .pd-rc-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 10px;
+          flex-wrap: wrap;
+        }
+        .pd-rc-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: var(--bg-3);
+          color: var(--text);
+          font-weight: 700;
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .pd-rc-name {
+          font-size: 13.5px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .pd-rc-date {
+          font-size: 11px;
+          color: var(--text-muted);
+        }
+        .pd-rc-comment {
+          font-size: 13.5px;
+          color: var(--text-muted);
+          line-height: 1.6;
+          margin-bottom: 10px;
+        }
+        .pd-rc-helpful {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--text-muted);
+          border: 1px solid var(--border);
+          padding: 4px 10px;
+          border-radius: var(--radius-sm);
+          transition: all 0.2s;
+        }
+        .pd-rc-helpful:hover {
+          color: var(--primary);
+          border-color: var(--primary-glow);
+          background: var(--primary-glow);
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 900px) {
+          .pd-layout {
+            grid-template-columns: 1fr;
+            gap: 30px;
+          }
+          .pd-image-box {
+            height: 320px;
+          }
         }
       `}</style>
     </div>

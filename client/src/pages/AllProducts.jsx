@@ -372,7 +372,7 @@ function ProductCard({ product: p }) {
   const badgeText  = isBoth ? 'RENT & BUY' : isBuy ? 'FOR SALE' : 'FOR RENT'
 
   return (
-    <Link to={`/browse/${p.id}`} className="ap-card">
+    <Link to={`/products/product-details/${p.id}`} className="ap-card">
       <div className="ap-card-img">
         {p.image
           ? <img src={`${BASE_URL}${p.image}`} alt={p.name} />
@@ -402,7 +402,7 @@ function ProductRow({ product: p }) {
   const isRent = p.listing_type === 'Rent' || p.listing_type === 'Both' || !p.listing_type
   const isBuy  = p.listing_type === 'Buy'  || p.listing_type === 'Both'
   return (
-    <Link to={`/browse/${p.id}`} className="ap-row">
+    <Link to={`/products/product-details/${p.id}`} className="ap-row">
       <div className="ap-row-img">
         {p.image
           ? <img src={`${BASE_URL}${p.image}`} alt={p.name} />

@@ -101,7 +101,8 @@ function HomePageInner() {
           )}
 
           <div className="hp-nav">
-            <Link to="/products" className="hp-nav-link">📋 All Products</Link>
+            <Link to="/" className="hp-nav-link">🏠 Home</Link>
+            <Link to="/products/add-product" className="hp-nav-link">✨ Be a Vendor</Link>
           </div>
 
           <div className="hp-search">
@@ -136,8 +137,7 @@ function HomePageInner() {
           ))}
           <button className={`hp-cat-btn ${cat==='buy'?'active':''}`} onClick={()=>setCat('buy')}>🛒 For Sale</button>
           <button className="hp-cat-btn" onClick={()=>navigate('/products')}>🏠 Housing</button>
-          <button className="hp-cat-btn" onClick={()=>navigate('/products')}>📦 Post Listing</button>
-          <Link to="/products" className="hp-cat-btn hp-cat-btn--allproducts" style={{marginLeft:'auto', color:'#6366f1', fontWeight:700, borderBottom:'2px solid #6366f1', background:'#f0f0ff'}}>📋 All Products</Link>
+          <button className="hp-cat-btn" onClick={()=>navigate('/products/add-product')}>📦 Post Listing</button>
         </div>
       </nav>
 
@@ -474,7 +474,7 @@ function ProductCard({ product: p }) {
   const badgeText = p.listing_type === 'Both' ? 'RENT & BUY' : p.listing_type === 'Buy' ? 'FOR SALE' : 'FOR RENT'
   const inWish = wish.has(p.id)
   return (
-    <Link to={`/browse/${p.id}`} className="hp-card">
+    <Link to={`/products/product-details/${p.id}`} className="hp-card">
       <span className={`hp-card-badge hp-badge-${badgeType}`}>{badgeText}</span>
       <div className="hp-card-img">
         {p.image

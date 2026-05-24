@@ -11,8 +11,10 @@ import AllProducts    from './pages/AllProducts'
 import Storefront     from './pages/student/Storefront'
 import ProductDetail  from './pages/student/ProductDetail'
 import MyOrders       from './pages/student/MyOrders'
+import TrackOrder     from './pages/student/TrackOrder'
 import Profile        from './pages/student/Profile'
 import Chat           from './pages/student/Chat'
+import AddProduct     from './pages/products/AddProduct'
 
 import Login          from './pages/auth/Login'
 import Register       from './pages/auth/Register'
@@ -59,10 +61,12 @@ export default function App() {
             <Route path="/"           element={<Home />} />
             <Route path="/products"   element={<AllProducts />} />
             <Route path="/browse"     element={<Navigate to="/products" replace />} />
-            <Route path="/browse/:id" element={<PublicRoute><ProductDetail /></PublicRoute>} />
+            <Route path="/products/product-details/:id" element={<PublicRoute><ProductDetail /></PublicRoute>} />
 
             {/* Student protected */}
             <Route path="/my-orders" element={<StudentRoute><MyOrders /></StudentRoute>} />
+            <Route path="/track-order/:id" element={<StudentRoute><TrackOrder /></StudentRoute>} />
+            <Route path="/products/add-product" element={<StudentRoute><AddProduct /></StudentRoute>} />
             <Route path="/profile"   element={<StudentRoute><Profile /></StudentRoute>} />
             <Route path="/messages"  element={<StudentRoute><Chat /></StudentRoute>} />
 

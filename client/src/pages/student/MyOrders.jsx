@@ -47,7 +47,9 @@ export default function MyOrders() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           {orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
+            <Link key={order.id} to={`/track-order/${order.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }} className="order-card-link">
+              <OrderCard order={order} />
+            </Link>
           ))}
         </div>
       )}
@@ -95,6 +97,13 @@ function OrderCard({ order }) {
           justify-content: space-between;
           padding: var(--space-5) var(--space-6);
           gap: var(--space-4);
+          transition: all 0.2s ease;
+          cursor: pointer;
+        }
+        .order-card-link:hover .order-card {
+          border-color: var(--clr-primary, #6366f1);
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-lg);
         }
 
         .order-card__left {

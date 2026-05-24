@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Package, ShoppingBag, MessageCircle, User, LogOut, LogIn, Menu, X, Settings } from 'lucide-react'
+import { Home, Plus, Settings, LogOut, LogIn, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import ThemeToggle from '../ui/ThemeToggle'
@@ -24,9 +24,8 @@ export default function StudentNavbar() {
         <Link to="/" className="snav__logo">stu<span>RENT</span></Link>
 
         <nav className="snav__links">
-          {link('/products', <Package size={15}/>, 'Browse')}
-          {user && link('/my-orders', <ShoppingBag size={15}/>, 'My Orders')}
-          {user && link('/messages',  <MessageCircle size={15}/>, 'Messages')}
+          {link('/', <Home size={15}/>, 'Home')}
+          {link('/products/add-product', <Plus size={15}/>, 'Be a Vendor')}
         </nav>
 
         <div className="snav__right">
@@ -52,9 +51,8 @@ export default function StudentNavbar() {
 
       {open && (
         <div className="snav__mobile">
-          {link('/products', null, '🔍 Browse')}
-          {user && link('/my-orders', null, '📦 My Orders')}
-          {user && link('/messages',  null, '💬 Messages')}
+          {link('/', null, '🏠 Home')}
+          {link('/products/add-product', null, '✨ Be a Vendor')}
           {user && link('/profile',   null, '👤 Profile')}
           {!user && <Link to="/login"    className="btn btn--ghost btn--full" onClick={()=>setOpen(false)}>Sign In</Link>}
           {!user && <Link to="/register" className="btn btn--primary btn--full" onClick={()=>setOpen(false)}>Sign Up</Link>}
