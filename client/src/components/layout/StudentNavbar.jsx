@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Home, Plus, Settings, LogOut, LogIn, Menu, X } from 'lucide-react'
+import { Package, Plus, Settings, LogOut, LogIn, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import ThemeToggle from '../ui/ThemeToggle'
@@ -24,7 +24,7 @@ export default function StudentNavbar() {
         <Link to="/" className="snav__logo">stu<span>RENT</span></Link>
 
         <nav className="snav__links">
-          {link('/', <Home size={15}/>, 'Home')}
+          {link('/products', <Package size={15}/>, 'All Products')}
           {link('/products/add-product', <Plus size={15}/>, 'Be a Vendor')}
         </nav>
 
@@ -51,7 +51,7 @@ export default function StudentNavbar() {
 
       {open && (
         <div className="snav__mobile">
-          {link('/', null, '🏠 Home')}
+          {link('/products', null, '📋 All Products')}
           {link('/products/add-product', null, '✨ Be a Vendor')}
           {user && link('/profile',   null, '👤 Profile')}
           {!user && <Link to="/login"    className="btn btn--ghost btn--full" onClick={()=>setOpen(false)}>Sign In</Link>}

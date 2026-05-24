@@ -6,9 +6,7 @@ import { CartProvider, useCart, CartWishlistUI } from '../components/CartWishlis
 import '../styles/home.css'
 
 const CATS = [
-  { id:'all', emoji:'🏠', label:'Home' },
-  { id:'Indoor', emoji:'🪑', label:'Indoor' },
-  { id:'Outdoor', emoji:'🏕️', label:'Outdoor' },
+  { id:'all', emoji:'🏠', label:'Home' }
 ]
 
 const SLIDES = [
@@ -101,8 +99,7 @@ function HomePageInner() {
           )}
 
           <div className="hp-nav">
-            <Link to="/" className="hp-nav-link">🏠 Home</Link>
-            <Link to="/products/add-product" className="hp-nav-link">✨ Be a Vendor</Link>
+            <Link to="/products" className="hp-nav-link">📋 All Products</Link>
           </div>
 
           <div className="hp-search">
@@ -135,9 +132,9 @@ function HomePageInner() {
               <span>{c.emoji}</span> {c.label}
             </button>
           ))}
+          <button className="hp-cat-btn" onClick={()=>navigate('/products/add-product')}>✨ Be a Vendor</button>
           <button className={`hp-cat-btn ${cat==='buy'?'active':''}`} onClick={()=>setCat('buy')}>🛒 For Sale</button>
           <button className="hp-cat-btn" onClick={()=>navigate('/products')}>🏠 Housing</button>
-          <button className="hp-cat-btn" onClick={()=>navigate('/products/add-product')}>📦 Post Listing</button>
         </div>
       </nav>
 
@@ -430,15 +427,17 @@ function NavActions({ user }) {
           <div className="hp-na-drop">
             <div className="hp-na-drop-title">Track Your Order</div>
             {user ? (
-              <Link to="/my-orders" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>📦 My Orders</Link>
+              <>
+                <Link to="/my-orders" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>📦 My Orders</Link>
+                <Link to="/my-orders" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>🔄 Recent Rentals</Link>
+                <Link to="/my-orders" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>✅ Completed Orders</Link>
+              </>
             ) : (
               <div className="hp-na-drop-info">
                 <div className="hp-na-info-row" style={{marginBottom:10}}>Sign in to track your orders.</div>
                 <Link to="/login" className="hp-na-drop-btn" onClick={() => setOpenDrop(null)}>Sign In</Link>
               </div>
             )}
-            <Link to="/my-orders" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>🔄 Recent Rentals</Link>
-            <Link to="/my-orders" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>✅ Completed Orders</Link>
           </div>
         )}
       </div>
