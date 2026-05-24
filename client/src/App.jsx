@@ -7,6 +7,7 @@ import Layout        from './components/layout/Layout'
 import StudentLayout from './components/layout/StudentLayout'
 
 import Home           from './pages/Home'
+import AllProducts    from './pages/AllProducts'
 import Storefront     from './pages/student/Storefront'
 import ProductDetail  from './pages/student/ProductDetail'
 import MyOrders       from './pages/student/MyOrders'
@@ -56,6 +57,7 @@ export default function App() {
           <Routes>
             {/* Public */}
             <Route path="/"           element={<Home />} />
+            <Route path="/products"   element={<AllProducts />} />
             <Route path="/browse"     element={<PublicRoute><Storefront /></PublicRoute>} />
             <Route path="/browse/:id" element={<PublicRoute><ProductDetail /></PublicRoute>} />
 

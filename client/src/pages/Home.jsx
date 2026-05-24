@@ -102,7 +102,7 @@ function HomePageInner() {
 
           <div className="hp-nav">
             <Link to="/" className="hp-nav-link" style={{color:'#fff'}}>Home</Link>
-            <Link to="/browse" className="hp-nav-link">Browse</Link>
+            <Link to="/products" className="hp-nav-link">All Products</Link>
           </div>
 
           <div className="hp-search">
@@ -144,8 +144,9 @@ function HomePageInner() {
             </button>
           ))}
           <button className={`hp-cat-btn ${cat==='buy'?'active':''}`} onClick={()=>setCat('buy')}>🛒 For Sale</button>
-          <button className="hp-cat-btn" onClick={()=>navigate('/browse')}>🏠 Housing</button>
-          <button className="hp-cat-btn" onClick={()=>navigate('/browse')}>📦 Post Listing</button>
+          <button className="hp-cat-btn" onClick={()=>navigate('/products')}>🏠 Housing</button>
+          <button className="hp-cat-btn" onClick={()=>navigate('/products')}>📦 Post Listing</button>
+          <Link to="/products" className="hp-cat-btn hp-cat-btn--allproducts" style={{marginLeft:'auto', color:'#6366f1', fontWeight:700, borderBottom:'2px solid #6366f1', background:'#f0f0ff'}}>📋 All Products</Link>
         </div>
       </nav>
 
@@ -161,7 +162,10 @@ function HomePageInner() {
             <div className="hp-hero-price">
               <span className="now">{s.price[0]}</span>
             </div>
-            <Link to="/browse" className="hp-btn">{s.price[1]} →</Link>
+            <div style={{display:'flex', gap:12, flexWrap:'wrap', alignItems:'center'}}>
+              <Link to="/browse" className="hp-btn">{s.price[1]} →</Link>
+              <Link to="/products" className="hp-btn" style={{background:'rgba(255,255,255,.15)', border:'1.5px solid rgba(255,255,255,.4)', backdropFilter:'blur(8px)'}}>📋 All Products</Link>
+            </div>
           </div>
           <div className="hp-hero-emoji"><span>{s.emoji}</span></div>
           <div className="hp-hero-dots">
