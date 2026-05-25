@@ -41,6 +41,65 @@ export default function ProductDetail() {
   const [inWish, setInWish]         = useState(false)
   const [activeTab, setActiveTab]   = useState('description') // 'description' | 'specifications' | 'reviews'
 
+  const handleAction = () => {
+    if (!user) {
+      toast.error('Please sign in first')
+      navigate('/login', { state: { from: window.location.pathname } })
+      return
+    }
+    setShowPay(true)
+  }
+
+  const handleMessage = () => {
+    if (!user) {
+      toast.error('Please sign in to message')
+      navigate('/login', { state: { from: window.location.pathname, startChat: true } })
+      return
+    }
+    
+    // Check if current user is the poster of the product
+    const isPoster = product?.posted_by 
+      ? user.email === product.posted_by.email 
+      : user.is_staff;
+      
+    if (isPoster) {
+      toast.error('You cannot chat with yourself');
+      return;
+    }
+
+    const recipient = product?.posted_by ? {
+      email: product.posted_by.email,
+      name: product.posted_by.name,
+      id: product.posted_by.id,
+      type: 'customer'
+    } : {
+      email: 'admin@sturent.com',
+      name: 'Admin',
+      id: 'admin',
+      type: 'admin'
+    };
+
+    navigate(user.is_staff ? '/admin/messages' : '/messages', {
+      state: {
+        recipient,
+        product: {
+          id: product?.id,
+          name: product?.name,
+          price: product?.price
+        }
+      }
+    })
+    toast('Opening chat with owner...', { icon: '💬' })
+  }
+
+  // Auto start chat if redirected back from login
+  useEffect(() => {
+    if (location.state?.startChat && user && product) {
+      navigate(location.pathname, { replace: true, state: {} })
+      handleMessage()
+    }
+  }, [location.state, user, product])
+
   if (loading) return <div className="loading-screen"><span className="spinner" /></div>
   if (!product) return (
     <div className="empty-state card" style={{ marginTop: 32 }}>
@@ -70,65 +129,6 @@ export default function ProductDetail() {
   const rentTotal       = (basePrice * days * quantity).toFixed(2)
   const buyTotal        = (parseFloat(buyPrice) * quantity).toFixed(2)
   const overallTotal    = currentMode === 'rent' ? rentTotal : buyTotal
-
-  // Auto start chat if redirected back from login
-  useEffect(() => {
-    if (location.state?.startChat && user && product) {
-      navigate(location.pathname, { replace: true, state: {} })
-      handleMessage()
-    }
-  }, [location.state, user, product])
-
-  const handleAction = () => {
-    if (!user) {
-      toast.error('Please sign in first')
-      navigate('/login', { state: { from: window.location.pathname } })
-      return
-    }
-    setShowPay(true)
-  }
-
-  const handleMessage = () => {
-    if (!user) {
-      toast.error('Please sign in to message')
-      navigate('/login', { state: { from: window.location.pathname, startChat: true } })
-      return
-    }
-    
-    // Check if current user is the poster of the product
-    const isPoster = product.posted_by 
-      ? user.email === product.posted_by.email 
-      : user.is_staff;
-      
-    if (isPoster) {
-      toast.error('You cannot chat with yourself');
-      return;
-    }
-
-    const recipient = product.posted_by ? {
-      email: product.posted_by.email,
-      name: product.posted_by.name,
-      id: product.posted_by.id,
-      type: 'customer'
-    } : {
-      email: 'admin@sturent.com',
-      name: 'Admin',
-      id: 'admin',
-      type: 'admin'
-    };
-
-    navigate(user.is_staff ? '/admin/messages' : '/messages', {
-      state: {
-        recipient,
-        product: {
-          id: product.id,
-          name: product.name,
-          price: product.price
-        }
-      }
-    })
-    toast('Opening chat with owner...', { icon: '💬' })
-  }
 
   const toggleWishlist = () => {
     setInWish(prev => {
