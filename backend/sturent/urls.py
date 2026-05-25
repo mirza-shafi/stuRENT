@@ -2,7 +2,7 @@
 Root URL configuration for stuRENT API.
 All routes are prefixed with /api/ to cleanly separate from the React SPA.
 """
-
+from django.http import JsonResponse
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -11,7 +11,14 @@ from django.conf.urls.static import static
 from django.views.static import serve
 from django.urls import re_path
 
+def health_check(request):
+    return JsonResponse({"status": "ok", "service": "sturent-backend"})
+
+
 urlpatterns = [
+    # Health check for uptime monitoring
+    path("health/", health_check),
+
     # Django admin
     path("admin/", admin.site.urls),
 
