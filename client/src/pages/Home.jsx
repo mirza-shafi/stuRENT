@@ -368,6 +368,7 @@ function NavActions({ user }) {
   const { openLoginModal, openRegisterModal, logout } = useAuth()
   const navigate = useNavigate()
   const [openDrop, setOpenDrop] = useState(null)
+  const avatarUrl = localStorage.getItem('user_avatar')
 
   const toggleDrop = (name) => setOpenDrop(d => d === name ? null : name)
 
@@ -456,7 +457,11 @@ function NavActions({ user }) {
       {user ? (
         <div className="hp-na-wrap">
           <button className="hp-na-btn" title="My Profile" onClick={() => toggleDrop('profile')}>
-            <span className="hp-na-icon">👤</span>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Profile" style={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'cover', marginBottom: 2 }} />
+            ) : (
+              <span className="hp-na-icon">👤</span>
+            )}
             <span className="hp-na-label">Profile</span>
           </button>
           {openDrop === 'profile' && (

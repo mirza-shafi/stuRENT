@@ -11,6 +11,7 @@ export default function StudentNavbar() {
   const { cartCount } = useCart()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const avatarUrl = localStorage.getItem('user_avatar')
 
   const handleLogout = async () => { await logout(); toast.success('Logged out'); navigate('/') }
 
@@ -74,7 +75,13 @@ export default function StudentNavbar() {
           {user ? (
             <>
               {user.is_staff && <Link to="/dashboard" className="btn btn--ghost btn--sm">Admin Panel</Link>}
-              <Link to="/profile" className="snav__avatar" title="My Profile">{user.username?.[0]?.toUpperCase()}</Link>
+              <Link to="/profile" className="snav__avatar" title="My Profile" style={{ overflow: 'hidden' }}>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  user.username?.[0]?.toUpperCase()
+                )}
+              </Link>
               <Link to="/profile" className="snav__icon-btn" title="Settings" style={{ color: 'var(--text-muted)' }}>
                 <Settings size={15}/>
               </Link>

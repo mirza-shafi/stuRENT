@@ -92,6 +92,9 @@ export default function AuthModal() {
     try {
       const result = await signInWithPopup(auth, googleProvider)
       const idToken = await result.user.getIdToken()
+      if (result.user.photoURL) {
+        localStorage.setItem('user_avatar', result.user.photoURL)
+      }
       await googleLogin(idToken)
       toast.success('Welcome!')
       closeAuthModal()
