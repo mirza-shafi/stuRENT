@@ -2,16 +2,17 @@
  * Sidebar.jsx — Admin nav with avatar dropdown (Settings + Logout confirmation)
  */
 import { NavLink, useNavigate, Link } from 'react-router-dom'
-import { LayoutDashboard, Users, Package, ShoppingCart, LogOut, Settings, Menu, X, ChevronUp } from 'lucide-react'
+import { LayoutDashboard, Users, Package, ShoppingCart, Plus, RefreshCw, LogOut, Settings, Menu, X, ChevronUp } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
 const NAV_ITEMS = [
-  { to: '/dashboard',      icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/customers',      icon: Users,           label: 'Customers'  },
-  { to: '/admin/products', icon: Package,         label: 'Products'   },
-  { to: '/admin/orders',   icon: ShoppingCart,    label: 'Orders'     },
+  { to: '/admin/dashboard',     icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/admin/customers',     icon: Users,           label: 'Customers'  },
+  { to: '/admin/products',      icon: Package,         label: 'Products'   },
+  { to: '/admin/add-product',   icon: Plus,            label: 'Add Product' },
+  { to: '/admin/orders',        icon: ShoppingCart,    label: 'Orders'     },
 ]
 
 export default function Sidebar() {
@@ -53,7 +54,7 @@ export default function Sidebar() {
 
         {/* Logo */}
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)' }}>
-          <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <Link to="/admin/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
             <div style={{ width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg,#6366f1,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>S</div>
             <div>
               <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text)' }}>
@@ -70,7 +71,7 @@ export default function Sidebar() {
             <NavLink
               key={to}
               to={to}
-              end={to === '/dashboard'}
+              end={to === '/admin/dashboard'}
               onClick={() => setMobileOpen(false)}
               style={({ isActive }) => ({
                 display: 'flex', alignItems: 'center', gap: 12,

@@ -122,7 +122,7 @@ function BrowseCard({ product: p, inWish, onWish, onCart }) {
       {/* Image area */}
       <div style={{ height:180, background: p.category==='Indoor' ? '#eef2ff' : '#fef2f2', display:'flex', alignItems:'center', justifyContent:'center', fontSize:64, position:'relative', overflow:'hidden' }}>
         {p.image
-          ? <img src={`${BASE}${p.image}`} alt={p.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+          ? <img src={`${p.image?.startsWith('http') ? p.image : `${BASE}${p.image}`}`} alt={p.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
           : <span>{p.category === 'Indoor' ? '🪑' : '🏕️'}</span>
         }
 

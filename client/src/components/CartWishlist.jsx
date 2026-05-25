@@ -115,7 +115,7 @@ export function CartWishlistUI({ allProducts }) {
             <div className="hp-drawer-empty"><span style={{fontSize:60}}>🛒</span><p>Your cart is empty</p></div>
           ) : Object.values(cart).map(({product:p, qty}) => (
             <div key={p.id} className="hp-drawer-item">
-              <div className="hp-di-img">{p.image ? <img src={`${BASE}${p.image}`} alt="" /> : p.category==='Indoor'?'🪑':'🏕️'}</div>
+              <div className="hp-di-img">{p.image ? <img src={`${p.image?.startsWith('http') ? p.image : `${BASE}${p.image}`}`} alt="" /> : p.category==='Indoor'?'🪑':'🏕️'}</div>
               <div className="hp-di-info">
                 <div className="hp-di-name">{p.name}</div>
                 <div className="hp-di-price">${(p.price*qty).toFixed(2)}</div>
@@ -152,7 +152,7 @@ export function CartWishlistUI({ allProducts }) {
             if (!p) return null
             return (
               <div key={id} className="hp-drawer-item">
-                <div className="hp-di-img">{p.image ? <img src={`${BASE}${p.image}`} alt="" /> : p.category==='Indoor'?'🪑':'🏕️'}</div>
+                <div className="hp-di-img">{p.image ? <img src={`${p.image?.startsWith('http') ? p.image : `${BASE}${p.image}`}`} alt="" /> : p.category==='Indoor'?'🪑':'🏕️'}</div>
                 <div className="hp-di-info">
                   <div className="hp-di-name">{p.name}</div>
                   <div className="hp-di-price">${p.price}/day</div>

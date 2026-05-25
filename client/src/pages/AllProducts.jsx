@@ -375,7 +375,7 @@ function ProductCard({ product: p }) {
     <Link to={`/products/product-details/${p.id}`} className="ap-card">
       <div className="ap-card-img">
         {p.image
-          ? <img src={`${BASE_URL}${p.image}`} alt={p.name} />
+          ? <img src={`${p.image?.startsWith('http') ? p.image : `${BASE_URL}${p.image}`}`} alt={p.name} />
           : <span>{p.category === 'Indoor' ? '🪑' : p.category === 'Housing' ? '🏠' : '🏕️'}</span>
         }
         <span className={`ap-card-badge ${badgeClass}`}>{badgeText}</span>
@@ -405,7 +405,7 @@ function ProductRow({ product: p }) {
     <Link to={`/products/product-details/${p.id}`} className="ap-row">
       <div className="ap-row-img">
         {p.image
-          ? <img src={`${BASE_URL}${p.image}`} alt={p.name} />
+          ? <img src={`${p.image?.startsWith('http') ? p.image : `${BASE_URL}${p.image}`}`} alt={p.name} />
           : <span>{p.category === 'Indoor' ? '🪑' : p.category === 'Housing' ? '🏠' : '🏕️'}</span>
         }
       </div>

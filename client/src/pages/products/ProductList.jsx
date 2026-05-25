@@ -1,8 +1,8 @@
 /**
- * ProductList.jsx — Card grid view with image upload + admin detail view
+ * ProductList.jsx — Phoenix-style admin product management
  */
 import { useState, useRef } from 'react'
-import { Plus, Search, Pencil, Trash2, Package, X, ImageIcon, Eye, User, Mail, Phone, Tag, Calendar, DollarSign } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Package, X, ImageIcon, Eye, User, Mail, Phone, Tag, Calendar, DollarSign, Filter, Download, ChevronRight } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import ProductService from '../../services/productService'
 import { Link } from 'react-router-dom'
@@ -11,26 +11,40 @@ import toast from 'react-hot-toast'
 const EMPTY_FORM = { name: '', price: '', buy_price: '', listing_type: 'Rent', category: 'Indoor', description: '', is_available: true, image: null }
 const BASE_URL   = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace('/api/v1', '')
 
+const STATUS_MAP = {
+  true:  { label: 'Available',   bg: 'rgba(16,185,129,.12)',  color: 'var(--success)' },
+  false: { label: 'Unavailable', bg: 'rgba(239,68,68,.12)',   color: 'var(--danger)'  },
+}
+const TYPE_MAP = {
+  Rent: { bg: 'rgba(99,102,241,.12)', color: 'var(--primary)' },
+  Buy:  { bg: 'rgba(16,185,129,.12)', color: 'var(--success)' },
+  Both: { bg: 'rgba(245,158,11,.12)', color: 'var(--warning)' },
+}
+
 export default function ProductList() {
   const { data, loading, execute: refetch } = useApi(ProductService.getAll)
   const [search, setSearch]       = useState('')
+  const [filterType, setFilterType] = useState('All')
   const [showModal, setShowModal] = useState(false)
-  const [viewItem, setViewItem]   = useState(null)   // detail panel
+  const [viewItem, setViewItem]   = useState(null)
   const [editItem, setEditItem]   = useState(null)
   const [form, setForm]           = useState(EMPTY_FORM)
   const [preview, setPreview]     = useState(null)
   const [saving, setSaving]       = useState(false)
   const fileRef = useRef()
 
-  const products = (data?.results ?? data ?? []).filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  )
+  const allProducts = data?.results ?? data ?? []
+  const products = allProducts.filter(p => {
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())
+    const matchType   = filterType === 'All' || p.listing_type === filterType
+    return matchSearch && matchType
+  })
 
   const openCreate = () => { setEditItem(null); setForm(EMPTY_FORM); setPreview(null); setShowModal(true) }
   const openEdit   = (p) => {
     setEditItem(p)
     setForm({ name: p.name, price: p.price, buy_price: p.buy_price || '', listing_type: p.listing_type || 'Rent', category: p.category, description: p.description, is_available: p.is_available, image: null })
-    setPreview(p.image ? `${BASE_URL}${p.image}` : null)
+    setPreview(p.image ? `${p.image?.startsWith('http') ? p.image : `${BASE_URL}${p.image}`}` : null)
     setShowModal(true)
   }
   const closeModal = () => { setShowModal(false); setEditItem(null); setForm(EMPTY_FORM); setPreview(null) }
@@ -39,34 +53,22 @@ export default function ProductList() {
     const { name, value, type, checked } = e.target
     setForm(p => ({ ...p, [name]: type === 'checkbox' ? checked : value }))
   }
-
   const handleImage = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    setForm(p => ({ ...p, image: file }))
-    setPreview(URL.createObjectURL(file))
+    const file = e.target.files[0]; if (!file) return
+    setForm(p => ({ ...p, image: file })); setPreview(URL.createObjectURL(file))
   }
-
   const removeImage = () => { setForm(p => ({ ...p, image: null })); setPreview(null); if (fileRef.current) fileRef.current.value = '' }
 
   const handleSave = async (e) => {
     e.preventDefault(); setSaving(true)
     try {
-      // If no new image picked during edit, exclude image key so server keeps existing
       const payload = { ...form }
       if (editItem && !form.image) delete payload.image
-
-      if (editItem) {
-        await ProductService.update(editItem.id, payload)
-        toast.success('Product updated.')
-      } else {
-        await ProductService.create(payload)
-        toast.success('Product created.')
-      }
+      if (editItem) { await ProductService.update(editItem.id, payload); toast.success('Product updated.') }
+      else          { await ProductService.create(payload);               toast.success('Product created.') }
       closeModal(); refetch()
-    } catch (err) {
-      toast.error(err.response?.data?.price?.[0] || 'Failed to save product.')
-    } finally { setSaving(false) }
+    } catch (err) { toast.error(err.response?.data?.price?.[0] || 'Failed to save product.') }
+    finally { setSaving(false) }
   }
 
   const handleDelete = async (id) => {
@@ -77,104 +79,153 @@ export default function ProductList() {
 
   return (
     <div className="fade-in">
-      {/* Header */}
-      <div className="page-header">
+      {/* ── Breadcrumb ── */}
+      <nav style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>
+        <Link to="/admin/dashboard" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Home</Link>
+        <ChevronRight size={13} />
+        <span style={{ color: 'var(--text)' }}>Products</span>
+      </nav>
+
+      {/* ── Page Header ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 className="page-title">Products</h1>
-          <p className="page-subtitle">Manage rental inventory · {products.length} item{products.length !== 1 ? 's' : ''}</p>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', margin: 0 }}>Products</h1>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 4 }}>
+            {allProducts.length} product{allProducts.length !== 1 ? 's' : ''} in total
+          </p>
         </div>
-        <button id="add-product-btn" className="btn btn--primary" onClick={openCreate}>
-          <Plus size={15}/> Add Product
-        </button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button className="btn btn--ghost btn--sm" style={{ gap: 6 }}>
+            <Download size={14} /> Export
+          </button>
+          <button id="add-product-btn" className="btn btn--primary" onClick={openCreate}>
+            <Plus size={15} /> Add Product
+          </button>
+        </div>
       </div>
 
-      {/* Search */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 12, padding: '10px 16px', marginBottom: 24 }}>
-        <Search size={16} color="var(--text-muted)" />
-        <input
-          type="search"
-          placeholder="Search products..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ flex: 1, background: 'none', border: 'none', color: 'var(--text)', fontSize: 14, outline: 'none' }}
-        />
-      </div>
-
-      {/* Card grid */}
-      {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 20 }}>
-          {[1,2,3,4,5,6].map(i => <div key={i} style={{ height: 300, borderRadius: 14, background: 'var(--surface)', animation: 'shimmer 1.5s infinite', backgroundSize: '200% 100%' }} />)}
+      {/* ── Filter Toolbar ── */}
+      <div className="card" style={{ padding: '14px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 220, background: 'var(--bg-3)', borderRadius: 10, padding: '8px 14px', border: '1px solid var(--border)' }}>
+          <Search size={15} color="var(--text-muted)" />
+          <input
+            type="search"
+            placeholder="Search products..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ flex: 1, background: 'none', border: 'none', color: 'var(--text)', fontSize: 14, outline: 'none' }}
+          />
         </div>
-      ) : products.length === 0 ? (
-        <div className="empty-state card" style={{ padding: 48 }}>
-          <Package size={48} className="empty-state__icon" />
-          <p className="empty-state__title">No products yet</p>
-          <button className="btn btn--primary" onClick={openCreate}><Plus size={14}/> Add First Product</button>
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 20 }}>
-          {products.map(p => (
-            <div key={p.id} className="card" style={{ overflow: 'hidden', transition: 'transform .2s, box-shadow .2s' }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)' }}
-              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '' }}
-            >
-              {/* Product image */}
-              <div style={{ height: 160, overflow: 'hidden', background: p.category === 'Indoor' ? 'rgba(99,102,241,.08)' : 'rgba(239,68,68,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                {p.image ? (
-                  <img src={`${BASE_URL}${p.image}`} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <span style={{ fontSize: 56 }}>{p.category === 'Indoor' ? '🪑' : '🏕️'}</span>
-                )}
-                {/* Listing type badge */}
-                <div style={{ position: 'absolute', bottom: 10, left: 10, display: 'flex', gap: 4 }}>
-                  {(p.listing_type === 'Rent' || p.listing_type === 'Both') && (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999, background: 'rgba(99,102,241,.9)', color: '#fff' }}>📅 Rent</span>
-                  )}
-                  {(p.listing_type === 'Buy' || p.listing_type === 'Both') && (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999, background: 'rgba(16,185,129,.9)', color: '#fff' }}>🛒 Buy</span>
-                  )}
-                </div>
-                {/* Availability dot */}
-                <span style={{ position: 'absolute', top: 10, right: 10, width: 10, height: 10, borderRadius: '50%', background: p.is_available ? '#10b981' : '#ef4444', border: '2px solid rgba(255,255,255,.8)' }} title={p.is_available ? 'Available' : 'Unavailable'} />
-              </div>
-
-              {/* Body */}
-              <div style={{ padding: '14px 16px' }}>
-                <h3 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</h3>
-                {p.description && (
-                  <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 8, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {p.description}
-                  </p>
-                )}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div>
-                    <span style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>${p.price}</span>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>/day</span>
-                    {p.buy_price && <div style={{ fontSize: 12, color: '#10b981', fontWeight: 700 }}>Buy: ${p.buy_price}</div>}
-                  </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button className="btn btn--ghost btn--sm" onClick={() => setViewItem(p)} title="View Details"><Eye size={13}/></button>
-                    <button className="btn btn--ghost btn--sm" onClick={() => openEdit(p)} title="Edit"><Pencil size={13}/></button>
-                    <button className="btn btn--danger btn--sm" onClick={() => handleDelete(p.id)} title="Delete"><Trash2 size={13}/></button>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {['All', 'Rent', 'Buy', 'Both'].map(t => (
+            <button
+              key={t}
+              onClick={() => setFilterType(t)}
+              style={{
+                padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                border: `1px solid ${filterType === t ? 'var(--primary)' : 'var(--border)'}`,
+                background: filterType === t ? 'var(--primary-glow)' : 'var(--surface)',
+                color: filterType === t ? 'var(--primary)' : 'var(--text-muted)',
+                transition: 'all .15s'
+              }}
+            >{t}</button>
           ))}
         </div>
-      )}
+      </div>
 
-      {/* ── Modal ── */}
+      {/* ── Table ── */}
+      <div className="card" style={{ overflow: 'hidden' }}>
+        {loading ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 60, gap: 12, color: 'var(--text-muted)' }}>
+            <span className="spinner" /> Loading products...
+          </div>
+        ) : products.length === 0 ? (
+          <div className="empty-state" style={{ padding: 60 }}>
+            <Package size={48} className="empty-state__icon" />
+            <p className="empty-state__title">No products found</p>
+            <button className="btn btn--primary btn--sm" onClick={openCreate}><Plus size={14} /> Add Product</button>
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                  {['Product', 'Category', 'Listing Type', 'Rent Price', 'Buy Price', 'Status', 'Actions'].map(h => (
+                    <th key={h} style={{ padding: '12px 20px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', whiteSpace: 'nowrap', background: 'var(--surface)' }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {products.map(p => {
+                  const typeStyle = TYPE_MAP[p.listing_type] || TYPE_MAP.Rent
+                  const statusStyle = STATUS_MAP[String(p.is_available)] || STATUS_MAP.true
+                  return (
+                    <tr key={p.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background .15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      {/* Product col */}
+                      <td style={{ padding: '14px 20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ width: 44, height: 44, borderRadius: 8, overflow: 'hidden', background: 'var(--surface)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)' }}>
+                            {p.image ? <img src={`${p.image?.startsWith('http') ? p.image : `${BASE_URL}${p.image}`}`} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              : <span style={{ fontSize: 20 }}>{p.category === 'Indoor' ? '🪑' : '🏕️'}</span>}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 700, color: 'var(--text)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>ID: #{p.id}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '14px 20px', color: 'var(--text-muted)' }}>{p.category}</td>
+                      <td style={{ padding: '14px 20px' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: typeStyle.bg, color: typeStyle.color }}>
+                          {p.listing_type}
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 20px', fontWeight: 700, color: 'var(--primary)' }}>
+                        {p.price ? `$${p.price}/day` : '—'}
+                      </td>
+                      <td style={{ padding: '14px 20px', fontWeight: 600, color: 'var(--success)' }}>
+                        {p.buy_price ? `$${p.buy_price}` : '—'}
+                      </td>
+                      <td style={{ padding: '14px 20px' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: statusStyle.bg, color: statusStyle.color }}>
+                          {statusStyle.label}
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 20px' }}>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn--ghost btn--sm" onClick={() => setViewItem(p)} title="View Details"><Eye size={13} /></button>
+                          <button className="btn btn--ghost btn--sm" onClick={() => openEdit(p)} title="Edit"><Pencil size={13} /></button>
+                          <button className="btn btn--danger btn--sm" onClick={() => handleDelete(p.id)} title="Delete"><Trash2 size={13} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+            {/* Table footer */}
+            <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)' }}>
+              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Showing {products.length} of {allProducts.length} products</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Create / Edit Modal ── */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
+          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 540 }}>
             <div className="modal-header">
               <h2 className="modal-title">{editItem ? 'Edit Product' : 'New Product'}</h2>
-              <button className="btn btn--ghost btn--sm" onClick={closeModal}><X size={16}/></button>
+              <button className="btn btn--ghost btn--sm" onClick={closeModal}><X size={16} /></button>
             </div>
-
             <form onSubmit={handleSave}>
-              {/* Image upload area */}
+              {/* Image */}
               <div className="form-group">
                 <label className="form-label">Product Image</label>
                 <div
@@ -186,9 +237,7 @@ export default function ProductList() {
                   {preview ? (
                     <>
                       <img src={preview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <button type="button" onClick={e => { e.stopPropagation(); removeImage() }} style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,.6)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <X size={14}/>
-                      </button>
+                      <button type="button" onClick={e => { e.stopPropagation(); removeImage() }} style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,.6)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                     </>
                   ) : (
                     <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -203,23 +252,24 @@ export default function ProductList() {
 
               <div className="form-group">
                 <label className="form-label">Product Name *</label>
-                <input name="name" className="form-input" value={form.name} onChange={handleChange} required placeholder="e.g. Folding Table" style={{ borderRadius: 10 }} />
+                <input name="name" className="form-input" value={form.name} onChange={handleChange} required placeholder="e.g. Folding Table" />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                 <div className="form-group">
                   <label className="form-label">Price / Day ($) *</label>
-                  <input name="price" type="number" step="0.01" min="0" className="form-input" value={form.price} onChange={handleChange} required placeholder="0.00" style={{ borderRadius: 10 }} />
+                  <input name="price" type="number" step="0.01" min="0" className="form-input" value={form.price} onChange={handleChange} required placeholder="0.00" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Buy Price ($)</label>
-                  <input name="buy_price" type="number" step="0.01" min="0" className="form-input" value={form.buy_price} onChange={handleChange} placeholder="0.00" style={{ borderRadius: 10 }} />
+                  <input name="buy_price" type="number" step="0.01" min="0" className="form-input" value={form.buy_price} onChange={handleChange} placeholder="0.00" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Category</label>
-                  <select name="category" className="form-select" value={form.category} onChange={handleChange} style={{ borderRadius: 10 }}>
+                  <select name="category" className="form-select" value={form.category} onChange={handleChange}>
                     <option value="Indoor">🪑 Indoor</option>
                     <option value="Outdoor">🏕️ Outdoor</option>
+                    <option value="Housing">🏠 Housing</option>
                   </select>
                 </div>
               </div>
@@ -227,8 +277,9 @@ export default function ProductList() {
               <div className="form-group">
                 <label className="form-label">Listing Type *</label>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  {[['Rent','📅 Rent Only','#6366f1'],['Buy','🛒 Buy Only','#10b981'],['Both','🔄 Rent & Buy','#f59e0b']].map(([val, lbl, clr]) => (
-                    <button key={val} type="button" onClick={() => setForm(p => ({ ...p, listing_type: val }))} style={{ flex: 1, padding: '9px 6px', borderRadius: 10, border: `2px solid ${form.listing_type === val ? clr : 'var(--border)'}`, background: form.listing_type === val ? `${clr}18` : 'var(--surface)', color: form.listing_type === val ? clr : 'var(--text-muted)', fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all .15s' }}>
+                  {[['Rent','📅 Rent Only','var(--primary)'],['Buy','🛒 Buy Only','var(--success)'],['Both','🔄 Rent & Buy','var(--warning)']].map(([val, lbl, clr]) => (
+                    <button key={val} type="button" onClick={() => setForm(p => ({ ...p, listing_type: val }))}
+                      style={{ flex: 1, padding: '9px 6px', borderRadius: 10, border: `2px solid ${form.listing_type === val ? clr : 'var(--border)'}`, background: form.listing_type === val ? `${clr}18` : 'var(--surface)', color: form.listing_type === val ? clr : 'var(--text-muted)', fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all .15s' }}>
                       {lbl}
                     </button>
                   ))}
@@ -237,7 +288,7 @@ export default function ProductList() {
 
               <div className="form-group">
                 <label className="form-label">Description</label>
-                <textarea name="description" className="form-textarea" value={form.description} onChange={handleChange} rows={3} placeholder="Describe the rental item..." style={{ borderRadius: 10 }} />
+                <textarea name="description" className="form-textarea" value={form.description} onChange={handleChange} rows={3} placeholder="Describe the rental item..." />
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
@@ -260,26 +311,20 @@ export default function ProductList() {
       {viewItem && (
         <div className="modal-overlay" onClick={() => setViewItem(null)}>
           <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', top: 0, right: 0, height: '100vh', width: '100%', maxWidth: 480, background: 'var(--bg-2)', borderLeft: '1px solid var(--border)', overflowY: 'auto', zIndex: 1000, animation: 'slideInRight .25s ease' }}>
-
-            {/* Header */}
             <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--bg-2)', zIndex: 10 }}>
               <div>
                 <div style={{ fontWeight: 800, fontSize: 18 }}>Product Details</div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>#{viewItem.id}</div>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn--ghost btn--sm" onClick={() => { setViewItem(null); openEdit(viewItem) }}><Pencil size={13}/> Edit</button>
-                <button onClick={() => setViewItem(null)} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}><X size={15}/></button>
+                <button className="btn btn--ghost btn--sm" onClick={() => { setViewItem(null); openEdit(viewItem) }}><Pencil size={13} /> Edit</button>
+                <button onClick={() => setViewItem(null)} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}><X size={15} /></button>
               </div>
             </div>
 
-            {/* Product image */}
-            <div style={{ height: 220, background: viewItem.category === 'Indoor' ? 'rgba(99,102,241,.08)' : 'rgba(239,68,68,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72, position: 'relative', overflow: 'hidden' }}>
-              {viewItem.image
-                ? <img src={`${BASE_URL}${viewItem.image}`} alt={viewItem.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <span>{viewItem.category === 'Indoor' ? '🪑' : '🏕️'}</span>
-              }
-              {/* Listing badges */}
+            <div style={{ height: 220, background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72, position: 'relative', overflow: 'hidden' }}>
+              {viewItem.image ? <img src={`${viewItem.image?.startsWith('http') ? viewItem.image : `${BASE_URL}${viewItem.image}`}`} alt={viewItem.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <span>{viewItem.category === 'Indoor' ? '🪑' : '🏕️'}</span>}
               <div style={{ position: 'absolute', bottom: 12, left: 12, display: 'flex', gap: 6 }}>
                 {(viewItem.listing_type === 'Rent' || viewItem.listing_type === 'Both' || !viewItem.listing_type) && (
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: 'rgba(99,102,241,.9)', color: '#fff' }}>📅 Rent</span>
@@ -288,35 +333,30 @@ export default function ProductList() {
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: 'rgba(16,185,129,.9)', color: '#fff' }}>🛒 Buy</span>
                 )}
               </div>
-              {/* Avail status */}
               <span style={{ position: 'absolute', top: 12, right: 12, fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 999, background: viewItem.is_available ? 'rgba(16,185,129,.9)' : 'rgba(239,68,68,.9)', color: '#fff' }}>
                 {viewItem.is_available ? '✓ Available' : '✗ Unavailable'}
               </span>
             </div>
 
-            {/* Content */}
             <div style={{ padding: 24 }}>
-              {/* Name & Category */}
               <div style={{ marginBottom: 20 }}>
                 <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>{viewItem.name}</h2>
-                <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 12px', borderRadius: 999, background: viewItem.category === 'Indoor' ? 'rgba(99,102,241,.12)' : 'rgba(239,68,68,.12)', color: viewItem.category === 'Indoor' ? '#6366f1' : '#ef4444', border: `1px solid ${viewItem.category === 'Indoor' ? 'rgba(99,102,241,.25)' : 'rgba(239,68,68,.25)'}` }}>
+                <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 12px', borderRadius: 999, background: viewItem.category === 'Indoor' ? 'rgba(99,102,241,.12)' : 'rgba(239,68,68,.12)', color: viewItem.category === 'Indoor' ? 'var(--primary)' : 'var(--danger)' }}>
                   {viewItem.category}
                 </span>
               </div>
 
-              {/* Pricing */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
                 <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}><DollarSign size={11}/> Rent Price</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--primary)' }}>${viewItem.price}<span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)' }}>/day</span></div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Rent Price</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>${viewItem.price}<span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)' }}>/day</span></div>
                 </div>
                 <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}><DollarSign size={11}/> Buy Price</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: '#10b981' }}>{viewItem.buy_price ? `$${viewItem.buy_price}` : <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>N/A</span>}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Buy Price</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--success)' }}>{viewItem.buy_price ? `$${viewItem.buy_price}` : <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>N/A</span>}</div>
                 </div>
               </div>
 
-              {/* Description */}
               {viewItem.description && (
                 <div style={{ marginBottom: 20 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.06em' }}>Description</div>
@@ -324,57 +364,15 @@ export default function ProductList() {
                 </div>
               )}
 
-              {/* Meta info */}
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.06em' }}>Info</div>
-                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-                  {[[
-                    <Calendar size={14}/>, 'Posted On', new Date(viewItem.date_created).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                  ],[
-                    <Tag size={14}/>, 'Category', viewItem.category
-                  ]].map(([icon, label, val], i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderBottom: i < 1 ? '1px solid var(--border)' : 'none' }}>
-                      <span style={{ color: 'var(--primary)' }}>{icon}</span>
-                      <span style={{ fontSize: 13, color: 'var(--text-muted)', flex: 1 }}>{label}</span>
-                      <span style={{ fontSize: 13, fontWeight: 600 }}>{val}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Posted by */}
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.06em' }}>Posted By</div>
-                {viewItem.posted_by ? (
-                  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 18, flexShrink: 0 }}>
-                        {viewItem.posted_by.name?.[0]?.toUpperCase()}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 15 }}>{viewItem.posted_by.name}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Student Customer</div>
-                      </div>
-                    </div>
-                    {[[
-                      <Mail size={13}/>, viewItem.posted_by.email
-                    ],[
-                      <Phone size={13}/>, viewItem.posted_by.phone || 'No phone'
-                    ]].map(([icon, val], i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginTop: i > 0 ? 6 : 0 }}>
-                        <span style={{ color: 'var(--primary)' }}>{icon}</span> {val}
-                      </div>
-                    ))}
-                    <Link to={`/customers/${viewItem.posted_by.id}`} className="btn btn--ghost btn--sm" style={{ marginTop: 12, width: '100%', justifyContent: 'center' }}>
-                      <User size={13}/> View Customer Profile
-                    </Link>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+                {[[<Calendar size={14} />, 'Posted On', new Date(viewItem.date_created).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })],
+                  [<Tag size={14} />, 'Category', viewItem.category]].map(([icon, label, val], i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderBottom: i < 1 ? '1px solid var(--border)' : 'none' }}>
+                    <span style={{ color: 'var(--primary)' }}>{icon}</span>
+                    <span style={{ fontSize: 13, color: 'var(--text-muted)', flex: 1 }}>{label}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{val}</span>
                   </div>
-                ) : (
-                  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
-                    <User size={24} style={{ margin: '0 auto 8px', opacity: .3 }} />
-                    <p>Posted by admin — no customer linked</p>
-                  </div>
-                )}
+                ))}
               </div>
             </div>
           </div>
@@ -382,7 +380,6 @@ export default function ProductList() {
       )}
 
       <style>{`
-        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
         @keyframes slideInRight { from { transform: translateX(100%) } to { transform: translateX(0) } }
       `}</style>
     </div>

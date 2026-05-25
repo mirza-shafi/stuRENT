@@ -115,7 +115,7 @@ export default function Cart() {
                   {Object.values(cart).map(({ product: p, qty }) => {
                     const priceNum = parseFloat(p.price)
                     const itemTotal = priceNum * qty
-                    const imageSrc = p.image ? `${BASE}${p.image}` : null
+                    const imageSrc = p.image ? `${p.image?.startsWith('http') ? p.image : `${BASE}${p.image}`}` : null
                     const emojiFallback = p.category === 'Indoor' ? '🪑' : p.category === 'Housing' ? '🏠' : '🏕️'
 
                     return (

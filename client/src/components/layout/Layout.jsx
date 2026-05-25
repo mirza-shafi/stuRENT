@@ -132,7 +132,7 @@ export default function Layout({ children }) {
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, padding: '28px 32px' }} className="fade-in">
+        <main style={{ flex: 1, padding: '28px 32px', minHeight: '100%', background: 'var(--bg)', overflow: 'auto' }} className="fade-in">
           {children}
         </main>
       </div>

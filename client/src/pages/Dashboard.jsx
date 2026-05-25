@@ -22,8 +22,14 @@ export default function Dashboard() {
   const [topProducts, setTopProducts] = useState([])
   const [adminReqs, setAdminReqs]     = useState([])
   const [loading, setLoading]         = useState(true)
+  const [error, setError]             = useState(null)
   const [actioning, setActioning]     = useState(null) // id of req being processed
   const [hoveredIdx, setHoveredIdx]   = useState(null)
+
+  // Debug logging
+  useEffect(() => {
+    console.log('📊 Dashboard mounted. User:', user, 'isAdmin:', user?.is_staff)
+  }, [user])
 
   const fetchAdminReqs = useCallback(async () => {
     try {
@@ -33,14 +39,23 @@ export default function Dashboard() {
   }, [])
 
   useEffect(() => {
+    setLoading(true)
+    setError(null)
+    console.log('📊 Fetching dashboard stats...')
     Promise.all([
       api.get('/dashboard/'),
       ProductService.getAll({ limit: 4 })
     ]).then(([d, p]) => {
+      console.log('✅ Dashboard stats received:', d.data)
       setStats(d.data.stats)
       setOrders(d.data.recent_orders ?? [])
       setTopProducts(p.data?.results ?? p.data ?? [])
-    }).catch(() => {}).finally(() => setLoading(false))
+      setLoading(false)
+    }).catch((err) => {
+      console.error('❌ Dashboard API error:', err)
+      setError(err.message || 'Failed to load dashboard')
+      setLoading(false)
+    })
 
     fetchAdminReqs()
     const iv = setInterval(fetchAdminReqs, 20000)
@@ -59,16 +74,36 @@ export default function Dashboard() {
   }
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 12, color: 'var(--text-muted)' }}>
-      <span className="spinner" /> Loading Admin Panel...
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: 12, color: 'var(--text-muted)', flexDirection: 'column' }}>
+      <span className="spinner" style={{ width: 40, height: 40 }} /> 
+      <p>Loading Dashboard Stats...</p>
     </div>
   )
 
+  if (error) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: 12, color: 'var(--danger)', flexDirection: 'column', textAlign: 'center' }}>
+      <p style={{ fontSize: 16, fontWeight: 700 }}>⚠️ Error loading dashboard</p>
+      <p style={{ fontSize: 14, color: 'var(--text-muted)' }}>{error}</p>
+      <button onClick={() => window.location.reload()} className="btn btn--primary btn--sm">Retry</button>
+    </div>
+  )
+
+  // Get default empty stats object for rendering structure while loading
+  const displayStats = stats || {
+    total_orders: 0,
+    total_customers: 0,
+    total_products: 0,
+    total_revenue: 0,
+    delivered: 0,
+    pending: 0,
+    out_for_delivery: 0,
+  }
+
   const statCards = [
-    { label: 'Total Customers', value: stats?.total_customers ?? 0,       change: '+8.2%',  icon: Users,        color: 'var(--primary)', bg: 'var(--primary-glow)' },
-    { label: 'Active Products',  value: stats?.total_products  ?? 0,       change: '+12.4%', icon: Package,      color: 'var(--accent)',  bg: 'rgba(6,182,212,.12)'  },
-    { label: 'Total Orders',    value: stats?.total_orders    ?? 0,       change: '+18.7%', icon: ShoppingCart, color: 'var(--success)', bg: 'rgba(16,185,129,.12)' },
-    { label: 'Revenue (est.)',  value: `$${(stats?.total_revenue ?? 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`, change: '+6.5%',  icon: DollarSign,   color: 'var(--warning)', bg: 'rgba(245,158,11,.12)'  },
+    { label: 'Total Customers', value: displayStats?.total_customers ?? '—',       change: '+0%',  icon: Users,        color: 'var(--primary)', bg: 'var(--primary-glow)' },
+    { label: 'Active Products',  value: displayStats?.total_products  ?? '—',       change: '+0%', icon: Package,      color: 'var(--accent)',  bg: 'rgba(6,182,212,.12)'  },
+    { label: 'Total Orders',    value: displayStats?.total_orders    ?? '—',       change: '+0%', icon: ShoppingCart, color: 'var(--success)', bg: 'rgba(16,185,129,.12)' },
+    { label: 'Revenue (est.)',  value: displayStats?.total_revenue ? `$${(displayStats.total_revenue).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}` : '$0.00', change: '+0%',  icon: DollarSign,   color: 'var(--warning)', bg: 'rgba(245,158,11,.12)'  },
   ]
 
   const STATUS_STYLE = {
@@ -90,8 +125,8 @@ export default function Dashboard() {
 
   // Math for circular progress loaders
   const renderProgressCircle = (count, label, color) => {
-    const total = stats?.total_orders || 1
-    const pct = Math.round((count / total) * 100)
+    const total = displayStats?.total_orders || 1
+    const pct = total > 0 ? Math.round((count / total) * 100) : 0
     const radius = 30
     const circumference = 2 * Math.PI * radius
     const strokeDashoffset = circumference - (pct / 100) * circumference
@@ -120,7 +155,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="db-container fade-in">
+    <div className="db-container fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1200, margin: '0 auto', width: '100%' }}>
       {/* ── Welcome Hero Banner ── */}
       <div className="db-hero">
         <div className="db-hero-content">
@@ -310,9 +345,9 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="db-progress-indicators" style={{ marginTop: 24 }}>
-            {renderProgressCircle(stats?.pending ?? 0, 'Pending Validation', 'var(--warning)')}
-            {renderProgressCircle(stats?.out_for_delivery ?? 0, 'Out for Handoff', 'var(--accent)')}
-            {renderProgressCircle(stats?.delivered ?? 0, 'Delivered Escrow', 'var(--success)')}
+            {renderProgressCircle(displayStats?.pending ?? 0, 'Pending Validation', 'var(--warning)')}
+            {renderProgressCircle(displayStats?.out_for_delivery ?? 0, 'Out for Handoff', 'var(--accent)')}
+            {renderProgressCircle(displayStats?.delivered ?? 0, 'Delivered Escrow', 'var(--success)')}
           </div>
         </div>
       </div>
@@ -384,7 +419,7 @@ export default function Dashboard() {
                   <div key={p.id} className="db-product-row">
                     <div className="db-product-thumb">
                       {p.image ? (
-                        <img src={p.image} alt={p.name} />
+                        <img src={p.image?.startsWith('http') ? p.image : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${p.image}`.replace('/api/v1', '')} alt={p.name} />
                       ) : (
                         <span>🪑</span>
                       )}

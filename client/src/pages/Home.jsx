@@ -475,7 +475,7 @@ function ProductCard({ product: p }) {
       <span className={`hp-card-badge hp-badge-${badgeType}`}>{badgeText}</span>
       <div className="hp-card-img">
         {p.image
-          ? <img src={`${BASE_URL}${p.image}`} alt={p.name} />
+          ? <img src={`${p.image?.startsWith('http') ? p.image : `${BASE_URL}${p.image}`}`} alt={p.name} />
           : <span>{p.category === 'Indoor' ? '🪑' : '🏕️'}</span>
         }
         <div className="hp-card-actions">

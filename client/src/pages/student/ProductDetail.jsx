@@ -116,7 +116,7 @@ export default function ProductDetail() {
         <div className="pd-visual-col">
           <div className="pd-image-box card">
             {product.image ? (
-              <img src={`${BASE_URL}${product.image}`} alt={product.name} className="pd-main-img" />
+              <img src={`${product.image?.startsWith('http') ? product.image : `${BASE_URL}${product.image}`}`} alt={product.name} className="pd-main-img" />
             ) : (
               <div className="pd-emoji-placeholder">
                 <span className="pd-emoji">{categoryEmoji}</span>
@@ -130,7 +130,7 @@ export default function ProductDetail() {
           {/* Gallery Thumbnails (Decorative fallback styles matching Phoenix) */}
           <div className="pd-thumbs">
             <div className="pd-thumb active">
-              {product.image ? <img src={`${BASE_URL}${product.image}`} alt="" /> : <span>{categoryEmoji}</span>}
+              {product.image ? <img src={`${product.image?.startsWith('http') ? product.image : `${BASE_URL}${product.image}`}`} alt="" /> : <span>{categoryEmoji}</span>}
             </div>
             <div className="pd-thumb">
               <span>🌟</span>

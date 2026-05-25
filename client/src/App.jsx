@@ -29,6 +29,8 @@ import CustomerList   from './pages/customers/CustomerList'
 import CustomerDetail from './pages/customers/CustomerDetail'
 import ProductList    from './pages/products/ProductList'
 import OrderList      from './pages/orders/OrderList'
+import OrderDetail    from './pages/orders/OrderDetail'
+import Refund         from './pages/orders/Refund'
 import AdminSettings  from './pages/admin/AdminSettings'
 
 function StudentRoute({ children }) {
@@ -39,9 +41,14 @@ function StudentRoute({ children }) {
 
 function AdminRoute({ children }) {
   const { user, loading } = useAuth()
-  if (loading) return <div className="loading-screen"><span className="spinner" /></div>
-  // Redirect to admin login (not student login) when unauthenticated
-  return user ? <Layout>{children}</Layout> : <Navigate to="/admin/login" replace />
+  if (loading) return (
+    <div className="loading-screen">
+      <span className="spinner" />
+      <p style={{ marginTop: 12, fontSize: 14, color: 'var(--text-muted)' }}>Loading admin panel...</p>
+    </div>
+  )
+  // Check if user is authenticated AND is an admin (is_staff)
+  return (user && user.is_staff) ? <Layout>{children}</Layout> : <Navigate to="/admin/login" replace />
 }
 
 function GuestRoute({ children }) {
@@ -84,12 +91,15 @@ export default function App() {
             <Route path="/admin/register" element={<AdminRegister />} />
 
             {/* Admin panel */}
-            <Route path="/dashboard"      element={<AdminRoute><Dashboard /></AdminRoute>} />
-            <Route path="/customers"      element={<AdminRoute><CustomerList /></AdminRoute>} />
-            <Route path="/customers/:id"  element={<AdminRoute><CustomerDetail /></AdminRoute>} />
-            <Route path="/admin/products"  element={<AdminRoute><ProductList /></AdminRoute>} />
-            <Route path="/admin/orders"    element={<AdminRoute><OrderList /></AdminRoute>} />
-            <Route path="/admin/settings"  element={<AdminRoute><AdminSettings /></AdminRoute>} />
+            <Route path="/admin/dashboard"    element={<AdminRoute><Dashboard /></AdminRoute>} />
+            <Route path="/admin/customers"    element={<AdminRoute><CustomerList /></AdminRoute>} />
+            <Route path="/admin/customers/:id" element={<AdminRoute><CustomerDetail /></AdminRoute>} />
+            <Route path="/admin/products"     element={<AdminRoute><ProductList /></AdminRoute>} />
+            <Route path="/admin/add-product"  element={<AdminRoute><AddProduct /></AdminRoute>} />
+            <Route path="/admin/orders"       element={<AdminRoute><OrderList /></AdminRoute>} />
+            <Route path="/admin/orders/:id"   element={<AdminRoute><OrderDetail /></AdminRoute>} />
+            <Route path="/admin/orders/:id/refund" element={<AdminRoute><Refund /></AdminRoute>} />
+            <Route path="/admin/settings"     element={<AdminRoute><AdminSettings /></AdminRoute>} />
 
             </Routes>
             <AuthModal />
