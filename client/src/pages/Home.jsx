@@ -142,7 +142,7 @@ function HomePageInner() {
             }
           }}>✨ Be a Vendor</button>
           <button className={`hp-cat-btn ${cat==='buy'?'active':''}`} onClick={()=>setCat('buy')}>🛒 For Sale</button>
-          <button className="hp-cat-btn" onClick={()=>navigate('/products')}>🏠 Housing</button>
+          <button className="hp-cat-btn" onClick={()=>navigate('/products?category=Housing')}>🏠 Housing</button>
         </div>
       </nav>
 

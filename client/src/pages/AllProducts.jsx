@@ -2,8 +2,8 @@
  * AllProducts.jsx — Phoenix-style products filter page
  * Route: /products
  */
-import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
 import StudentService from '../services/studentService'
 
@@ -22,14 +22,27 @@ export default function AllProducts() {
   const { data, loading } = useApi(StudentService.getProducts)
   const all = data?.results ?? data ?? []
 
+  const [searchParams] = useSearchParams()
+  const qParam = searchParams.get('q') || ''
+  const catParam = searchParams.get('category') || 'All'
+
   // ── Filter state ──────────────────────────────
-  const [search,      setSearch]      = useState('')
-  const [category,    setCategory]    = useState('All')
+  const [search,      setSearch]      = useState(qParam)
+  const [category,    setCategory]    = useState(catParam)
   const [listingType, setListingType] = useState('All')
   const [maxPrice,    setMaxPrice]    = useState(500)
   const [sortBy,      setSortBy]      = useState('newest')
   const [available,   setAvailable]   = useState(false)
   const [view,        setView]        = useState('grid') // 'grid' | 'list'
+
+  // Synchronize URL query params if they change
+  useEffect(() => {
+    setSearch(qParam)
+  }, [qParam])
+
+  useEffect(() => {
+    setCategory(catParam)
+  }, [catParam])
 
   // ── Derived ───────────────────────────────────
   const filtered = useMemo(() => {
@@ -43,7 +56,10 @@ export default function AllProducts() {
       arr = arr.filter(p => p.listing_type === listingType)
     if (available)
       arr = arr.filter(p => p.is_available)
-    arr = arr.filter(p => Number(p.price) <= maxPrice)
+    arr = arr.filter(p => {
+      const priceToCompare = p.listing_type === 'Buy' ? p.buy_price : p.price
+      return Number(priceToCompare || 0) <= maxPrice
+    })
 
     if (sortBy === 'price_asc')  arr.sort((a,b) => a.price - b.price)
     if (sortBy === 'price_desc') arr.sort((a,b) => b.price - a.price)
