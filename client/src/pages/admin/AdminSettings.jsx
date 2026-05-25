@@ -163,6 +163,9 @@ export default function AdminSettings() {
         @media (max-width: 768px) {
           div[style*="gridTemplateColumns: 200px 1fr"] { grid-template-columns: 1fr !important; }
         }
+        @media (max-width: 600px) {
+          div[style*="gridTemplateColumns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+        }
       `}</style>
     </div>
   )

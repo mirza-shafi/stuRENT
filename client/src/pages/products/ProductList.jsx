@@ -361,7 +361,7 @@ export default function ProductList() {
                 <input name="name" className="form-input" value={form.name} onChange={handleChange} required placeholder="e.g. Folding Table" />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
                 <div className="form-group">
                   <label className="form-label">Price / Day ($) *</label>
                   <input name="price" type="number" step="0.01" min="0" className="form-input" value={form.price} onChange={handleChange} required placeholder="0.00" />
@@ -382,7 +382,7 @@ export default function ProductList() {
 
               <div className="form-group">
                 <label className="form-label">Listing Type *</label>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {[['Rent','📅 Rent Only','var(--primary)'],['Buy','🛒 Buy Only','var(--success)'],['Both','🔄 Rent & Buy','var(--warning)']].map(([val, lbl, clr]) => (
                     <button key={val} type="button" onClick={() => setForm(p => ({ ...p, listing_type: val }))}
                       style={{ flex: 1, padding: '9px 6px', borderRadius: 10, border: `2px solid ${form.listing_type === val ? clr : 'var(--border)'}`, background: form.listing_type === val ? `${clr}18` : 'var(--surface)', color: form.listing_type === val ? clr : 'var(--text-muted)', fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all .15s' }}>
@@ -452,7 +452,7 @@ export default function ProductList() {
                 </span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
                 <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Rent Price</div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>${viewItem.price}<span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)' }}>/day</span></div>

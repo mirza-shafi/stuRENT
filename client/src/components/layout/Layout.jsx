@@ -44,17 +44,17 @@ export default function Layout({ children }) {
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
       <Sidebar />
 
-      <div style={{ flex: 1, marginLeft: 'var(--sidebar-w)', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="admin-main-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         {/* ── Top header ── */}
-        <header style={{ height: 60, background: 'var(--bg-2)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '0 28px', gap: 10, position: 'sticky', top: 0, zIndex: 90 }}>
+        <header className="admin-header">
 
           {/* Theme toggle */}
           <ThemeToggle />
 
           {/* Settings */}
           <Link to="/admin/settings" style={{ width: 36, height: 36, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-muted)', transition: 'all .15s' }}
-            onMouseEnter={e => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.borderColor = 'var(--primary)' }}
-            onMouseLeave={e => { e.currentTarget.style.color = ''; e.currentTarget.style.borderColor = '' }}
+             onMouseEnter={e => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.borderColor = 'var(--primary)' }}
+             onMouseLeave={e => { e.currentTarget.style.color = ''; e.currentTarget.style.borderColor = '' }}
             title="Admin Settings"
           >
             <Settings size={16}/>
@@ -132,10 +132,49 @@ export default function Layout({ children }) {
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, padding: '28px 32px', minHeight: '100%', background: 'var(--bg)', overflow: 'auto' }} className="fade-in">
+        <main className="admin-content fade-in">
           {children}
         </main>
       </div>
+
+      <style>{`
+        .admin-main-wrapper {
+          flex: 1;
+          margin-left: var(--sidebar-w);
+          transition: margin-left .25s ease;
+        }
+        .admin-header {
+          height: 60px;
+          background: var(--bg-2);
+          border-bottom: 1px solid var(--border);
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          padding: 0 28px;
+          gap: 10px;
+          position: sticky;
+          top: 0;
+          z-index: 90;
+        }
+        .admin-content {
+          flex: 1;
+          padding: 28px 32px;
+          min-height: 100%;
+          background: var(--bg);
+          overflow: auto;
+        }
+        @media (max-width: 768px) {
+          .admin-main-wrapper {
+            margin-left: 0 !important;
+          }
+          .admin-header {
+            padding: 0 16px 0 72px !important;
+          }
+          .admin-content {
+            padding: 16px !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }

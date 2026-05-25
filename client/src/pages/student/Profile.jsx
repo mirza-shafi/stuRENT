@@ -101,7 +101,7 @@ export default function Profile() {
               <div style={{ background: 'rgba(99,102,241,.12)', color: 'var(--primary)', fontSize: '11px', fontWeight: 700, padding: '2px 10px', borderRadius: '999px', display: 'inline-block', marginTop: '6px' }}>Student</div>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
             {[['Wallet Balance', `$${balance.toFixed(2)}`],['Member Since', new Date().getFullYear()]].map(([k,v]) => (
               <div key={k} style={{ background: 'var(--surface)', borderRadius: '10px', padding: '14px' }}>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>{k}</div>

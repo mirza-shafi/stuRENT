@@ -69,12 +69,12 @@ export default function CustomerDetail() {
       </div>
 
       {/* ── Two-column layout ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
+      <div className="cd-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
 
         {/* LEFT: Stats + Order History */}
         <div>
           {/* Stats row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
             {[
               { label: 'Total Orders', value: orders.length, icon: <ShoppingCart size={20} />, color: 'var(--primary)', bg: 'rgba(99,102,241,.1)' },
               { label: 'Total Spent', value: `$${totalSpent.toFixed(2)}`, icon: '💳', color: 'var(--success)', bg: 'rgba(16,185,129,.1)' },
