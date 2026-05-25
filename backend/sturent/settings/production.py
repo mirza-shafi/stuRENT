@@ -30,7 +30,7 @@ CORS_ALLOW_CREDENTIALS = True
 # ── Static Files (WhiteNoise) & Media Files ──────────────────────────────────
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
