@@ -17,6 +17,12 @@ import ProductService from '../../services/productService'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
+const HOUSING_LOCATIONS = {
+  Dhaka: ['Mirpur', 'Dhanmondi', 'Gulshan', 'Banani', 'Uttara', 'Badda', 'Khilgaon'],
+  Chittagong: ['Halishahar', 'GEC', 'Panchlaish', 'Nasirabad', 'Agrabad'],
+  Sylhet: ['Zindabazar', 'Shibgonj', 'Uposhahar', 'Amberkhana']
+}
+
 const EMPTY_FORM = {
   name: '',
   price: '',
@@ -25,7 +31,15 @@ const EMPTY_FORM = {
   category: 'Indoor',
   description: '',
   is_available: true,
-  image: null
+  image: null,
+  city: '',
+  area: '',
+  house_type: 'Flat',
+  flat_size: '',
+  rooms: 1,
+  bathrooms: 1,
+  ac_included: false,
+  furnished: false
 }
 
 export default function AddProduct() {
@@ -40,7 +54,14 @@ export default function AddProduct() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
-    setForm(p => ({ ...p, [name]: type === 'checkbox' ? checked : value }))
+    setForm(p => {
+      const next = { ...p, [name]: type === 'checkbox' ? checked : value }
+      if (name === 'city') {
+        const areas = HOUSING_LOCATIONS[value] || []
+        next.area = areas[0] || ''
+      }
+      return next
+    })
   }
 
   const handleImage = (e) => {
@@ -60,15 +81,45 @@ export default function AddProduct() {
     if (e) e.preventDefault()
 
     if (!form.name) { toast.error('Please write a product title.'); return }
-    if (!form.price) { toast.error('Please enter a daily rental price.'); return }
+    
+    // Listing Type Validation
+    if (form.listing_type === 'Rent') {
+      if (!form.price) { toast.error('Please enter a daily rental price.'); return }
+    } else if (form.listing_type === 'Buy') {
+      if (!form.buy_price) { toast.error('Please enter a purchase price.'); return }
+    } else if (form.listing_type === 'Both') {
+      if (!form.price) { toast.error('Please enter a daily rental price.'); return }
+      if (!form.buy_price) { toast.error('Please enter a purchase price.'); return }
+    }
+
+    // Housing Validation
+    if (form.category === 'Housing') {
+      if (!form.city) { toast.error('Please select a location city.'); return }
+      if (!form.area) { toast.error('Please select an area.'); return }
+      if (!form.flat_size) { toast.error('Please specify the flat size.'); return }
+    }
     
     setSaving(true)
     try {
       const payload = { ...form }
       
-      // If Buy Only, set rent price to 0 (or match buy price)
+      // If Buy Only, set rent price to null (not 0 or required)
       if (form.listing_type === 'Buy') {
-        payload.price = 0
+        payload.price = null
+      } else if (form.listing_type === 'Rent') {
+        payload.buy_price = null
+      }
+
+      // If category is not Housing, clear housing specifications
+      if (form.category !== 'Housing') {
+        payload.city = null
+        payload.area = null
+        payload.house_type = null
+        payload.flat_size = null
+        payload.rooms = null
+        payload.bathrooms = null
+        payload.ac_included = false
+        payload.furnished = false
       }
 
       await ProductService.create(payload)
@@ -187,6 +238,140 @@ export default function AddProduct() {
               <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} style={{ display: 'none' }} />
             </div>
           </div>
+
+          {form.category === 'Housing' && (
+            <div className="ap-form-card card fade-in">
+              <div className="ap-card-header">
+                <Layers size={15} />
+                <span>Housing Specifications</span>
+              </div>
+              <div className="ap-card-body">
+                <div className="ap-pricing-row">
+                  <div className="ap-group">
+                    <label className="ap-field-label">Location (City) *</label>
+                    <select 
+                      name="city" 
+                      className="ap-select" 
+                      value={form.city} 
+                      onChange={handleChange}
+                      required={form.category === 'Housing'}
+                    >
+                      <option value="">Select City</option>
+                      {Object.keys(HOUSING_LOCATIONS).map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="ap-group">
+                    <label className="ap-field-label">Area *</label>
+                    <select 
+                      name="area" 
+                      className="ap-select" 
+                      value={form.area} 
+                      onChange={handleChange}
+                      required={form.category === 'Housing'}
+                      disabled={!form.city}
+                    >
+                      <option value="">Select Area</option>
+                      {(HOUSING_LOCATIONS[form.city] || []).map(a => (
+                        <option key={a} value={a}>{a}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="ap-pricing-row">
+                  <div className="ap-group">
+                    <label className="ap-field-label">House Type *</label>
+                    <select 
+                      name="house_type" 
+                      className="ap-select" 
+                      value={form.house_type} 
+                      onChange={handleChange}
+                      required={form.category === 'Housing'}
+                    >
+                      <option value="Flat">Flat</option>
+                      <option value="Duplex">Duplex</option>
+                      <option value="Sublet">Sublet</option>
+                      <option value="Room">Room</option>
+                      <option value="Apartment">Apartment</option>
+                    </select>
+                  </div>
+                  <div className="ap-group">
+                    <label className="ap-field-label">Flat Size (sqft) *</label>
+                    <input 
+                      name="flat_size" 
+                      type="number" 
+                      min="0"
+                      className="ap-input" 
+                      value={form.flat_size} 
+                      onChange={handleChange}
+                      required={form.category === 'Housing'}
+                      placeholder="e.g. 1200" 
+                    />
+                  </div>
+                </div>
+
+                <div className="ap-pricing-row" style={{ alignItems: 'center' }}>
+                  <div className="ap-group">
+                    <label className="ap-field-label">Rooms (Bedrooms) *</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <button 
+                        type="button" 
+                        className="ap-counter-btn"
+                        onClick={() => setForm(p => ({ ...p, rooms: Math.max(1, (p.rooms || 1) - 1) }))}
+                      >-</button>
+                      <span style={{ fontSize: 16, fontWeight: 700, minWidth: 20, textAlign: 'center' }}>{form.rooms}</span>
+                      <button 
+                        type="button" 
+                        className="ap-counter-btn"
+                        onClick={() => setForm(p => ({ ...p, rooms: (p.rooms || 1) + 1 }))}
+                      >+</button>
+                    </div>
+                  </div>
+                  <div className="ap-group">
+                    <label className="ap-field-label">Bathrooms *</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <button 
+                        type="button" 
+                        className="ap-counter-btn"
+                        onClick={() => setForm(p => ({ ...p, bathrooms: Math.max(1, (p.bathrooms || 1) - 1) }))}
+                      >-</button>
+                      <span style={{ fontSize: 16, fontWeight: 700, minWidth: 20, textAlign: 'center' }}>{form.bathrooms}</span>
+                      <button 
+                        type="button" 
+                        className="ap-counter-btn"
+                        onClick={() => setForm(p => ({ ...p, bathrooms: (p.bathrooms || 1) + 1 }))}
+                      >+</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 24, marginTop: 12 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                    <input 
+                      type="checkbox" 
+                      name="ac_included" 
+                      checked={form.ac_included} 
+                      onChange={handleChange}
+                      style={{ width: 16, height: 16, accentColor: 'var(--primary)' }}
+                    />
+                    <span>AC Included</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                    <input 
+                      type="checkbox" 
+                      name="furnished" 
+                      checked={form.furnished} 
+                      onChange={handleChange}
+                      style={{ width: 16, height: 16, accentColor: 'var(--primary)' }}
+                    />
+                    <span>Fully Furnished</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Section 3: Pricing & Specifications Tabs */}
           <div className="ap-form-card card">
@@ -756,6 +941,27 @@ export default function AddProduct() {
         .ap-availability-switch label span {
           font-size: 11px;
           color: var(--text-muted);
+        }
+
+        .ap-counter-btn {
+          width: 32px;
+          height: 32px;
+          border-radius: var(--radius-md);
+          border: 1px solid var(--border);
+          background: var(--bg-2);
+          color: var(--text);
+          font-weight: bold;
+          font-size: 16px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+        .ap-counter-btn:hover {
+          background: var(--surface-hov);
+          border-color: var(--primary);
+          color: var(--primary);
         }
 
         /* Responsive layout */

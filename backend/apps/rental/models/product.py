@@ -41,12 +41,22 @@ class Product(models.Model):
         REJECTED = "rejected", _("Rejected")
 
     name         = models.CharField(_("product name"),  max_length=200)
-    price        = models.DecimalField(_("price per day"), max_digits=10, decimal_places=2)
+    price        = models.DecimalField(_("price per day"), max_digits=10, decimal_places=2, null=True, blank=True)
     buy_price    = models.DecimalField(_("buy price"), max_digits=10, decimal_places=2, null=True, blank=True)
     category     = models.CharField(_("category"), max_length=20, choices=Category.choices, db_index=True)
     listing_type = models.CharField(_("listing type"), max_length=4, choices=ListingType.choices, default=ListingType.RENT)
     description  = models.TextField(_("description"), blank=True, default="")
     image        = models.ImageField(_("product image"), upload_to="products/", null=True, blank=True)
+    
+    # Housing specifications
+    city         = models.CharField(_("city"), max_length=100, blank=True, null=True)
+    area         = models.CharField(_("area"), max_length=100, blank=True, null=True)
+    house_type   = models.CharField(_("house type"), max_length=50, blank=True, null=True)
+    flat_size    = models.IntegerField(_("flat size (sqft)"), blank=True, null=True)
+    rooms        = models.IntegerField(_("rooms"), blank=True, null=True)
+    bathrooms    = models.IntegerField(_("bathrooms"), blank=True, null=True)
+    ac_included  = models.BooleanField(_("AC included"), default=False)
+    furnished    = models.BooleanField(_("furnished"), default=False)
     posted_by    = models.ForeignKey(
         "rental.Customer",
         on_delete=models.SET_NULL,

@@ -9,6 +9,12 @@ import StudentService from '../services/studentService'
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace('/api/v1', '')
 
+const HOUSING_LOCATIONS = {
+  Dhaka: ['Mirpur', 'Dhanmondi', 'Gulshan', 'Banani', 'Uttara', 'Badda', 'Khilgaon'],
+  Chittagong: ['Halishahar', 'GEC', 'Panchlaish', 'Nasirabad', 'Agrabad'],
+  Sylhet: ['Zindabazar', 'Shibgonj', 'Uposhahar', 'Amberkhana']
+}
+
 const CATEGORIES = ['All', 'Indoor', 'Outdoor', 'Housing']
 const LISTING_TYPES = ['All', 'Rent', 'Buy', 'Both']
 const SORT_OPTIONS = [
@@ -19,12 +25,17 @@ const SORT_OPTIONS = [
 ]
 
 export default function AllProducts() {
-  const { data, loading } = useApi(StudentService.getProducts)
-  const all = data?.results ?? data ?? []
-
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const qParam = searchParams.get('q') || ''
   const catParam = searchParams.get('category') || 'All'
+  const cityParam = searchParams.get('city') || ''
+  const areaParam = searchParams.get('area') || ''
+  const houseTypeParam = searchParams.get('house_type') || ''
+  const sizeParam = searchParams.get('flat_size') || ''
+  const roomsParam = searchParams.get('rooms') || ''
+  const bathsParam = searchParams.get('bathrooms') || ''
+  const acParam = searchParams.get('ac_included') === 'true'
+  const furnishedParam = searchParams.get('furnished') === 'true'
 
   // ── Filter state ──────────────────────────────
   const [search,      setSearch]      = useState(qParam)
@@ -35,6 +46,37 @@ export default function AllProducts() {
   const [available,   setAvailable]   = useState(false)
   const [view,        setView]        = useState('grid') // 'grid' | 'list'
 
+  // Housing state
+  const [city, setCity]               = useState(cityParam)
+  const [area, setArea]               = useState(areaParam)
+  const [houseType, setHouseType]     = useState(houseTypeParam)
+  const [flatSize, setFlatSize]       = useState(sizeParam)
+  const [rooms, setRooms]             = useState(roomsParam)
+  const [bathrooms, setBathrooms]     = useState(bathsParam)
+  const [acIncluded, setAcIncluded]   = useState(acParam)
+  const [furnished, setFurnished]     = useState(furnishedParam)
+
+  // ── Data Fetching with search parameters ───────────────────────────
+  const apiParams = useMemo(() => {
+    const p = {}
+    if (search) p.q = search
+    if (category !== 'All') p.category = category
+    if (category === 'Housing') {
+      if (city) p.city = city
+      if (area) p.area = area
+      if (houseType) p.house_type = houseType
+      if (flatSize) p.flat_size = flatSize
+      if (rooms) p.rooms = rooms
+      if (bathrooms) p.bathrooms = bathrooms
+      if (acIncluded) p.ac_included = acIncluded
+      if (furnished) p.furnished = furnished
+    }
+    return p
+  }, [search, category, city, area, houseType, flatSize, rooms, bathrooms, acIncluded, furnished])
+
+  const { data, loading } = useApi(() => StudentService.getProducts(apiParams), [apiParams])
+  const all = data?.results ?? data ?? []
+
   // Synchronize URL query params if they change
   useEffect(() => {
     setSearch(qParam)
@@ -43,6 +85,44 @@ export default function AllProducts() {
   useEffect(() => {
     setCategory(catParam)
   }, [catParam])
+
+  useEffect(() => {
+    setCity(searchParams.get('city') || '')
+    setArea(searchParams.get('area') || '')
+    setHouseType(searchParams.get('house_type') || '')
+    setFlatSize(searchParams.get('flat_size') || '')
+    setRooms(searchParams.get('rooms') || '')
+    setBathrooms(searchParams.get('bathrooms') || '')
+    setAcIncluded(searchParams.get('ac_included') === 'true')
+    setFurnished(searchParams.get('furnished') === 'true')
+  }, [searchParams])
+
+  const updateSearchParam = (key, value) => {
+    const nextParams = new URLSearchParams(searchParams)
+    if (value === '' || value === null || value === undefined || value === false || value === 'All') {
+      nextParams.delete(key)
+    } else {
+      nextParams.set(key, String(value))
+    }
+    setSearchParams(nextParams)
+  }
+
+  const handleCategoryChange = (newCat) => {
+    setCategory(newCat)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('category', newCat)
+    if (newCat !== 'Housing') {
+      nextParams.delete('city')
+      nextParams.delete('area')
+      nextParams.delete('house_type')
+      nextParams.delete('flat_size')
+      nextParams.delete('rooms')
+      nextParams.delete('bathrooms')
+      nextParams.delete('ac_included')
+      nextParams.delete('furnished')
+    }
+    setSearchParams(nextParams)
+  }
 
   // ── Derived ───────────────────────────────────
   const filtered = useMemo(() => {
@@ -61,15 +141,45 @@ export default function AllProducts() {
       return Number(priceToCompare || 0) <= maxPrice
     })
 
-    if (sortBy === 'price_asc')  arr.sort((a,b) => a.price - b.price)
-    if (sortBy === 'price_desc') arr.sort((a,b) => b.price - a.price)
+    // Housing specific filters (using DB attributes directly)
+    if (category === 'Housing') {
+      if (city) {
+        arr = arr.filter(p => p.city === city)
+      }
+      if (area) {
+        arr = arr.filter(p => p.area === area)
+      }
+      if (houseType) {
+        arr = arr.filter(p => p.house_type === houseType)
+      }
+      if (flatSize) {
+        arr = arr.filter(p => p.flat_size && Number(p.flat_size) >= Number(flatSize))
+      }
+      if (rooms) {
+        arr = arr.filter(p => p.rooms && Number(p.rooms) >= Number(rooms))
+      }
+      if (bathrooms) {
+        arr = arr.filter(p => p.bathrooms && Number(p.bathrooms) >= Number(bathrooms))
+      }
+      if (acIncluded) {
+        arr = arr.filter(p => p.ac_included)
+      }
+      if (furnished) {
+        arr = arr.filter(p => p.furnished)
+      }
+    }
+
+    if (sortBy === 'price_asc')  arr.sort((a,b) => (a.price || 0) - (b.price || 0))
+    if (sortBy === 'price_desc') arr.sort((a,b) => (b.price || 0) - (a.price || 0))
     if (sortBy === 'name_asc')   arr.sort((a,b) => a.name.localeCompare(b.name))
     return arr
-  }, [all, search, category, listingType, available, maxPrice, sortBy])
+  }, [all, search, category, listingType, available, maxPrice, sortBy, city, area, houseType, flatSize, rooms, bathrooms, acIncluded, furnished])
 
   const resetFilters = () => {
     setSearch(''); setCategory('All'); setListingType('All')
     setMaxPrice(500); setAvailable(false); setSortBy('newest')
+    setCity(''); setArea(''); setHouseType(''); setFlatSize(''); setRooms(''); setBathrooms(''); setAcIncluded(false); setFurnished(false)
+    setSearchParams(new URLSearchParams())
   }
 
   return (
@@ -94,6 +204,88 @@ export default function AllProducts() {
           </div>
         </div>
       </div>
+
+      {category === 'Housing' && (
+        <div className="ap-housing-filterbar fade-in">
+          <div className="ap-housing-filterbar-inner">
+            {/* City */}
+            <div className="ap-h-filter-item">
+              <span className="ap-h-filter-label">City</span>
+              <select className="ap-h-select" value={city} onChange={e => { setCity(e.target.value); updateSearchParam('city', e.target.value) }}>
+                <option value="">All Cities</option>
+                {Object.keys(HOUSING_LOCATIONS).map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Area */}
+            <div className="ap-h-filter-item">
+              <span className="ap-h-filter-label">Area</span>
+              <select className="ap-h-select" value={area} onChange={e => { setArea(e.target.value); updateSearchParam('area', e.target.value) }} disabled={!city}>
+                <option value="">All Areas</option>
+                {(HOUSING_LOCATIONS[city] || []).map(a => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* House Type */}
+            <div className="ap-h-filter-item">
+              <span className="ap-h-filter-label">Type</span>
+              <select className="ap-h-select" value={houseType} onChange={e => { setHouseType(e.target.value); updateSearchParam('house_type', e.target.value) }}>
+                <option value="">All Types</option>
+                <option value="Flat">Flat</option>
+                <option value="Duplex">Duplex</option>
+                <option value="Sublet">Sublet</option>
+                <option value="Room">Room</option>
+                <option value="Apartment">Apartment</option>
+              </select>
+            </div>
+
+            {/* Size (sqft) */}
+            <div className="ap-h-filter-item">
+              <span className="ap-h-filter-label">Min Size: <strong>{flatSize || 0} sqft</strong></span>
+              <input type="range" min="0" max="3000" step="50" value={flatSize || 0} onChange={e => { setFlatSize(e.target.value); updateSearchParam('flat_size', e.target.value) }} className="ap-h-range" />
+            </div>
+
+            {/* Rooms */}
+            <div className="ap-h-filter-item">
+              <span className="ap-h-filter-label">Rooms</span>
+              <select className="ap-h-select" value={rooms} onChange={e => { setRooms(e.target.value); updateSearchParam('rooms', e.target.value) }}>
+                <option value="">Any</option>
+                <option value="1">1+ Bed</option>
+                <option value="2">2+ Beds</option>
+                <option value="3">3+ Beds</option>
+                <option value="4">4+ Beds</option>
+              </select>
+            </div>
+
+            {/* Bathrooms */}
+            <div className="ap-h-filter-item">
+              <span className="ap-h-filter-label">Baths</span>
+              <select className="ap-h-select" value={bathrooms} onChange={e => { setBathrooms(e.target.value); updateSearchParam('bathrooms', e.target.value) }}>
+                <option value="">Any</option>
+                <option value="1">1+ Bath</option>
+                <option value="2">2+ Baths</option>
+                <option value="3">3+ Baths</option>
+              </select>
+            </div>
+
+            {/* Amenities */}
+            <div className="ap-h-filter-item-checkboxes">
+              <label className="ap-h-checkbox-label">
+                <input type="checkbox" checked={acIncluded} onChange={e => { setAcIncluded(e.target.checked); updateSearchParam('ac_included', e.target.checked) }} className="ap-h-checkbox" />
+                <span>AC Included</span>
+              </label>
+              <label className="ap-h-checkbox-label">
+                <input type="checkbox" checked={furnished} onChange={e => { setFurnished(e.target.checked); updateSearchParam('furnished', e.target.checked) }} className="ap-h-checkbox" />
+                <span>Furnished</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="ap-body">
         {/* ── SIDEBAR ── */}
@@ -127,7 +319,7 @@ export default function AllProducts() {
                   type="radio"
                   name="category"
                   checked={category === c}
-                  onChange={() => setCategory(c)}
+                  onChange={() => handleCategoryChange(c)}
                   className="ap-radio"
                 />
                 <span className="ap-checkbox-label">
@@ -364,6 +556,76 @@ export default function AllProducts() {
         .ap-empty-title { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; color:#1a1a2e; margin-bottom:8px; }
         .ap-empty-sub { font-size:14px; color:#64748b; margin-bottom:24px; }
         .ap-empty-reset { background:#6366f1; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }
+
+        /* ── Housing Filter Bar ── */
+        .ap-housing-filterbar {
+          background: #ffffff;
+          border-bottom: 1px solid #e8e6e1;
+          box-shadow: 0 4px 12px rgba(0,0,0,.03);
+          padding: 12px 24px;
+        }
+        .ap-housing-filterbar-inner {
+          max-width: 1400px;
+          margin: 0 auto;
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          flex-wrap: wrap;
+        }
+        .ap-h-filter-item {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          min-width: 120px;
+          flex-grow: 1;
+        }
+        .ap-h-filter-label {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: .06em;
+          color: #94a3b8;
+        }
+        .ap-h-select {
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 8px 12px;
+          font-size: 13px;
+          background: #f8f7f4;
+          color: #1a1a2e;
+          outline: none;
+          cursor: pointer;
+          font-family: inherit;
+        }
+        .ap-h-select:focus {
+          border-color: #6366f1;
+        }
+        .ap-h-range {
+          accent-color: #6366f1;
+          cursor: pointer;
+        }
+        .ap-h-filter-item-checkboxes {
+          display: flex;
+          gap: 16px;
+          align-items: center;
+          align-self: flex-end;
+          padding-bottom: 6px;
+        }
+        .ap-h-checkbox-label {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          color: #374151;
+        }
+        .ap-h-checkbox {
+          width: 16px;
+          height: 16px;
+          accent-color: #6366f1;
+          cursor: pointer;
+        }
 
         /* ── Responsive ── */
         @media (max-width:900px) {

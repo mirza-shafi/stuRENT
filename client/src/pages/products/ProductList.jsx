@@ -8,7 +8,30 @@ import ProductService from '../../services/productService'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 
-const EMPTY_FORM = { name: '', price: '', buy_price: '', listing_type: 'Rent', category: 'Indoor', description: '', is_available: true, image: null }
+const HOUSING_LOCATIONS = {
+  Dhaka: ['Mirpur', 'Dhanmondi', 'Gulshan', 'Banani', 'Uttara', 'Badda', 'Khilgaon'],
+  Chittagong: ['Halishahar', 'GEC', 'Panchlaish', 'Nasirabad', 'Agrabad'],
+  Sylhet: ['Zindabazar', 'Shibgonj', 'Uposhahar', 'Amberkhana']
+}
+
+const EMPTY_FORM = { 
+  name: '', 
+  price: '', 
+  buy_price: '', 
+  listing_type: 'Rent', 
+  category: 'Indoor', 
+  description: '', 
+  is_available: true, 
+  image: null,
+  city: '',
+  area: '',
+  house_type: 'Flat',
+  flat_size: '',
+  rooms: 1,
+  bathrooms: 1,
+  ac_included: false,
+  furnished: false
+}
 const BASE_URL   = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace('/api/v1', '')
 
 const STATUS_MAP = {
@@ -45,7 +68,24 @@ export default function ProductList() {
   const openCreate = () => { setEditItem(null); setForm(EMPTY_FORM); setPreview(null); setShowModal(true) }
   const openEdit   = (p) => {
     setEditItem(p)
-    setForm({ name: p.name, price: p.price, buy_price: p.buy_price || '', listing_type: p.listing_type || 'Rent', category: p.category, description: p.description, is_available: p.is_available, image: null })
+    setForm({ 
+      name: p.name, 
+      price: p.price, 
+      buy_price: p.buy_price || '', 
+      listing_type: p.listing_type || 'Rent', 
+      category: p.category, 
+      description: p.description, 
+      is_available: p.is_available, 
+      image: null,
+      city: p.city || '',
+      area: p.area || '',
+      house_type: p.house_type || 'Flat',
+      flat_size: p.flat_size || '',
+      rooms: p.rooms || 1,
+      bathrooms: p.bathrooms || 1,
+      ac_included: !!p.ac_included,
+      furnished: !!p.furnished
+    })
     setPreview(p.image ? `${p.image?.startsWith('http') ? p.image : `${BASE_URL}${p.image}`}` : null)
     setShowModal(true)
   }
@@ -53,7 +93,14 @@ export default function ProductList() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
-    setForm(p => ({ ...p, [name]: type === 'checkbox' ? checked : value }))
+    setForm(p => {
+      const next = { ...p, [name]: type === 'checkbox' ? checked : value }
+      if (name === 'city') {
+        const areas = HOUSING_LOCATIONS[value] || []
+        next.area = areas[0] || ''
+      }
+      return next
+    })
   }
   const handleImage = (e) => {
     const file = e.target.files[0]; if (!file) return
@@ -62,10 +109,49 @@ export default function ProductList() {
   const removeImage = () => { setForm(p => ({ ...p, image: null })); setPreview(null); if (fileRef.current) fileRef.current.value = '' }
 
   const handleSave = async (e) => {
-    e.preventDefault(); setSaving(true)
+    e.preventDefault()
+
+    // Listing Type Validation
+    if (form.listing_type === 'Rent') {
+      if (!form.price) { toast.error('Please enter a daily rental price.'); return }
+    } else if (form.listing_type === 'Buy') {
+      if (!form.buy_price) { toast.error('Please enter a purchase price.'); return }
+    } else if (form.listing_type === 'Both') {
+      if (!form.price) { toast.error('Please enter a daily rental price.'); return }
+      if (!form.buy_price) { toast.error('Please enter a purchase price.'); return }
+    }
+
+    // Housing Validation
+    if (form.category === 'Housing') {
+      if (!form.city) { toast.error('Please select a location city.'); return }
+      if (!form.area) { toast.error('Please select an area.'); return }
+      if (!form.flat_size) { toast.error('Please specify the flat size.'); return }
+    }
+
+    setSaving(true)
     try {
       const payload = { ...form }
       if (editItem && !form.image) delete payload.image
+
+      // Format pricing fields
+      if (form.listing_type === 'Buy') {
+        payload.price = null
+      } else if (form.listing_type === 'Rent') {
+        payload.buy_price = null
+      }
+
+      // Clear housing fields if not Housing category
+      if (form.category !== 'Housing') {
+        payload.city = null
+        payload.area = null
+        payload.house_type = null
+        payload.flat_size = null
+        payload.rooms = null
+        payload.bathrooms = null
+        payload.ac_included = false
+        payload.furnished = false
+      }
+
       if (editItem) { await ProductService.update(editItem.id, payload); toast.success('Product updated.') }
       else          { await ProductService.create(payload);               toast.success('Product created.') }
       closeModal(); refetch()
@@ -361,16 +447,20 @@ export default function ProductList() {
                 <input name="name" className="form-input" value={form.name} onChange={handleChange} required placeholder="e.g. Folding Table" />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
-                <div className="form-group">
-                  <label className="form-label">Price / Day ($) *</label>
-                  <input name="price" type="number" step="0.01" min="0" className="form-input" value={form.price} onChange={handleChange} required placeholder="0.00" />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Buy Price ($)</label>
-                  <input name="buy_price" type="number" step="0.01" min="0" className="form-input" value={form.buy_price} onChange={handleChange} placeholder="0.00" />
-                </div>
-                <div className="form-group">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, marginBottom: 16 }}>
+                {form.listing_type !== 'Buy' && (
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Price / Day ($) *</label>
+                    <input name="price" type="number" step="0.01" min="0" className="form-input" value={form.price} onChange={handleChange} required placeholder="0.00" />
+                  </div>
+                )}
+                {form.listing_type !== 'Rent' && (
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Buy Price ($) *</label>
+                    <input name="buy_price" type="number" step="0.01" min="0" className="form-input" value={form.buy_price} onChange={handleChange} required placeholder="0.00" />
+                  </div>
+                )}
+                <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">Category</label>
                   <select name="category" className="form-select" value={form.category} onChange={handleChange}>
                     <option value="Indoor">🪑 Indoor</option>
@@ -379,6 +469,80 @@ export default function ProductList() {
                   </select>
                 </div>
               </div>
+
+              {form.category === 'Housing' && (
+                <div className="card" style={{ padding: '16px 20px', marginBottom: 16, background: 'var(--bg-3)', border: '1px solid var(--border)' }}>
+                  <h4 style={{ margin: '0 0 12px', fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--text-muted)' }}>🏠 Housing Specifications</h4>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">City *</label>
+                      <select name="city" className="form-select" value={form.city} onChange={handleChange} required>
+                        <option value="">Select City</option>
+                        {Object.keys(HOUSING_LOCATIONS).map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Area *</label>
+                      <select name="area" className="form-select" value={form.area} onChange={handleChange} required disabled={!form.city}>
+                        <option value="">Select Area</option>
+                        {(HOUSING_LOCATIONS[form.city] || []).map(a => (
+                          <option key={a} value={a}>{a}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">House Type *</label>
+                      <select name="house_type" className="form-select" value={form.house_type} onChange={handleChange} required>
+                        <option value="Flat">Flat</option>
+                        <option value="Duplex">Duplex</option>
+                        <option value="Sublet">Sublet</option>
+                        <option value="Room">Room</option>
+                        <option value="Apartment">Apartment</option>
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Flat Size (sqft) *</label>
+                      <input name="flat_size" type="number" min="0" className="form-input" value={form.flat_size} onChange={handleChange} required placeholder="e.g. 1200" />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Rooms (Bedrooms) *</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <button type="button" className="btn btn--ghost btn--sm" style={{ padding: '2px 8px' }} onClick={() => setForm(p => ({ ...p, rooms: Math.max(1, (p.rooms || 1) - 1) }))}>-</button>
+                        <span style={{ fontWeight: 'bold' }}>{form.rooms}</span>
+                        <button type="button" className="btn btn--ghost btn--sm" style={{ padding: '2px 8px' }} onClick={() => setForm(p => ({ ...p, rooms: (p.rooms || 1) + 1 }))}>+</button>
+                      </div>
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Bathrooms *</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <button type="button" className="btn btn--ghost btn--sm" style={{ padding: '2px 8px' }} onClick={() => setForm(p => ({ ...p, bathrooms: Math.max(1, (p.bathrooms || 1) - 1) }))}>-</button>
+                        <span style={{ fontWeight: 'bold' }}>{form.bathrooms}</span>
+                        <button type="button" className="btn btn--ghost btn--sm" style={{ padding: '2px 8px' }} onClick={() => setForm(p => ({ ...p, bathrooms: (p.bathrooms || 1) + 1 }))}>+</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+                      <input type="checkbox" name="ac_included" checked={form.ac_included} onChange={handleChange} style={{ width: 15, height: 15, accentColor: 'var(--primary)' }} />
+                      <span>AC Included</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+                      <input type="checkbox" name="furnished" checked={form.furnished} onChange={handleChange} style={{ width: 15, height: 15, accentColor: 'var(--primary)' }} />
+                      <span>Fully Furnished</span>
+                    </label>
+                  </div>
+                </div>
+              )}
 
               <div className="form-group">
                 <label className="form-label">Listing Type *</label>
