@@ -34,7 +34,7 @@ export default function Sidebar() {
     setShowLogoutModal(false)
     await logout()
     toast.success('Logged out successfully')
-    navigate('/admin/login')
+    navigate('/')
   }
 
   return (
