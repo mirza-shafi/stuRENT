@@ -77,7 +77,39 @@ export default function ProductDetail() {
 
   const handleMessage = () => {
     if (!user) { toast.error('Please sign in to message'); navigate('/login'); return }
-    navigate('/messages')
+    
+    // Check if current user is the poster of the product
+    const isPoster = product.posted_by 
+      ? user.email === product.posted_by.email 
+      : user.is_staff;
+      
+    if (isPoster) {
+      toast.error('You cannot chat with yourself');
+      return;
+    }
+
+    const recipient = product.posted_by ? {
+      email: product.posted_by.email,
+      name: product.posted_by.name,
+      id: product.posted_by.id,
+      type: 'customer'
+    } : {
+      email: 'admin@sturent.com',
+      name: 'Admin',
+      id: 'admin',
+      type: 'admin'
+    };
+
+    navigate(user.is_staff ? '/admin/messages' : '/messages', {
+      state: {
+        recipient,
+        product: {
+          id: product.id,
+          name: product.name,
+          price: product.price
+        }
+      }
+    })
     toast('Opening chat with owner...', { icon: '💬' })
   }
 
@@ -161,7 +193,7 @@ export default function ProductDetail() {
                 {product.category}
               </span>
               <span className="pd-sb-name-small">
-                👤 Listed by <strong>{product.owner?.username || 'Verified Student'}</strong>
+                👤 Listed by <strong>{product.posted_by?.name || 'Admin'}</strong>
               </span>
             </div>
             <h1 className="pd-title">{product.name}</h1>

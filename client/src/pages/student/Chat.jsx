@@ -1,82 +1,311 @@
 /**
- * Chat.jsx — Fixed 2-panel messaging layout
+ * Chat.jsx — Fixed 2-panel messaging layout with localStorage persistence
  * Left: conversation list | Right: active chat window
  */
 import { useState, useRef, useEffect } from 'react'
 import { Send, Search, MessageCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-
-const MOCK_CONVOS = [
-  { id: 1, name: 'Alex Kim',    sub: 'Folding Table',    last: 'Is it still available?',    time: '2m',  avatar: 'A', unread: 2, color: '#6366f1' },
-  { id: 2, name: 'Sara Malik',  sub: 'Study Lamp',       last: 'Thanks for the info!',      time: '1h',  avatar: 'S', unread: 0, color: '#06b6d4' },
-  { id: 3, name: 'Omar Hassan', sub: '1BR Apartment',    last: 'When can I view it?',       time: '3h',  avatar: 'O', unread: 1, color: '#10b981' },
-  { id: 4, name: 'Priya Roy',   sub: 'Camping Chair',    last: 'What is the daily rate?',   time: 'Yd',  avatar: 'P', unread: 0, color: '#f59e0b' },
-]
-
-const MOCK_MSGS = {
-  1: [
-    { id: 1, mine: false, text: 'Hi! Is the Folding Table still available?',     time: '2:30 PM' },
-    { id: 2, mine: true,  text: 'Yes it is! Want to rent or buy?',               time: '2:31 PM' },
-    { id: 3, mine: false, text: 'I want to rent for 3 days. How much?',          time: '2:32 PM' },
-    { id: 4, mine: true,  text: '$5/day so $15 total. Interested?',              time: '2:33 PM' },
-    { id: 5, mine: false, text: 'Is it still available?',                        time: '2:34 PM' },
-  ],
-  2: [
-    { id: 1, mine: false, text: 'Hello! Question about the Study Lamp.',         time: 'Yesterday' },
-    { id: 2, mine: true,  text: 'Sure! Ask away.',                               time: 'Yesterday' },
-    { id: 3, mine: false, text: 'Thanks for the info!',                          time: 'Yesterday' },
-  ],
-  3: [
-    { id: 1, mine: false, text: 'I saw your 1BR Apartment listing.',             time: 'Yesterday' },
-    { id: 2, mine: true,  text: 'Available from next month!',                    time: 'Yesterday' },
-    { id: 3, mine: false, text: 'When can I view it?',                           time: 'Yesterday' },
-  ],
-  4: [
-    { id: 1, mine: false, text: 'What is the daily rate for the camping chair?', time: '2 days ago' },
-  ],
-}
+import { useLocation } from 'react-router-dom'
+import toast from 'react-hot-toast'
 
 const AUTO_REPLIES = [
   'Got it, thanks!', 'Sure, sounds good.', 'Let me check and get back to you.',
-  'Yes, it\'s available!', 'I\'ll confirm shortly.', 'Great, see you then!'
+  "Yes, it's available!", "I'll confirm shortly.", 'Great, see you then!'
 ]
+
+const getChatData = (userEmail) => {
+  const data = localStorage.getItem('sturent_chat_data')
+  if (data) {
+    try {
+      return JSON.parse(data)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  // Initialize with seeded mock data
+  const seededConvos = [
+    {
+      id: `mock1::${userEmail}::alex@sturent.com`,
+      productId: 'mock1',
+      productName: 'Folding Table',
+      participants: [userEmail, 'alex@sturent.com'],
+      participantNames: {
+        [userEmail]: 'You',
+        'alex@sturent.com': 'Alex Kim'
+      },
+      lastMessage: 'Is it still available?',
+      lastMessageTime: '2:34 PM',
+      unread: 2,
+      color: '#6366f1'
+    },
+    {
+      id: `mock2::${userEmail}::sara@sturent.com`,
+      productId: 'mock2',
+      productName: 'Study Lamp',
+      participants: [userEmail, 'sara@sturent.com'],
+      participantNames: {
+        [userEmail]: 'You',
+        'sara@sturent.com': 'Sara Malik'
+      },
+      lastMessage: 'Thanks for the info!',
+      lastMessageTime: 'Yesterday',
+      unread: 0,
+      color: '#06b6d4'
+    },
+    {
+      id: `mock3::${userEmail}::omar@sturent.com`,
+      productId: 'mock3',
+      productName: '1BR Apartment',
+      participants: [userEmail, 'omar@sturent.com'],
+      participantNames: {
+        [userEmail]: 'You',
+        'omar@sturent.com': 'Omar Hassan'
+      },
+      lastMessage: 'When can I view it?',
+      lastMessageTime: 'Yesterday',
+      unread: 1,
+      color: '#10b981'
+    },
+    {
+      id: `mock4::${userEmail}::priya@sturent.com`,
+      productId: 'mock4',
+      productName: 'Camping Chair',
+      participants: [userEmail, 'priya@sturent.com'],
+      participantNames: {
+        [userEmail]: 'You',
+        'priya@sturent.com': 'Priya Roy'
+      },
+      lastMessage: 'What is the daily rate?',
+      lastMessageTime: '2 days ago',
+      unread: 0,
+      color: '#f59e0b'
+    }
+  ]
+
+  const seededMessages = {
+    [`mock1::${userEmail}::alex@sturent.com`]: [
+      { id: 1, senderEmail: 'alex@sturent.com', text: 'Hi! Is the Folding Table still available?', time: '2:30 PM' },
+      { id: 2, senderEmail: userEmail,          text: 'Yes it is! Want to rent or buy?', time: '2:31 PM' },
+      { id: 3, senderEmail: 'alex@sturent.com', text: 'I want to rent for 3 days. How much?', time: '2:32 PM' },
+      { id: 4, senderEmail: userEmail,          text: '$5/day so $15 total. Interested?', time: '2:33 PM' },
+      { id: 5, senderEmail: 'alex@sturent.com', text: 'Is it still available?', time: '2:34 PM' },
+    ],
+    [`mock2::${userEmail}::sara@sturent.com`]: [
+      { id: 1, senderEmail: 'sara@sturent.com', text: 'Hello! Question about the Study Lamp.', time: 'Yesterday' },
+      { id: 2, senderEmail: userEmail,          text: 'Sure! Ask away.', time: 'Yesterday' },
+      { id: 3, senderEmail: 'sara@sturent.com', text: 'Thanks for the info!', time: 'Yesterday' },
+    ],
+    [`mock3::${userEmail}::omar@sturent.com`]: [
+      { id: 1, senderEmail: 'omar@sturent.com', text: 'I saw your 1BR Apartment listing.', time: 'Yesterday' },
+      { id: 2, senderEmail: userEmail,          text: 'Available from next month!', time: 'Yesterday' },
+      { id: 3, senderEmail: 'omar@sturent.com', text: 'When can I view it?', time: 'Yesterday' },
+    ],
+    [`mock4::${userEmail}::priya@sturent.com`]: [
+      { id: 1, senderEmail: 'priya@sturent.com', text: 'What is the daily rate for the camping chair?', time: '2 days ago' },
+    ]
+  }
+
+  const initialData = { conversations: seededConvos, messages: seededMessages }
+  localStorage.setItem('sturent_chat_data', JSON.stringify(initialData))
+  return initialData
+}
 
 export default function Chat() {
   const { user } = useAuth()
-  const [activeId, setActiveId]     = useState(null)
-  const [messages, setMessages]     = useState(MOCK_MSGS)
-  const [input, setInput]           = useState('')
-  const [search, setSearch]         = useState('')
-  const [typing, setTyping]         = useState(false)
+  const location = useLocation()
+  
+  const [conversations, setConversations] = useState([])
+  const [allMessages, setAllMessages]     = useState({})
+  const [activeId, setActiveId]           = useState(null)
+  const [input, setInput]                 = useState('')
+  const [search, setSearch]               = useState('')
+  const [typing, setTyping]               = useState(false)
   const bottomRef = useRef(null)
 
-  const activeConvo  = MOCK_CONVOS.find(c => c.id === activeId)
-  const currentMsgs  = activeId ? (messages[activeId] ?? []) : []
-  const filteredList = MOCK_CONVOS.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.sub.toLowerCase().includes(search.toLowerCase())
-  )
+  const getRecipientInfo = (convo) => {
+    if (!convo || !convo.participants || !user?.email) return { name: convo?.recipientName || 'User', avatar: '?' }
+    const otherEmail = convo.participants.find(email => email !== user.email) || convo.participants[0]
+    const otherName = convo.participantNames?.[otherEmail] || convo.recipientName || 'User'
+    return {
+      email: otherEmail,
+      name: otherName,
+      avatar: otherName[0]?.toUpperCase() || '?'
+    }
+  }
+
+  const activeConvo = conversations.find(c => c.id === activeId)
+  const activeRecipient = activeConvo ? getRecipientInfo(activeConvo) : null
+  const currentMsgs = activeId ? (allMessages[activeId] ?? []) : []
+
+  const filteredList = conversations.filter(c => {
+    if (!user?.email || !c.participants?.includes(user.email)) return false
+    const recipientInfo = getRecipientInfo(c)
+    return (
+      recipientInfo.name.toLowerCase().includes(search.toLowerCase()) ||
+      (c.productName || c.sub || '').toLowerCase().includes(search.toLowerCase())
+    )
+  })
 
   // Scroll to bottom on new message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [currentMsgs])
 
+  // Sync state from local storage and Router navigation state
+  useEffect(() => {
+    if (!user?.email) return
+
+    const chatData = getChatData(user.email)
+    let convos = [...chatData.conversations]
+    let msgs = { ...chatData.messages }
+
+    // Parse navigate state payload
+    const { recipient, product } = location.state || {}
+    if (recipient && product) {
+      const sortedEmails = [user.email, recipient.email].sort()
+      const convoId = `${product.id}::${sortedEmails[0]}::${sortedEmails[1]}`
+
+      const existingIdx = convos.findIndex(c => c.id === convoId)
+
+      if (existingIdx === -1) {
+        const colors = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6']
+        const randomColor = colors[Math.floor(Math.random() * colors.length)]
+
+        const newConvo = {
+          id: convoId,
+          productId: product.id,
+          productName: product.name,
+          participants: [user.email, recipient.email],
+          participantNames: {
+            [user.email]: user.username || 'You',
+            [recipient.email]: recipient.name
+          },
+          lastMessage: `Interested in ${product.name}`,
+          lastMessageTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          unread: 0,
+          color: randomColor
+        }
+
+        convos.unshift(newConvo)
+        
+        msgs[convoId] = [
+          {
+            id: Date.now(),
+            senderEmail: user.email,
+            text: `Hi! I'm interested in renting/buying your "${product.name}". Is it still available?`,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        ]
+
+        const updatedData = { conversations: convos, messages: msgs }
+        localStorage.setItem('sturent_chat_data', JSON.stringify(updatedData))
+      }
+
+      setActiveId(convoId)
+      window.history.replaceState({}, document.title)
+    }
+
+    setConversations(convos)
+    setAllMessages(msgs)
+  }, [user, location.state])
+
   const sendMessage = () => {
-    if (!input.trim() || !activeId) return
-    const msg = { id: Date.now(), mine: true, text: input.trim(), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-    setMessages(prev => ({ ...prev, [activeId]: [...(prev[activeId] ?? []), msg] }))
+    if (!input.trim() || !activeId || !user?.email) return
+    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const newMsg = {
+      id: Date.now(),
+      senderEmail: user.email,
+      text: input.trim(),
+      time: nowStr
+    }
+
+    const chatData = JSON.parse(localStorage.getItem('sturent_chat_data') || '{}')
+    const convos = chatData.conversations || []
+    const msgs = chatData.messages || {}
+
+    const updatedMsgs = {
+      ...msgs,
+      [activeId]: [...(msgs[activeId] || []), newMsg]
+    }
+
+    const targetConvo = convos.find(c => c.id === activeId)
+    if (targetConvo) {
+      targetConvo.lastMessage = input.trim()
+      targetConvo.lastMessageTime = nowStr
+      targetConvo.unread = 0
+    }
+
+    const filteredConvos = convos.filter(c => c.id !== activeId)
+    const updatedConvos = targetConvo ? [targetConvo, ...filteredConvos] : convos
+
+    const updatedData = { conversations: updatedConvos, messages: updatedMsgs }
+    localStorage.setItem('sturent_chat_data', JSON.stringify(updatedData))
+
+    setConversations(updatedConvos)
+    setAllMessages(updatedMsgs)
     setInput('')
+
+    // Trigger typing and auto-reply
     setTyping(true)
     setTimeout(() => {
-      const reply = { id: Date.now() + 1, mine: false, text: AUTO_REPLIES[Math.floor(Math.random() * AUTO_REPLIES.length)], time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-      setMessages(prev => ({ ...prev, [activeId]: [...(prev[activeId] ?? []), reply] }))
+      const replyTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      const autoReplyText = AUTO_REPLIES[Math.floor(Math.random() * AUTO_REPLIES.length)]
+      
+      const replyMsg = {
+        id: Date.now() + 1,
+        senderEmail: targetConvo ? targetConvo.participants.find(e => e !== user.email) : 'reply@sturent.com',
+        text: autoReplyText,
+        time: replyTime
+      }
+
+      const latestData = JSON.parse(localStorage.getItem('sturent_chat_data') || '{}')
+      const latestConvos = latestData.conversations || []
+      const latestMsgs = latestData.messages || {}
+
+      const nextMsgs = {
+        ...latestMsgs,
+        [activeId]: [...(latestMsgs[activeId] || []), replyMsg]
+      }
+
+      const latestActiveConvo = latestConvos.find(c => c.id === activeId)
+      if (latestActiveConvo) {
+        latestActiveConvo.lastMessage = autoReplyText
+        latestActiveConvo.lastMessageTime = replyTime
+      }
+
+      const nextFiltered = latestConvos.filter(c => c.id !== activeId)
+      const nextConvos = latestActiveConvo ? [latestActiveConvo, ...nextFiltered] : latestConvos
+
+      const nextData = { conversations: nextConvos, messages: nextMsgs }
+      localStorage.setItem('sturent_chat_data', JSON.stringify(nextData))
+
+      setConversations(nextConvos)
+      setAllMessages(nextMsgs)
       setTyping(false)
-    }, 1200 + Math.random() * 600)
+    }, 1000 + Math.random() * 800)
+  }
+
+  const isAdminPath = location.pathname.startsWith('/admin')
+  const containerStyle = isAdminPath ? {
+    display: 'grid',
+    gridTemplateColumns: '300px 1fr',
+    height: 'calc(100vh - 140px)',
+    background: 'var(--bg-2)',
+    borderRadius: '16px',
+    border: '1px solid var(--border)',
+    overflow: 'hidden',
+    boxShadow: 'var(--shadow-sm)'
+  } : {
+    display: 'grid',
+    gridTemplateColumns: '300px 1fr',
+    height: 'calc(100vh - 64px)',
+    background: 'var(--bg)',
+    overflow: 'hidden'
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', height: 'calc(100vh - 64px)', background: 'var(--bg)', overflow: 'hidden' }}>
+    <div style={containerStyle}>
 
       {/* ── LEFT: Conversation List ── */}
       <div style={{ background: 'var(--bg-2)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -96,41 +325,53 @@ export default function Chat() {
 
         {/* Conversation items */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {filteredList.map(c => (
-            <div
-              key={c.id}
-              onClick={() => setActiveId(c.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '14px 16px', cursor: 'pointer', borderBottom: '1px solid var(--border)',
-                background: activeId === c.id ? 'var(--primary-glow)' : 'none',
-                transition: 'background .15s',
-                borderLeft: activeId === c.id ? '3px solid var(--primary)' : '3px solid transparent',
-              }}
-              onMouseEnter={e => { if (activeId !== c.id) e.currentTarget.style.background = 'var(--surface-hov)' }}
-              onMouseLeave={e => { if (activeId !== c.id) e.currentTarget.style.background = 'none' }}
-            >
-              {/* Avatar */}
-              <div style={{ width: 44, height: 44, borderRadius: '50%', background: c.color, color: '#fff', fontWeight: 700, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative' }}>
-                {c.avatar}
-                {c.unread > 0 && (
-                  <span style={{ position: 'absolute', top: -2, right: -2, width: 18, height: 18, borderRadius: '50%', background: 'var(--primary)', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-2)' }}>
-                    {c.unread}
-                  </span>
-                )}
-              </div>
-
-              {/* Info */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                  <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{c.name}</span>
-                  <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>{c.time}</span>
+          {filteredList.map(c => {
+            const recipientInfo = getRecipientInfo(c)
+            return (
+              <div
+                key={c.id}
+                onClick={() => {
+                  setActiveId(c.id)
+                  setConversations(prev => {
+                    const next = prev.map(conv => conv.id === c.id ? { ...conv, unread: 0 } : conv)
+                    const chatData = JSON.parse(localStorage.getItem('sturent_chat_data') || '{}')
+                    chatData.conversations = next
+                    localStorage.setItem('sturent_chat_data', JSON.stringify(chatData))
+                    return next
+                  })
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '14px 16px', cursor: 'pointer', borderBottom: '1px solid var(--border)',
+                  background: activeId === c.id ? 'var(--primary-glow)' : 'none',
+                  transition: 'background .15s',
+                  borderLeft: activeId === c.id ? '3px solid var(--primary)' : '3px solid transparent',
+                }}
+                onMouseEnter={e => { if (activeId !== c.id) e.currentTarget.style.background = 'var(--surface-hov)' }}
+                onMouseLeave={e => { if (activeId !== c.id) e.currentTarget.style.background = 'none' }}
+              >
+                {/* Avatar */}
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: c.color || '#6366f1', color: '#fff', fontWeight: 700, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative' }}>
+                  {recipientInfo.avatar}
+                  {c.unread > 0 && (
+                    <span style={{ position: 'absolute', top: -2, right: -2, width: 18, height: 18, borderRadius: '50%', background: 'var(--primary)', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-2)' }}>
+                      {c.unread}
+                    </span>
+                  )}
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 500, marginBottom: 2 }}>{c.sub}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.last}</div>
+
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                    <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{recipientInfo.name}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>{c.lastMessageTime}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 500, marginBottom: 2 }}>{c.productName || c.sub}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.lastMessage}</div>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
@@ -146,12 +387,12 @@ export default function Chat() {
           <>
             {/* Chat header */}
             <div style={{ padding: '14px 20px', background: 'var(--bg-2)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: activeConvo?.color, color: '#fff', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                {activeConvo?.avatar}
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: activeConvo?.color || '#6366f1', color: '#fff', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {activeRecipient?.avatar}
               </div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{activeConvo?.name}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Re: {activeConvo?.sub}</div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{activeRecipient?.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Re: {activeConvo?.productName || activeConvo?.sub}</div>
               </div>
               <div style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 4 }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} />
@@ -161,20 +402,23 @@ export default function Chat() {
 
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {currentMsgs.map(m => (
-                <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: m.mine ? 'flex-end' : 'flex-start' }}>
-                  <div style={{
-                    maxWidth: '65%', padding: '10px 14px', borderRadius: m.mine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                    background: m.mine ? 'var(--primary)' : 'var(--bg-2)',
-                    border: m.mine ? 'none' : '1px solid var(--border)',
-                    color: m.mine ? '#fff' : 'var(--text)',
-                    fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word',
-                  }}>
-                    {m.text}
+              {currentMsgs.map(m => {
+                const isMine = m.senderEmail === user?.email
+                return (
+                  <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start' }}>
+                    <div style={{
+                      maxWidth: '65%', padding: '10px 14px', borderRadius: isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                      background: isMine ? 'var(--primary)' : 'var(--bg-2)',
+                      border: isMine ? 'none' : '1px solid var(--border)',
+                      color: isMine ? '#fff' : 'var(--text)',
+                      fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word',
+                    }}>
+                      {m.text}
+                    </div>
+                    <span style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 3, padding: '0 2px' }}>{m.time}</span>
                   </div>
-                  <span style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 3, padding: '0 2px' }}>{m.time}</span>
-                </div>
-              ))}
+                )
+              })}
 
               {/* Typing indicator */}
               {typing && (

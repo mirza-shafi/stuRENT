@@ -2,7 +2,7 @@
  * Sidebar.jsx — Admin nav with avatar dropdown (Settings + Logout confirmation)
  */
 import { NavLink, useNavigate, Link } from 'react-router-dom'
-import { LayoutDashboard, Users, Package, ShoppingCart, Plus, RefreshCw, LogOut, Settings, Menu, X, ChevronUp } from 'lucide-react'
+import { LayoutDashboard, Users, Package, ShoppingCart, Plus, RefreshCw, LogOut, Settings, Menu, X, ChevronUp, MessageCircle } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { to: '/admin/products',      icon: Package,         label: 'Products'   },
   { to: '/admin/add-product',   icon: Plus,            label: 'Add Product' },
   { to: '/admin/orders',        icon: ShoppingCart,    label: 'Orders'     },
+  { to: '/admin/messages',      icon: MessageCircle,   label: 'Messages'   },
 ]
 
 export default function Sidebar() {

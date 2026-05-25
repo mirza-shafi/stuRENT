@@ -102,6 +102,7 @@ export default function App() {
             <Route path="/admin/orders/:id"   element={<AdminRoute><OrderDetail /></AdminRoute>} />
             <Route path="/admin/orders/:id/refund" element={<AdminRoute><Refund /></AdminRoute>} />
             <Route path="/admin/settings"     element={<AdminRoute><AdminSettings /></AdminRoute>} />
+            <Route path="/admin/messages"     element={<AdminRoute><Chat /></AdminRoute>} />
 
             </Routes>
             <AuthModal />
