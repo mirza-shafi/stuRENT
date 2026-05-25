@@ -41,10 +41,23 @@ export default function AllProducts() {
   const [search,      setSearch]      = useState(qParam)
   const [category,    setCategory]    = useState(catParam)
   const [listingType, setListingType] = useState('All')
-  const [maxPrice,    setMaxPrice]    = useState(500)
+
+  const maxSliderLimit = useMemo(() => {
+    if (listingType === 'Buy') {
+      return category === 'Housing' ? 1000000 : 5000
+    } else {
+      return category === 'Housing' ? 2000 : 500
+    }
+  }, [category, listingType])
+
+  const [maxPrice,    setMaxPrice]    = useState(maxSliderLimit)
   const [sortBy,      setSortBy]      = useState('newest')
   const [available,   setAvailable]   = useState(false)
   const [view,        setView]        = useState('grid') // 'grid' | 'list'
+
+  useEffect(() => {
+    setMaxPrice(maxSliderLimit)
+  }, [maxSliderLimit])
 
   // Housing state
   const [city, setCity]               = useState(cityParam)
@@ -132,14 +145,24 @@ export default function AllProducts() {
                             p.description?.toLowerCase().includes(search.toLowerCase()))
     if (category !== 'All')
       arr = arr.filter(p => p.category === category)
-    if (listingType !== 'All')
-      arr = arr.filter(p => p.listing_type === listingType)
+    
+    // Support showing 'Both' for either 'Rent' or 'Buy' filtering
+    if (listingType === 'Rent') {
+      arr = arr.filter(p => p.listing_type === 'Rent' || p.listing_type === 'Both')
+    } else if (listingType === 'Buy') {
+      arr = arr.filter(p => p.listing_type === 'Buy' || p.listing_type === 'Both')
+    }
+
     if (available)
       arr = arr.filter(p => p.is_available)
-    arr = arr.filter(p => {
-      const priceToCompare = p.listing_type === 'Buy' ? p.buy_price : p.price
-      return Number(priceToCompare || 0) <= maxPrice
-    })
+
+    // Bypass price filtering if at max slider limit, otherwise filter by daily price or buy price
+    if (maxPrice < maxSliderLimit) {
+      arr = arr.filter(p => {
+        const priceToCompare = p.listing_type === 'Buy' ? p.buy_price : p.price
+        return Number(priceToCompare || 0) <= maxPrice
+      })
+    }
 
     // Housing specific filters (using DB attributes directly)
     if (category === 'Housing') {
@@ -152,7 +175,7 @@ export default function AllProducts() {
       if (houseType) {
         arr = arr.filter(p => p.house_type === houseType)
       }
-      if (flatSize) {
+      if (flatSize && Number(flatSize) > 0) {
         arr = arr.filter(p => p.flat_size && Number(p.flat_size) >= Number(flatSize))
       }
       if (rooms) {
@@ -169,11 +192,11 @@ export default function AllProducts() {
       }
     }
 
-    if (sortBy === 'price_asc')  arr.sort((a,b) => (a.price || 0) - (b.price || 0))
-    if (sortBy === 'price_desc') arr.sort((a,b) => (b.price || 0) - (a.price || 0))
+    if (sortBy === 'price_asc')  arr.sort((a,b) => (a.price || a.buy_price || 0) - (b.price || b.buy_price || 0))
+    if (sortBy === 'price_desc') arr.sort((a,b) => (b.price || b.buy_price || 0) - (a.price || a.buy_price || 0))
     if (sortBy === 'name_asc')   arr.sort((a,b) => a.name.localeCompare(b.name))
     return arr
-  }, [all, search, category, listingType, available, maxPrice, sortBy, city, area, houseType, flatSize, rooms, bathrooms, acIncluded, furnished])
+  }, [all, search, category, listingType, available, maxPrice, maxSliderLimit, sortBy, city, area, houseType, flatSize, rooms, bathrooms, acIncluded, furnished])
 
   const resetFilters = () => {
     setSearch(''); setCategory('All'); setListingType('All')
@@ -359,20 +382,20 @@ export default function AllProducts() {
           {/* Price Range */}
           <div className="ap-filter-group">
             <label className="ap-filter-label">
-              Max Price/day: <strong style={{ color:'#6366f1' }}>${maxPrice}</strong>
+              {listingType === 'Buy' ? 'Max Purchase Price:' : 'Max Price/day:'} <strong style={{ color:'#6366f1' }}>${maxPrice}</strong>
             </label>
             <input
               type="range"
               min={0}
-              max={500}
-              step={5}
+              max={maxSliderLimit}
+              step={listingType === 'Buy' ? (category === 'Housing' ? 10000 : 50) : (category === 'Housing' ? 50 : 5)}
               value={maxPrice}
               onChange={e => setMaxPrice(Number(e.target.value))}
               className="ap-range"
             />
             <div className="ap-range-labels">
               <span>$0</span>
-              <span>$500</span>
+              <span>${maxSliderLimit}</span>
             </div>
           </div>
 
