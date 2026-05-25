@@ -29,6 +29,10 @@ class OrderService:
             status=Order.Status.OUT_FOR_DELIVERY
         ).count()
 
+        pending_products = Product.objects.filter(
+            approval_status=Product.ApprovalStatus.PENDING
+        ).count()
+
         return {
             "total_orders": total_orders,
             "total_customers": total_customers,
@@ -37,7 +41,9 @@ class OrderService:
             "delivered": delivered,
             "pending": pending,
             "out_for_delivery": out_for_delivery,
+            "pending_products": pending_products,
         }
+
 
     @staticmethod
     def get_orders_for_customer(customer_id: int) -> QuerySet:

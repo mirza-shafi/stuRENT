@@ -35,6 +35,11 @@ class Product(models.Model):
         BUY  = "Buy",  _("Buy Only")
         BOTH = "Both", _("Rent & Buy")
 
+    class ApprovalStatus(models.TextChoices):
+        PENDING  = "pending",  _("Pending Review")
+        APPROVED = "approved", _("Approved")
+        REJECTED = "rejected", _("Rejected")
+
     name         = models.CharField(_("product name"),  max_length=200)
     price        = models.DecimalField(_("price per day"), max_digits=10, decimal_places=2)
     buy_price    = models.DecimalField(_("buy price"), max_digits=10, decimal_places=2, null=True, blank=True)
@@ -51,6 +56,13 @@ class Product(models.Model):
     )
     tags         = models.ManyToManyField(Tag, blank=True, related_name="products")
     is_available = models.BooleanField(_("available for rent"), default=True)
+    approval_status = models.CharField(
+        _("approval status"),
+        max_length=10,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.PENDING,
+        db_index=True,
+    )
     date_created = models.DateTimeField(_("date created"), auto_now_add=True)
     updated_at   = models.DateTimeField(_("last updated"), auto_now=True)
 

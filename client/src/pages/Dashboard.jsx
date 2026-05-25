@@ -97,6 +97,7 @@ export default function Dashboard() {
     delivered: 0,
     pending: 0,
     out_for_delivery: 0,
+    pending_products: 0,
   }
 
   const statCards = [
@@ -104,6 +105,7 @@ export default function Dashboard() {
     { label: 'Active Products',  value: displayStats?.total_products  ?? '—',       change: '+0%', icon: Package,      color: 'var(--accent)',  bg: 'rgba(6,182,212,.12)'  },
     { label: 'Total Orders',    value: displayStats?.total_orders    ?? '—',       change: '+0%', icon: ShoppingCart, color: 'var(--success)', bg: 'rgba(16,185,129,.12)' },
     { label: 'Revenue (est.)',  value: displayStats?.total_revenue ? `$${(displayStats.total_revenue).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}` : '$0.00', change: '+0%',  icon: DollarSign,   color: 'var(--warning)', bg: 'rgba(245,158,11,.12)'  },
+    { label: 'Pending Products', value: displayStats?.pending_products ?? 0,       change: '', icon: Clock, color: 'var(--warning)', bg: 'rgba(245,158,11,.12)', isLink: true, linkTo: '/admin/products' },
   ]
 
   const STATUS_STYLE = {
@@ -229,13 +231,26 @@ export default function Dashboard() {
         {statCards.map(s => {
           const Icon = s.icon
           return (
-            <div key={s.label} className="db-stat-card">
+            <div 
+              key={s.label} 
+              className="db-stat-card"
+              onClick={() => s.linkTo && navigate(s.linkTo)}
+              style={s.linkTo ? { cursor: 'pointer' } : {}}
+            >
               <div className="db-stat-left" style={{ borderColor: s.color }}>
                 <span className="db-stat-label">{s.label}</span>
                 <span className="db-stat-value">{s.value}</span>
                 <span className="db-stat-trend">
-                  <TrendingUp size={12} color="var(--success)" style={{ marginRight: 4 }} />
-                  {s.change} vs last month
+                  {s.isLink ? (
+                    <span style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center' }}>
+                      Review now <ArrowUpRight size={12} style={{ marginLeft: 2 }} />
+                    </span>
+                  ) : (
+                    <>
+                      <TrendingUp size={12} color="var(--success)" style={{ marginRight: 4 }} />
+                      {s.change} vs last month
+                    </>
+                  )}
                 </span>
               </div>
               <div className="db-stat-icon-wrap" style={{ background: s.bg }}>

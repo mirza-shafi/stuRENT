@@ -47,6 +47,7 @@ class DashboardStatsView(APIView):
                     "delivered": 0,
                     "pending": 0,
                     "out_for_delivery": 0,
+                    "pending_products": 0,
                 }, "recent_orders": []},
                 status=status.HTTP_200_OK,
             )

@@ -30,9 +30,9 @@ class ProductListSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             "id", "name", "price", "buy_price", "category", "listing_type",
-            "description", "image", "is_available", "posted_by", "tags", "date_created",
+            "description", "image", "is_available", "approval_status", "posted_by", "tags", "date_created",
         )
-        read_only_fields = ("id", "date_created")
+        read_only_fields = ("id", "date_created", "approval_status")
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
@@ -51,4 +51,4 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = "__all__"
-        read_only_fields = ("id", "date_created", "updated_at")
+        read_only_fields = ("id", "date_created", "updated_at", "approval_status")

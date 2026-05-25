@@ -32,10 +32,14 @@ class StudentProductListView(generics.ListAPIView):
 
     def get_queryset(self):
         return (
-            Product.objects.filter(is_available=True)
+            Product.objects.filter(
+                is_available=True,
+                approval_status=Product.ApprovalStatus.APPROVED,
+            )
             .prefetch_related("tags")
             .order_by("-date_created")
         )
+
 
 
 class StudentProductDetailView(generics.RetrieveAPIView):

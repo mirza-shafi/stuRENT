@@ -32,6 +32,15 @@ const ProductService = {
 
   /** DELETE /api/v1/products/:id/ */
   delete: (id) => api.delete(`/products/${id}/`),
+
+  /** POST /api/v1/products/:id/approve/ — admin only */
+  approve: (id) => api.post(`/products/${id}/approve/`),
+
+  /** POST /api/v1/products/:id/reject/ — admin only */
+  reject: (id) => api.post(`/products/${id}/reject/`),
+
+  /** GET /api/v1/products/?approval_status=pending — admin pending list */
+  getPending: () => api.get('/products/', { params: { approval_status: 'pending' } }),
 }
 
 export default ProductService

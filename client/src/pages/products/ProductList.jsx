@@ -2,7 +2,7 @@
  * ProductList.jsx — Phoenix-style admin product management
  */
 import { useState, useRef } from 'react'
-import { Plus, Search, Pencil, Trash2, Package, X, ImageIcon, Eye, User, Mail, Phone, Tag, Calendar, DollarSign, Filter, Download, ChevronRight } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Package, X, ImageIcon, Eye, User, Mail, Phone, Tag, Calendar, DollarSign, Filter, Download, ChevronRight, Check, XCircle } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import ProductService from '../../services/productService'
 import { Link } from 'react-router-dom'
@@ -25,6 +25,7 @@ export default function ProductList() {
   const { data, loading, execute: refetch } = useApi(ProductService.getAll)
   const [search, setSearch]       = useState('')
   const [filterType, setFilterType] = useState('All')
+  const [approvalTab, setApprovalTab] = useState('All') // 'All', 'pending', 'approved', 'rejected'
   const [showModal, setShowModal] = useState(false)
   const [viewItem, setViewItem]   = useState(null)
   const [editItem, setEditItem]   = useState(null)
@@ -37,7 +38,8 @@ export default function ProductList() {
   const products = allProducts.filter(p => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())
     const matchType   = filterType === 'All' || p.listing_type === filterType
-    return matchSearch && matchType
+    const matchApproval = approvalTab === 'All' || p.approval_status === approvalTab
+    return matchSearch && matchType && matchApproval
   })
 
   const openCreate = () => { setEditItem(null); setForm(EMPTY_FORM); setPreview(null); setShowModal(true) }
@@ -91,6 +93,27 @@ export default function ProductList() {
     catch { toast.error('Failed to delete.') }
   }
 
+  const handleApprove = async (id) => {
+    try {
+      await ProductService.approve(id)
+      toast.success('Product approved and is now live!')
+      refetch()
+    } catch (err) {
+      toast.error('Failed to approve product.')
+    }
+  }
+
+  const handleReject = async (id) => {
+    if (!window.confirm('Are you sure you want to reject this product?')) return
+    try {
+      await ProductService.reject(id)
+      toast.success('Product rejected.')
+      refetch()
+    } catch (err) {
+      toast.error('Failed to reject product.')
+    }
+  }
+
   return (
     <div className="fade-in">
       {/* ── Breadcrumb ── */}
@@ -101,7 +124,7 @@ export default function ProductList() {
       </nav>
 
       {/* ── Page Header ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifySpaceBetween: 'space-between', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', margin: 0 }}>Products</h1>
           <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 4 }}>
@@ -116,6 +139,52 @@ export default function ProductList() {
             <Plus size={15} /> Add Product
           </button>
         </div>
+      </div>
+
+      {/* ── Approval Status Tabs ── */}
+      <div style={{ display: 'flex', gap: 16, borderBottom: '1px solid var(--border)', marginBottom: 20, overflowX: 'auto', paddingBottom: 2 }}>
+        {[
+          { key: 'All', label: 'All Products', count: allProducts.length },
+          { key: 'approved', label: 'Approved & Live', count: allProducts.filter(p => p.approval_status === 'approved').length },
+          { key: 'pending', label: 'Pending Review', count: allProducts.filter(p => p.approval_status === 'pending').length, badge: true },
+          { key: 'rejected', label: 'Rejected', count: allProducts.filter(p => p.approval_status === 'rejected').length }
+        ].map(tab => {
+          const isActive = approvalTab === tab.key
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setApprovalTab(tab.key)}
+              style={{
+                padding: '12px 8px',
+                background: 'none',
+                border: 'none',
+                borderBottom: `2px solid ${isActive ? 'var(--primary)' : 'transparent'}`,
+                color: isActive ? 'var(--text)' : 'var(--text-muted)',
+                fontWeight: isActive ? 700 : 500,
+                fontSize: 14,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                transition: 'all 0.2s',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {tab.label}
+              <span style={{
+                fontSize: 11,
+                padding: '2px 6px',
+                borderRadius: 99,
+                background: tab.badge && tab.count > 0 ? 'var(--danger)' : 'var(--border)',
+                color: tab.badge && tab.count > 0 ? '#fff' : 'var(--text-muted)',
+                fontWeight: 700
+              }}>
+                {tab.count}
+              </span>
+            </button>
+          )
+        })}
       </div>
 
       {/* ── Filter Toolbar ── */}
@@ -189,7 +258,14 @@ export default function ProductList() {
                           </div>
                           <div>
                             <div style={{ fontWeight: 700, color: 'var(--text)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>ID: #{p.id}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span>ID: #{p.id}</span>
+                              {p.posted_by ? (
+                                <span style={{ color: 'var(--primary)', fontWeight: 600 }}>• Posted by {p.posted_by.name}</span>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)' }}>• Admin</span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -206,12 +282,28 @@ export default function ProductList() {
                         {p.buy_price ? `$${p.buy_price}` : '—'}
                       </td>
                       <td style={{ padding: '14px 20px' }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: statusStyle.bg, color: statusStyle.color }}>
-                          {statusStyle.label}
-                        </span>
+                        {p.approval_status === 'pending' ? (
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(245,158,11,.12)', color: 'var(--warning)' }}>
+                            Pending Review
+                          </span>
+                        ) : p.approval_status === 'rejected' ? (
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(239,68,68,.12)', color: 'var(--danger)' }}>
+                            Rejected
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: statusStyle.bg, color: statusStyle.color }}>
+                            {statusStyle.label}
+                          </span>
+                        )}
                       </td>
                       <td style={{ padding: '14px 20px' }}>
-                        <div style={{ display: 'flex', gap: 6 }}>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          {p.approval_status === 'pending' && (
+                            <>
+                              <button className="btn btn--success btn--sm" onClick={() => handleApprove(p.id)} title="Approve" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0 }}><Check size={14} /></button>
+                              <button className="btn btn--danger btn--sm" onClick={() => handleReject(p.id)} title="Reject" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0 }}><XCircle size={14} /></button>
+                            </>
+                          )}
                           <button className="btn btn--ghost btn--sm" onClick={() => setViewItem(p)} title="View Details"><Eye size={13} /></button>
                           <button className="btn btn--ghost btn--sm" onClick={() => openEdit(p)} title="Edit"><Pencil size={13} /></button>
                           <button className="btn btn--danger btn--sm" onClick={() => handleDelete(p.id)} title="Delete"><Trash2 size={13} /></button>
@@ -378,16 +470,39 @@ export default function ProductList() {
                 </div>
               )}
 
-              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
                 {[[<Calendar size={14} />, 'Posted On', new Date(viewItem.date_created).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })],
-                  [<Tag size={14} />, 'Category', viewItem.category]].map(([icon, label, val], i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderBottom: i < 1 ? '1px solid var(--border)' : 'none' }}>
+                  [<Tag size={14} />, 'Category', viewItem.category],
+                  [<User size={14} />, 'Posted By', viewItem.posted_by ? `${viewItem.posted_by.name} (Customer)` : 'Admin']].map(([icon, label, val], i, arr) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none' }}>
                     <span style={{ color: 'var(--primary)' }}>{icon}</span>
                     <span style={{ fontSize: 13, color: 'var(--text-muted)', flex: 1 }}>{label}</span>
                     <span style={{ fontSize: 13, fontWeight: 600 }}>{val}</span>
                   </div>
                 ))}
               </div>
+
+              {viewItem.posted_by && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.06em' }}>Vendor Contact Details</div>
+                  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                      <User size={14} style={{ color: 'var(--primary)' }} />
+                      <span style={{ fontWeight: 600 }}>{viewItem.posted_by.name}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                      <Mail size={14} style={{ color: 'var(--primary)' }} />
+                      <a href={`mailto:${viewItem.posted_by.email}`} style={{ color: 'var(--primary)', textDecoration: 'underline' }}>{viewItem.posted_by.email}</a>
+                    </div>
+                    {viewItem.posted_by.phone && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                        <Phone size={14} style={{ color: 'var(--primary)' }} />
+                        <a href={`tel:${viewItem.posted_by.phone}`} style={{ color: 'var(--text)' }}>{viewItem.posted_by.phone}</a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

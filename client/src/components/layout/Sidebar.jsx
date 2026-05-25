@@ -6,6 +6,7 @@ import { LayoutDashboard, Users, Package, ShoppingCart, Plus, RefreshCw, LogOut,
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
+import ProductService from '../../services/productService'
 
 const NAV_ITEMS = [
   { to: '/admin/dashboard',     icon: LayoutDashboard, label: 'Dashboard' },
@@ -21,7 +22,26 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen]     = useState(false)
   const [dropOpen, setDropOpen]         = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [pendingCount, setPendingCount] = useState(0)
   const dropRef = useRef(null)
+
+  useEffect(() => {
+    if (!user?.is_staff) return
+
+    const checkPending = async () => {
+      try {
+        const res = await ProductService.getPending()
+        const count = res.data?.results?.length ?? res.data?.length ?? 0
+        setPendingCount(count)
+      } catch (err) {
+        console.error('Failed to fetch pending products for sidebar badge', err)
+      }
+    }
+
+    checkPending()
+    const interval = setInterval(checkPending, 30000)
+    return () => clearInterval(interval)
+  }, [user])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -84,6 +104,20 @@ export default function Sidebar() {
               })}
             >
               <Icon size={18}/><span>{label}</span>
+              {label === 'Products' && pendingCount > 0 && (
+                <span style={{
+                  marginLeft: 'auto',
+                  background: 'var(--danger)',
+                  color: '#fff',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  padding: '2px 6px',
+                  borderRadius: 999,
+                  lineHeight: 1
+                }}>
+                  {pendingCount}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

@@ -19,6 +19,8 @@ urlpatterns = [
     # ── Admin: Products ───────────────────────────────────────
     path("products/", views.ProductListCreateView.as_view(), name="product-list"),
     path("products/<int:pk>/", views.ProductRetrieveUpdateDestroyView.as_view(), name="product-detail"),
+    path("products/<int:pk>/approve/", views.ProductApproveRejectView.as_view(), {"action": "approve"}, name="product-approve"),
+    path("products/<int:pk>/reject/", views.ProductApproveRejectView.as_view(), {"action": "reject"}, name="product-reject"),
 
     # ── Admin: Orders ─────────────────────────────────────────
     path("orders/", views.OrderListCreateView.as_view(), name="order-list"),

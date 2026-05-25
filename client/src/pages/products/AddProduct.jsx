@@ -72,7 +72,11 @@ export default function AddProduct() {
       }
 
       await ProductService.create(payload)
-      toast.success('Your listing was published successfully! 🎉')
+      if (user?.is_staff) {
+        toast.success('Your listing was published successfully! 🎉')
+      } else {
+        toast.success('Listing submitted successfully and is pending admin approval! ⏳')
+      }
       navigate('/products')
     } catch (err) {
       const data = err.response?.data
