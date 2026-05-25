@@ -332,28 +332,28 @@ export default function MyProducts() {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 32px;
+          margin-bottom: 20px;
           flex-wrap: wrap;
-          gap: 20px;
+          gap: 16px;
         }
         .mp-title {
-          font-size: 32px;
+          font-size: 24px;
           font-weight: 800;
           color: var(--text);
           letter-spacing: -0.02em;
-          margin-bottom: 6px;
+          margin-bottom: 4px;
         }
         .mp-subtitle {
-          font-size: 14.5px;
+          font-size: 13px;
           color: var(--text-muted);
         }
         .mp-btn-primary {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 10px 18px;
+          gap: 6px;
+          padding: 8px 14px;
           border-radius: var(--radius-md);
-          font-size: 13.5px;
+          font-size: 12.5px;
           font-weight: 600;
           color: #fff;
           background: var(--primary);
@@ -368,34 +368,34 @@ export default function MyProducts() {
 
         .mp-stats-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-          gap: 20px;
-          margin-bottom: 36px;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 12px;
+          margin-bottom: 24px;
         }
         .mp-stat-card {
-          padding: 18px 24px;
+          padding: 10px 16px;
           display: flex;
           flex-direction: column;
           background: var(--bg-2);
           border: 1px solid var(--border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-md);
         }
         .mp-stat-val {
-          font-size: 32px;
+          font-size: 20px;
           font-weight: 800;
           color: var(--text);
           line-height: 1.2;
-          margin-bottom: 4px;
+          margin-bottom: 2px;
         }
         .mp-stat-val.text-success { color: var(--success); }
         .mp-stat-val.text-warning { color: var(--warning); }
         .mp-stat-val.text-danger { color: var(--danger); }
         .mp-stat-lbl {
-          font-size: 12px;
+          font-size: 10px;
           font-weight: 700;
           color: var(--text-muted);
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.03em;
         }
 
         .mp-list {
