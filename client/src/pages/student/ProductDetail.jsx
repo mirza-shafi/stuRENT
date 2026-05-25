@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   Package,
   MessageCircle,
@@ -27,6 +27,7 @@ export default function ProductDetail() {
   const { id } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const { addToCart } = useCart()
 
   const { data: product, loading } = useApi(
@@ -70,13 +71,29 @@ export default function ProductDetail() {
   const buyTotal        = (parseFloat(buyPrice) * quantity).toFixed(2)
   const overallTotal    = currentMode === 'rent' ? rentTotal : buyTotal
 
+  // Auto start chat if redirected back from login
+  useEffect(() => {
+    if (location.state?.startChat && user && product) {
+      navigate(location.pathname, { replace: true, state: {} })
+      handleMessage()
+    }
+  }, [location.state, user, product])
+
   const handleAction = () => {
-    if (!user) { toast.error('Please sign in first'); navigate('/login'); return }
+    if (!user) {
+      toast.error('Please sign in first')
+      navigate('/login', { state: { from: window.location.pathname } })
+      return
+    }
     setShowPay(true)
   }
 
   const handleMessage = () => {
-    if (!user) { toast.error('Please sign in to message'); navigate('/login'); return }
+    if (!user) {
+      toast.error('Please sign in to message')
+      navigate('/login', { state: { from: window.location.pathname, startChat: true } })
+      return
+    }
     
     // Check if current user is the poster of the product
     const isPoster = product.posted_by 

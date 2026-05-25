@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import ThemeToggle from '../../components/ui/ThemeToggle'
 import toast from 'react-hot-toast'
@@ -22,6 +22,7 @@ const INIT = { username: '', email: '', password: '', password_confirm: '', univ
 export default function Register() {
   const { register, googleLogin } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [form, setForm]       = useState(INIT)
   const [errors, setErrors]   = useState({})
   const [loading, setLoading] = useState(false)
@@ -30,7 +31,11 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setErrors({}); setLoading(true)
-    try { await register(form); toast.success('Account created! Please sign in.'); navigate('/login') }
+    try {
+      await register(form)
+      toast.success('Account created! Please sign in.')
+      navigate('/login', { state: location.state })
+    }
     catch (err) { if (err.response?.data) setErrors(err.response.data); else toast.error('Registration failed.') }
     finally { setLoading(false) }
   }
@@ -45,7 +50,7 @@ export default function Register() {
       localStorage.setItem('login_method', 'google')
       await googleLogin(idToken)
       toast.success('Welcome to stuRENT!')
-      navigate('/products')
+      navigate(location.state?.from || '/products', { state: location.state })
     } catch (err) {
       console.error(err)
       toast.error(err.response?.data?.detail || 'Google Sign-In failed.')

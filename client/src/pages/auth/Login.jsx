@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import ThemeToggle from '../../components/ui/ThemeToggle'
 import toast from 'react-hot-toast'
@@ -9,6 +9,7 @@ import { signInWithPopup } from 'firebase/auth'
 export default function Login() {
   const { login, googleLogin } = useAuth()
   const navigate  = useNavigate()
+  const location  = useLocation()
   const [form, setForm]       = useState({ username: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
@@ -18,7 +19,11 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setError(''); setLoading(true)
-    try { await login(form); toast.success('Welcome back!'); navigate('/products') }
+    try {
+      await login(form)
+      toast.success('Welcome back!')
+      navigate(location.state?.from || '/products', { state: location.state })
+    }
     catch (err) { setError(err.response?.data?.detail || 'Invalid credentials.') }
     finally { setLoading(false) }
   }
@@ -33,7 +38,7 @@ export default function Login() {
       localStorage.setItem('login_method', 'google')
       await googleLogin(idToken)
       toast.success('Welcome back!')
-      navigate('/products')
+      navigate(location.state?.from || '/products', { state: location.state })
     } catch (err) {
       console.error(err)
       toast.error(err.response?.data?.detail || 'Google Sign-In failed.')
