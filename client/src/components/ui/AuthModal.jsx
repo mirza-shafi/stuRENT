@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext'
 import ThemeToggle from './ThemeToggle'
 import toast from 'react-hot-toast'
 import { X } from 'lucide-react'
+import { auth, googleProvider } from '../../firebase'
+import { signInWithPopup } from 'firebase/auth'
 
 function Field({ name, label, type = 'text', placeholder, value, onChange, error }) {
   return (
@@ -24,7 +26,7 @@ function Field({ name, label, type = 'text', placeholder, value, onChange, error
 }
 
 export default function AuthModal() {
-  const { showAuthModal, authModalView, setAuthModalView, closeAuthModal, login, register } = useAuth()
+  const { showAuthModal, authModalView, setAuthModalView, closeAuthModal, login, googleLogin, register } = useAuth()
   const navigate = useNavigate()
 
   // Login form state
@@ -86,7 +88,21 @@ export default function AuthModal() {
     }
   }
 
-  const handleGoogle = () => toast('🚀 Google Sign-Up coming soon!', { icon: '⏳' })
+  const handleGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      const idToken = await result.user.getIdToken()
+      await googleLogin(idToken)
+      toast.success('Welcome!')
+      closeAuthModal()
+      if (window.location.pathname === '/login' || window.location.pathname === '/register') {
+        navigate('/products')
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error(err.response?.data?.detail || 'Google Sign-In failed.')
+    }
+  }
 
   return (
     <div className="am-overlay" onClick={closeAuthModal}>

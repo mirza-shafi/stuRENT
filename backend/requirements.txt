@@ -18,3 +18,4 @@ sqlparse==0.5.5
 whitenoise==6.12.0
 cloudinary==1.40.0
 django-cloudinary-storage==0.3.0
+firebase-admin==6.5.0

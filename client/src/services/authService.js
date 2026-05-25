@@ -40,6 +40,19 @@ const AuthService = {
   },
 
   /**
+   * Login with Firebase Google ID Token.
+   * @param {string} idToken
+   * @returns {{ access, refresh }}
+   */
+  googleLogin: async (idToken) => {
+    const response = await api.post('/auth/google/', { id_token: idToken })
+    const { access, refresh } = response.data
+    localStorage.setItem('access_token', access)
+    localStorage.setItem('refresh_token', refresh)
+    return response
+  },
+
+  /**
    * Logout — blacklist refresh token and clear local storage.
    */
   logout: async () => {

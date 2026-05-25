@@ -114,6 +114,10 @@ CLOUDINARY_STORAGE = {
 }
 
 
+# ── Firebase configuration ───────────────────────────────────────────────────
+FIREBASE_CREDENTIALS = config("FIREBASE_CREDENTIALS", default="")
+
+
 # ── Default Primary Key ───────────────────────────────────────────────────────
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

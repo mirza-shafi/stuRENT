@@ -12,6 +12,7 @@ urlpatterns = [
     path("token/refresh/",views.TokenRefreshView.as_view(),        name="token_refresh"),
     path("logout/",       views.LogoutView.as_view(),              name="logout"),
     path("me/",           views.CurrentUserView.as_view(),         name="me"),
+    path("google/",       views.GoogleLoginView.as_view(),         name="google-login"),
 
     # Admin approval workflow
     path("admin-request/",                      views.AdminRequestView.as_view(),       name="admin-request"),

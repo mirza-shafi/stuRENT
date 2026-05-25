@@ -49,6 +49,18 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const googleLogin = useCallback(async (idToken) => {
+    await AuthService.googleLogin(idToken)
+    const { data } = await AuthService.getMe()
+    setUser(data)
+    // Sync admin status
+    if (data.is_staff) {
+      localStorage.setItem('is_admin', 'true')
+    } else {
+      localStorage.removeItem('is_admin')
+    }
+  }, [])
+
   const adminLogin = useCallback(async (credentials) => {
     await AuthService.adminLogin(credentials)
     const { data } = await AuthService.getMe()
@@ -89,7 +101,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading, login, logout, register, adminLogin,
+      user, loading, login, googleLogin, logout, register, adminLogin,
       showAuthModal, setShowAuthModal,
       authModalView, setAuthModalView,
       openLoginModal, openRegisterModal, closeAuthModal,

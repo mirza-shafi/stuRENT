@@ -218,3 +218,76 @@ class AdminRequestActionView(APIView):
             return Response({'message': 'Request rejected and user removed.'})
 
         return Response({'detail': 'Invalid action.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GoogleLoginView(APIView):
+    """
+    POST /api/v1/auth/google/
+    Accepts Firebase ID Token, validates it, and logs in or creates the corresponding user.
+    """
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        import firebase_admin.auth as firebase_auth
+        from django.contrib.auth.models import User
+        from apps.rental.models import Customer
+
+        id_token = request.data.get("id_token")
+        if not id_token:
+            return Response(
+                {"detail": "Firebase ID Token is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Verify the ID Token with Firebase Admin SDK
+            decoded_token = firebase_auth.verify_id_token(id_token)
+            email = decoded_token.get("email")
+            uid = decoded_token.get("uid")
+            name = decoded_token.get("name") or (email.split("@")[0] if email else "Google User")
+
+            if not email:
+                return Response(
+                    {"detail": "Email address not found in Google account payload."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Check if user already exists
+            user = User.objects.filter(email=email).first()
+            if not user:
+                # Generate a unique username
+                base_username = email.split("@")[0]
+                username = base_username
+                counter = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}{counter}"
+                    counter += 1
+
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=User.objects.make_random_password()
+                )
+
+                # Auto-create Customer profile
+                Customer.objects.create(
+                    user=user,
+                    name=name,
+                    email=email,
+                    university_name="Google Account",
+                    student_id="",
+                )
+
+            # Issue SimpleJWT tokens
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": UserSerializer(user).data
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"detail": f"Invalid Firebase ID Token: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
