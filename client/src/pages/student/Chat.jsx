@@ -140,6 +140,10 @@ export default function Chat() {
 
   const filteredList = conversations.filter(c => {
     if (!user?.email || !c.participants?.includes(user.email)) return false
+    
+    // Hide mock/demo chats for admin users (so only actual chats are shown in admin panel)
+    if (user.is_staff && c.id.startsWith('mock')) return false
+    
     const recipientInfo = getRecipientInfo(c)
     return (
       recipientInfo.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -245,45 +249,6 @@ export default function Chat() {
     setConversations(updatedConvos)
     setAllMessages(updatedMsgs)
     setInput('')
-
-    // Trigger typing and auto-reply
-    setTyping(true)
-    setTimeout(() => {
-      const replyTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      const autoReplyText = AUTO_REPLIES[Math.floor(Math.random() * AUTO_REPLIES.length)]
-      
-      const replyMsg = {
-        id: Date.now() + 1,
-        senderEmail: targetConvo ? targetConvo.participants.find(e => e !== user.email) : 'reply@sturent.com',
-        text: autoReplyText,
-        time: replyTime
-      }
-
-      const latestData = JSON.parse(localStorage.getItem('sturent_chat_data') || '{}')
-      const latestConvos = latestData.conversations || []
-      const latestMsgs = latestData.messages || {}
-
-      const nextMsgs = {
-        ...latestMsgs,
-        [activeId]: [...(latestMsgs[activeId] || []), replyMsg]
-      }
-
-      const latestActiveConvo = latestConvos.find(c => c.id === activeId)
-      if (latestActiveConvo) {
-        latestActiveConvo.lastMessage = autoReplyText
-        latestActiveConvo.lastMessageTime = replyTime
-      }
-
-      const nextFiltered = latestConvos.filter(c => c.id !== activeId)
-      const nextConvos = latestActiveConvo ? [latestActiveConvo, ...nextFiltered] : latestConvos
-
-      const nextData = { conversations: nextConvos, messages: nextMsgs }
-      localStorage.setItem('sturent_chat_data', JSON.stringify(nextData))
-
-      setConversations(nextConvos)
-      setAllMessages(nextMsgs)
-      setTyping(false)
-    }, 1000 + Math.random() * 800)
   }
 
   const isAdminPath = location.pathname.startsWith('/admin')
