@@ -192,19 +192,6 @@ function HomePageInner() {
         </div>
       </section>
 
-      {/* PROMO STRIP */}
-      <div className="hp-promo">
-        {[['🔒','Secure Payments','100% safe checkout'],['🔄','Easy Returns','30-day return policy'],['💬','Direct Chat','Message sellers directly'],['🎓','Students Only','Verified student community']].map(([icon,title,sub])=>(
-          <div key={title} className="hp-promo-item">
-            <span style={{ fontSize:26 }}>{icon}</span>
-            <div>
-              <div style={{ fontSize:13, fontWeight:600, color:'var(--h-text)' }}>{title}</div>
-              <div style={{ fontSize:11, color:'var(--h-muted)' }}>{sub}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* CATEGORIES */}
       <section className="hp-section">
         <div className="hp-section-header">
@@ -256,36 +243,6 @@ function HomePageInner() {
         </div>
       </section>
 
-      {/* BANNER STRIP */}
-      <div className="hp-banners">
-        <Link to="/products" className="hp-banner b1">
-          <div className="hp-banner-emoji">🪑</div>
-          <div>
-            <div className="hp-banner-tag">Top Rentals</div>
-            <div className="hp-banner-title">Study Room<br/>Essentials</div>
-            <div className="hp-banner-sub">Desks, chairs from $3/day</div>
-            <span className="hp-btn-outline">Browse →</span>
-          </div>
-        </Link>
-        <Link to="/products" className="hp-banner b2">
-          <div className="hp-banner-emoji">📦</div>
-          <div>
-            <div className="hp-banner-tag">Sell Your Items</div>
-            <div className="hp-banner-title">Post &<br/>Earn</div>
-            <div className="hp-banner-sub">List items you no longer need</div>
-            <span className="hp-btn-outline">Start Selling →</span>
-          </div>
-        </Link>
-        <Link to="/products" className="hp-banner b3">
-          <div className="hp-banner-emoji">🏠</div>
-          <div>
-            <div className="hp-banner-tag">Student Housing</div>
-            <div className="hp-banner-title">Find Your<br/>Next Room</div>
-            <div className="hp-banner-sub">Rooms near campus</div>
-            <span className="hp-btn-outline">Explore →</span>
-          </div>
-        </Link>
-      </div>
 
       {/* RECENT LISTINGS */}
       <section className="hp-section">
