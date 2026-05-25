@@ -141,7 +141,11 @@ export default function Cart() {
                         </div>
                         <div className="cart-item-price-unit">
                           ${priceNum.toFixed(2)}
-                          {p.listing_type !== 'Buy' && <span className="cart-unit-label">/day</span>}
+                          {p.listing_type !== 'Buy' && (
+                            <span className="cart-unit-label">
+                              {p.category === 'Housing' ? '/month' : '/day'}
+                            </span>
+                          )}
                         </div>
                         <div className="cart-item-quantity">
                           <div className="cart-qty-ctrl">

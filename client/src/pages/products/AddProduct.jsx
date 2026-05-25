@@ -84,11 +84,11 @@ export default function AddProduct() {
     
     // Listing Type Validation
     if (form.listing_type === 'Rent') {
-      if (!form.price) { toast.error('Please enter a daily rental price.'); return }
+      if (!form.price) { toast.error(form.category === 'Housing' ? 'Please enter a monthly rental price.' : 'Please enter a daily rental price.'); return }
     } else if (form.listing_type === 'Buy') {
       if (!form.buy_price) { toast.error('Please enter a purchase price.'); return }
     } else if (form.listing_type === 'Both') {
-      if (!form.price) { toast.error('Please enter a daily rental price.'); return }
+      if (!form.price) { toast.error(form.category === 'Housing' ? 'Please enter a monthly rental price.' : 'Please enter a daily rental price.'); return }
       if (!form.buy_price) { toast.error('Please enter a purchase price.'); return }
     }
 
@@ -398,7 +398,9 @@ export default function AddProduct() {
                   <div className="ap-pricing-row">
                     {form.listing_type !== 'Buy' && (
                       <div className="ap-group">
-                        <label className="ap-field-label">Daily Rental Price ($) *</label>
+                        <label className="ap-field-label">
+                          {form.category === 'Housing' ? 'Monthly Rental Price ($) *' : 'Daily Rental Price ($) *'}
+                        </label>
                         <input 
                           name="price" 
                           type="number" 
@@ -408,9 +410,11 @@ export default function AddProduct() {
                           value={form.price} 
                           onChange={handleChange} 
                           required={form.listing_type !== 'Buy'} 
-                          placeholder="e.g. 5.00" 
+                          placeholder={form.category === 'Housing' ? "e.g. 500.00" : "e.g. 5.00"} 
                         />
-                        <span className="ap-input-hint">Price charged per day for rentals</span>
+                        <span className="ap-input-hint">
+                          {form.category === 'Housing' ? 'Price charged per month for rentals' : 'Price charged per day for rentals'}
+                        </span>
                       </div>
                     )}
                     {form.listing_type !== 'Rent' && (

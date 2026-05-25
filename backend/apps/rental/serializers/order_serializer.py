@@ -16,12 +16,13 @@ class OrderListSerializer(serializers.ModelSerializer):
     product_price = serializers.DecimalField(
         source="product.price", max_digits=10, decimal_places=2, read_only=True
     )
+    product_category = serializers.CharField(source="product.category", read_only=True)
 
     class Meta:
         model = Order
         fields = (
             "id", "customer", "customer_name",
-            "product", "product_name", "product_price",
+            "product", "product_name", "product_price", "product_category",
             "status", "note", "date_created",
         )
         read_only_fields = ("id", "date_created", "customer_name", "product_name")

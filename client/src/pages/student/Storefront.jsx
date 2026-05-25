@@ -160,7 +160,7 @@ function BrowseCard({ product: p, inWish, onWish, onCart }) {
           {isRent && (
             <div>
               <span style={{ fontSize:20, fontWeight:800, color:'#6366f1' }}>${p.price}</span>
-              <span style={{ fontSize:11, color:'#94a3b8' }}>/day</span>
+              <span style={{ fontSize:11, color:'#94a3b8' }}>{p.category === 'Housing' ? '/month' : '/day'}</span>
             </div>
           )}
           {isBuy && p.buy_price && (

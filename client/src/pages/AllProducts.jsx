@@ -382,7 +382,7 @@ export default function AllProducts() {
           {/* Price Range */}
           <div className="ap-filter-group">
             <label className="ap-filter-label">
-              {listingType === 'Buy' ? 'Max Purchase Price:' : 'Max Price/day:'} <strong style={{ color:'#6366f1' }}>${maxPrice}</strong>
+              {listingType === 'Buy' ? 'Max Purchase Price:' : (category === 'Housing' ? 'Max Price/month:' : 'Max Price/day:')} <strong style={{ color:'#6366f1' }}>${maxPrice}</strong>
             </label>
             <input
               type="range"
@@ -689,7 +689,7 @@ function ProductCard({ product: p }) {
         <div className="ap-card-cat">{p.category}</div>
         <div className="ap-card-name">{p.name}</div>
         <div className="ap-card-price">
-          {isRent && <><span className="ap-price-main">${p.price}</span><span className="ap-price-unit">/day</span></>}
+          {isRent && <><span className="ap-price-main">${p.price}</span><span className="ap-price-unit">{p.category === 'Housing' ? '/month' : '/day'}</span></>}
           {isBuy && p.buy_price && <span className="ap-price-buy">Buy: ${p.buy_price}</span>}
         </div>
         <span className="ap-card-btn">View Details →</span>
@@ -717,7 +717,7 @@ function ProductRow({ product: p }) {
       </div>
       <div className="ap-row-right">
         <div>
-          {isRent && <div className="ap-row-price">${p.price}<span className="ap-row-price-unit">/day</span></div>}
+          {isRent && <div className="ap-row-price">${p.price}<span className="ap-row-price-unit">{p.category === 'Housing' ? '/month' : '/day'}</span></div>}
           {isBuy && p.buy_price && <div style={{ fontSize:12, color:'#10b981', fontWeight:700 }}>Buy: ${p.buy_price}</div>}
         </div>
         <span className="ap-row-btn">Details →</span>

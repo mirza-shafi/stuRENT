@@ -9,9 +9,12 @@ export default function PaymentModal({ product, rentDays = 1, mode = 'rent', onC
   const [step, setStep] = useState(1)
   const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '' })
 
-  const price     = mode === 'rent'
-    ? (parseFloat(product?.price || 0) * rentDays).toFixed(2)
-    : parseFloat(product?.buy_price || product?.price || 0).toFixed(2)
+  const depositMultiplier = product?.category === 'Housing' ? 2 : 5
+  const depositAmount = mode === 'rent' ? (parseFloat(product?.price || 0) * depositMultiplier) : 0
+  const subtotal = mode === 'rent'
+    ? parseFloat(product?.price || 0) * rentDays
+    : parseFloat(product?.buy_price || product?.price || 0)
+  const price = mode === 'rent' ? (subtotal + depositAmount).toFixed(2) : subtotal.toFixed(2)
 
   const handleCardChange = (e) => setCard(p => ({ ...p, [e.target.name]: e.target.value }))
 
@@ -44,12 +47,24 @@ export default function PaymentModal({ product, rentDays = 1, mode = 'rent', onC
             <div style={{ background: 'var(--surface)', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
               <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '8px' }}>{product?.name}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
-                <span>{mode === 'rent' ? `Rent × ${rentDays} day${rentDays > 1 ? 's' : ''}` : 'Purchase price'}</span>
-                <span style={{ color: 'var(--text)', fontWeight: 600 }}>${mode === 'rent' ? product?.price : product?.buy_price || product?.price}/{ mode === 'rent' ? 'day' : 'unit'}</span>
+                <span>{mode === 'rent' ? (product?.category === 'Housing' ? `Rent × ${rentDays} month${rentDays > 1 ? 's' : ''}` : `Rent × ${rentDays} day${rentDays > 1 ? 's' : ''}`) : 'Purchase price'}</span>
+                <span style={{ color: 'var(--text)', fontWeight: 600 }}>${mode === 'rent' ? product?.price : product?.buy_price || product?.price}/{mode === 'rent' ? (product?.category === 'Housing' ? 'month' : 'day') : 'unit'}</span>
               </div>
               {mode === 'rent' && (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                    <span>Security Deposit (Refundable)</span>
+                    <span style={{ color: 'var(--warning)', fontWeight: 600 }}>+${depositAmount.toFixed(2)}</span>
+                  </div>
+                  <div style={{ borderTop: '1px solid var(--border)', marginTop: '10px', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '18px' }}>
+                    <span>Total Cost</span>
+                    <span style={{ color: 'var(--primary)' }}>${price}</span>
+                  </div>
+                </>
+              )}
+              {mode !== 'rent' && (
                 <div style={{ borderTop: '1px solid var(--border)', marginTop: '10px', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '18px' }}>
-                  <span>Total</span>
+                  <span>Total Cost</span>
                   <span style={{ color: 'var(--primary)' }}>${price}</span>
                 </div>
               )}
@@ -125,7 +140,7 @@ export default function PaymentModal({ product, rentDays = 1, mode = 'rent', onC
             </div>
             <h3 style={{ fontWeight: 800, fontSize: '22px', marginBottom: '8px' }}>Payment Successful! 🎉</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '8px' }}>
-              {mode === 'rent' ? `Your rental for ${rentDays} day(s) is confirmed.` : 'Your purchase is confirmed.'}
+              {mode === 'rent' ? (product?.category === 'Housing' ? `Your rental for ${rentDays} month(s) is confirmed.` : `Your rental for ${rentDays} day(s) is confirmed.`) : 'Your purchase is confirmed.'}
             </p>
             <p style={{ fontWeight: 800, fontSize: '24px', color: 'var(--primary)', marginBottom: '24px' }}>${price} paid</p>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>

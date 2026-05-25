@@ -124,7 +124,7 @@ export default function MyOrders() {
                     {order.product_price && (
                       <span className="mo-price-text">
                         ${parseFloat(order.product_price).toFixed(2)}
-                        <span className="mo-price-unit">/day</span>
+                        <span className="mo-price-unit">{order.product_category === 'Housing' ? '/month' : '/day'}</span>
                       </span>
                     )}
                   </div>

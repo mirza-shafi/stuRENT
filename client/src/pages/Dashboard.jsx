@@ -448,7 +448,7 @@ export default function Dashboard() {
                         }}>
                           {p.listing_type}
                         </span>
-                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>${parseFloat(p.price).toFixed(2)}/day</span>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>${parseFloat(p.price).toFixed(2)}{p.category === 'Housing' ? '/month' : '/day'}</span>
                       </div>
                     </div>
                   </div>

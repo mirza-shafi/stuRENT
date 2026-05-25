@@ -155,7 +155,7 @@ export function CartWishlistUI({ allProducts }) {
                 <div className="hp-di-img">{p.image ? <img src={`${p.image?.startsWith('http') ? p.image : `${BASE}${p.image}`}`} alt="" /> : p.category==='Indoor'?'🪑':'🏕️'}</div>
                 <div className="hp-di-info">
                   <div className="hp-di-name">{p.name}</div>
-                  <div className="hp-di-price">${p.price}/day</div>
+                  <div className="hp-di-price">${p.price}{p.category === 'Housing' ? '/month' : '/day'}</div>
                   <button onClick={()=>{addToCart(p)}} style={{marginTop:6,background:'#1a1a2e',color:'#fff',border:'none',borderRadius:6,padding:'5px 10px',fontSize:11,fontWeight:600,cursor:'pointer'}}>🛒 Add to Cart</button>
                 </div>
                 <button className="hp-di-remove" onClick={()=>toggleWish(p)}>🗑</button>

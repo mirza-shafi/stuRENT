@@ -113,11 +113,11 @@ export default function ProductList() {
 
     // Listing Type Validation
     if (form.listing_type === 'Rent') {
-      if (!form.price) { toast.error('Please enter a daily rental price.'); return }
+      if (!form.price) { toast.error(form.category === 'Housing' ? 'Please enter a monthly rental price.' : 'Please enter a daily rental price.'); return }
     } else if (form.listing_type === 'Buy') {
       if (!form.buy_price) { toast.error('Please enter a purchase price.'); return }
     } else if (form.listing_type === 'Both') {
-      if (!form.price) { toast.error('Please enter a daily rental price.'); return }
+      if (!form.price) { toast.error(form.category === 'Housing' ? 'Please enter a monthly rental price.' : 'Please enter a daily rental price.'); return }
       if (!form.buy_price) { toast.error('Please enter a purchase price.'); return }
     }
 
@@ -362,7 +362,7 @@ export default function ProductList() {
                         </span>
                       </td>
                       <td style={{ padding: '14px 20px', fontWeight: 700, color: 'var(--primary)' }}>
-                        {p.price ? `$${p.price}/day` : '—'}
+                        {p.price ? `$${p.price}${p.category === 'Housing' ? '/month' : '/day'}` : '—'}
                       </td>
                       <td style={{ padding: '14px 20px', fontWeight: 600, color: 'var(--success)' }}>
                         {p.buy_price ? `$${p.buy_price}` : '—'}
@@ -450,7 +450,7 @@ export default function ProductList() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, marginBottom: 16 }}>
                 {form.listing_type !== 'Buy' && (
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Price / Day ($) *</label>
+                    <label className="form-label">{form.category === 'Housing' ? 'Price / Month ($) *' : 'Price / Day ($) *'}</label>
                     <input name="price" type="number" step="0.01" min="0" className="form-input" value={form.price} onChange={handleChange} required placeholder="0.00" />
                   </div>
                 )}
@@ -616,15 +616,19 @@ export default function ProductList() {
                 </span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
-                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Rent Price</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>${viewItem.price}<span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)' }}>/day</span></div>
-                </div>
-                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Buy Price</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--success)' }}>{viewItem.buy_price ? `$${viewItem.buy_price}` : <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>N/A</span>}</div>
-                </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 20 }}>
+                {viewItem.listing_type !== 'Buy' && (
+                  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Rent Price</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>${viewItem.price}<span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)' }}>{viewItem.category === 'Housing' ? '/month' : '/day'}</span></div>
+                  </div>
+                )}
+                {viewItem.listing_type !== 'Rent' && viewItem.buy_price && (
+                  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Buy Price</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--success)' }}>${viewItem.buy_price}</div>
+                  </div>
+                )}
               </div>
 
               {viewItem.description && (

@@ -186,7 +186,7 @@ export default function MyProducts() {
                   {p.listing_type !== 'Buy' && (
                     <span className="mp-price-text">
                       ${parseFloat(p.price).toFixed(2)}
-                      <span className="mp-price-unit">/day</span>
+                      <span className="mp-price-unit">{p.category === 'Housing' ? '/month' : '/day'}</span>
                     </span>
                   )}
                   {p.listing_type === 'Both' && <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>or</span>}
@@ -265,7 +265,7 @@ export default function MyProducts() {
                 {viewItem.listing_type !== 'Buy' && (
                   <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Rent Price</div>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>${viewItem.price}<span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)' }}>/day</span></div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>${viewItem.price}<span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)' }}>{viewItem.category === 'Housing' ? '/month' : '/day'}</span></div>
                   </div>
                 )}
                 {viewItem.listing_type !== 'Rent' && viewItem.buy_price && (

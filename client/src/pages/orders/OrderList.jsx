@@ -216,7 +216,7 @@ export default function OrderList() {
                 <label className="form-label">Product *</label>
                 <select name="product_id" className="form-select" value={form.product_id} onChange={handleChange} required>
                   <option value="">— Select product —</option>
-                  {products.map(p => <option key={p.id} value={p.id}>{p.name} (${p.price}/day)</option>)}
+                  {products.map(p => <option key={p.id} value={p.id}>{p.name} (${p.price}{p.category === 'Housing' ? '/month' : '/day'})</option>)}
                 </select>
               </div>
               <div className="form-group">

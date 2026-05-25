@@ -477,9 +477,16 @@ function ProductCard({ product: p }) {
         <div className="hp-card-cat">{p.category}</div>
         <div className="hp-card-name">{p.name}</div>
         <div className="hp-card-price">
-          <span className="hp-price-now">${p.price}</span>
-          <span className="hp-price-unit">/day</span>
-          {p.buy_price && <span className="hp-price-buy">Buy: ${p.buy_price}</span>}
+          {p.listing_type !== 'Buy' && (
+            <>
+              <span className="hp-price-now">${p.price}</span>
+              <span className="hp-price-unit">{p.category === 'Housing' ? '/month' : '/day'}</span>
+            </>
+          )}
+          {p.listing_type === 'Both' && <span style={{ fontSize: 9, color: 'var(--text-dim)', margin: '0 4px' }}>or</span>}
+          {p.listing_type !== 'Rent' && p.buy_price && (
+            <span className="hp-price-buy">Buy: ${p.buy_price}</span>
+          )}
         </div>
       </div>
     </Link>
