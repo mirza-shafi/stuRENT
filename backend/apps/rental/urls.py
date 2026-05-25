@@ -32,5 +32,10 @@ urlpatterns = [
     path("student/rent/", views.StudentRentView.as_view(), name="student-rent"),
     path("student/my-orders/", views.StudentMyOrdersView.as_view(), name="student-my-orders"),
     path("student/my-products/", views.StudentMyProductsView.as_view(), name="student-my-products"),
+
+    # ── Chat/Direct Messaging ─────────────────────────────────
+    path("chat/conversations/", views.ChatConversationsView.as_view(), name="chat-conversations"),
+    path("chat/messages/", views.ChatMessagesView.as_view(), name="chat-messages"),
 ]
+
 

@@ -9,6 +9,7 @@ from .student import (
     StudentMyOrdersView,
     StudentMyProductsView,
 )
+from .chat import ChatConversationsView, ChatMessagesView
 
 __all__ = [
     "DashboardStatsView",
@@ -25,4 +26,7 @@ __all__ = [
     "StudentRentView",
     "StudentMyOrdersView",
     "StudentMyProductsView",
+    "ChatConversationsView",
+    "ChatMessagesView",
 ]
+

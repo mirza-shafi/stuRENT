@@ -1,5 +1,5 @@
 /**
- * Chat.jsx — Fixed 2-panel messaging layout with localStorage persistence
+ * Chat.jsx — Fixed 2-panel messaging layout with real database persistence
  * Left: conversation list | Right: active chat window
  */
 import { useState, useRef, useEffect } from 'react'
@@ -7,108 +7,36 @@ import { Send, Search, MessageCircle, ChevronRight, ArrowLeft } from 'lucide-rea
 import { useAuth } from '../../context/AuthContext'
 import { useLocation, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import ChatService from '../../services/chatService'
 
-const AUTO_REPLIES = [
-  'Got it, thanks!', 'Sure, sounds good.', 'Let me check and get back to you.',
-  "Yes, it's available!", "I'll confirm shortly.", 'Great, see you then!'
-]
+const formatMessageTime = (isoString) => {
+  if (!isoString) return ''
+  const date = new Date(isoString)
+  if (isNaN(date.getTime())) return isoString
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
 
-const getChatData = (userEmail) => {
-  const data = localStorage.getItem('sturent_chat_data')
-  if (data) {
-    try {
-      return JSON.parse(data)
-    } catch (e) {
-      console.error(e)
-    }
+const formatLastMessageTime = (isoString) => {
+  if (!isoString) return ''
+  const date = new Date(isoString)
+  if (isNaN(date.getTime())) return isoString
+  const now = new Date()
+
+  // Compare dates without time portion
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const diffTime = today - msgDate
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  } else if (diffDays === 1) {
+    return 'Yesterday'
+  } else if (diffDays < 7) {
+    return `${diffDays} days ago`
+  } else {
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
   }
-
-  // Initialize with seeded mock data
-  const seededConvos = [
-    {
-      id: `mock1::${userEmail}::alex@sturent.com`,
-      productId: 'mock1',
-      productName: 'Folding Table',
-      participants: [userEmail, 'alex@sturent.com'],
-      participantNames: {
-        [userEmail]: 'You',
-        'alex@sturent.com': 'Alex Kim'
-      },
-      lastMessage: 'Is it still available?',
-      lastMessageTime: '2:34 PM',
-      unread: 2,
-      color: '#6366f1'
-    },
-    {
-      id: `mock2::${userEmail}::sara@sturent.com`,
-      productId: 'mock2',
-      productName: 'Study Lamp',
-      participants: [userEmail, 'sara@sturent.com'],
-      participantNames: {
-        [userEmail]: 'You',
-        'sara@sturent.com': 'Sara Malik'
-      },
-      lastMessage: 'Thanks for the info!',
-      lastMessageTime: 'Yesterday',
-      unread: 0,
-      color: '#06b6d4'
-    },
-    {
-      id: `mock3::${userEmail}::omar@sturent.com`,
-      productId: 'mock3',
-      productName: '1BR Apartment',
-      participants: [userEmail, 'omar@sturent.com'],
-      participantNames: {
-        [userEmail]: 'You',
-        'omar@sturent.com': 'Omar Hassan'
-      },
-      lastMessage: 'When can I view it?',
-      lastMessageTime: 'Yesterday',
-      unread: 1,
-      color: '#10b981'
-    },
-    {
-      id: `mock4::${userEmail}::priya@sturent.com`,
-      productId: 'mock4',
-      productName: 'Camping Chair',
-      participants: [userEmail, 'priya@sturent.com'],
-      participantNames: {
-        [userEmail]: 'You',
-        'priya@sturent.com': 'Priya Roy'
-      },
-      lastMessage: 'What is the daily rate?',
-      lastMessageTime: '2 days ago',
-      unread: 0,
-      color: '#f59e0b'
-    }
-  ]
-
-  const seededMessages = {
-    [`mock1::${userEmail}::alex@sturent.com`]: [
-      { id: 1, senderEmail: 'alex@sturent.com', text: 'Hi! Is the Folding Table still available?', time: '2:30 PM' },
-      { id: 2, senderEmail: userEmail,          text: 'Yes it is! Want to rent or buy?', time: '2:31 PM' },
-      { id: 3, senderEmail: 'alex@sturent.com', text: 'I want to rent for 3 days. How much?', time: '2:32 PM' },
-      { id: 4, senderEmail: userEmail,          text: '$5/day so $15 total. Interested?', time: '2:33 PM' },
-      { id: 5, senderEmail: 'alex@sturent.com', text: 'Is it still available?', time: '2:34 PM' },
-    ],
-    [`mock2::${userEmail}::sara@sturent.com`]: [
-      { id: 1, senderEmail: 'sara@sturent.com', text: 'Hello! Question about the Study Lamp.', time: 'Yesterday' },
-      { id: 2, senderEmail: userEmail,          text: 'Sure! Ask away.', time: 'Yesterday' },
-      { id: 3, senderEmail: 'sara@sturent.com', text: 'Thanks for the info!', time: 'Yesterday' },
-    ],
-    [`mock3::${userEmail}::omar@sturent.com`]: [
-      { id: 1, senderEmail: 'omar@sturent.com', text: 'I saw your 1BR Apartment listing.', time: 'Yesterday' },
-      { id: 2, senderEmail: userEmail,          text: 'Available from next month!', time: 'Yesterday' },
-      { id: 3, senderEmail: 'omar@sturent.com', text: 'When can I view it?', time: 'Yesterday' },
-    ],
-    [`mock4::${userEmail}::priya@sturent.com`]: [
-      { id: 1, senderEmail: 'priya@sturent.com', text: 'What is the daily rate for the camping chair?', time: '2 days ago' },
-    ]
-  }
-
-  const initialData = { conversations: seededConvos, messages: seededMessages }
-  localStorage.setItem('sturent_chat_data', JSON.stringify(initialData))
-  return initialData
 }
 
 export default function Chat() {
@@ -116,7 +44,7 @@ export default function Chat() {
   const location = useLocation()
   
   const [conversations, setConversations] = useState([])
-  const [allMessages, setAllMessages]     = useState({})
+  const [activeMessages, setActiveMessages] = useState([])
   const [activeId, setActiveId]           = useState(null)
   const [input, setInput]                 = useState('')
   const [search, setSearch]               = useState('')
@@ -136,7 +64,7 @@ export default function Chat() {
 
   const activeConvo = conversations.find(c => c.id === activeId)
   const activeRecipient = activeConvo ? getRecipientInfo(activeConvo) : null
-  const currentMsgs = activeId ? (allMessages[activeId] ?? []) : []
+  const currentMsgs = activeMessages
 
   const filteredList = conversations.filter(c => {
     if (!user?.email || !c.participants?.includes(user.email)) return false
@@ -156,27 +84,67 @@ export default function Chat() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [currentMsgs])
 
-  // Sync state from local storage and Router navigation state
+  const fetchConversations = async (selectConvoId = null) => {
+    try {
+      const { data } = await ChatService.getConversations()
+      setConversations(data)
+      if (selectConvoId) {
+        setActiveId(selectConvoId)
+      }
+    } catch (err) {
+      console.error('Failed to load conversations:', err)
+    }
+  }
+
+  const fetchMessages = async (convoId) => {
+    try {
+      const { data } = await ChatService.getMessages(convoId)
+      setActiveMessages(data)
+    } catch (err) {
+      console.error('Failed to load messages:', err)
+    }
+  }
+
+  // Poll conversations list
   useEffect(() => {
     if (!user?.email) return
 
-    const chatData = getChatData(user.email)
-    let convos = [...chatData.conversations]
-    let msgs = { ...chatData.messages }
+    fetchConversations()
+    const interval = setInterval(() => {
+      fetchConversations()
+    }, 5000)
 
-    // Parse navigate state payload
-    const { recipient, product } = location.state || {}
+    return () => clearInterval(interval)
+  }, [user])
+
+  // Poll current messages thread
+  useEffect(() => {
+    if (!activeId) return
+
+    fetchMessages(activeId)
+    const interval = setInterval(() => {
+      fetchMessages(activeId)
+    }, 4000)
+
+    return () => clearInterval(interval)
+  }, [activeId])
+
+  // Sync navigation state payload from product details
+  useEffect(() => {
+    if (!user?.email || !location.state) return
+    const { recipient, product } = location.state
     if (recipient && product) {
       const sortedEmails = [user.email, recipient.email].sort()
       const convoId = `${product.id}::${sortedEmails[0]}::${sortedEmails[1]}`
-
-      const existingIdx = convos.findIndex(c => c.id === convoId)
-
-      if (existingIdx === -1) {
+      
+      const existing = conversations.find(c => c.id === convoId)
+      if (existing) {
+        setActiveId(convoId)
+      } else {
         const colors = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6']
         const randomColor = colors[Math.floor(Math.random() * colors.length)]
 
-        const newConvo = {
+        const tempConvo = {
           id: convoId,
           productId: product.id,
           productName: product.name,
@@ -186,69 +154,37 @@ export default function Chat() {
             [recipient.email]: recipient.name
           },
           lastMessage: `Interested in ${product.name}`,
-          lastMessageTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          lastMessageTime: new Date().toISOString(),
           unread: 0,
           color: randomColor
         }
 
-        convos.unshift(newConvo)
-        
-        msgs[convoId] = [
-          {
-            id: Date.now(),
-            senderEmail: user.email,
-            text: `Hi! I'm interested in renting/buying your "${product.name}". Is it still available?`,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          }
-        ]
-
-        const updatedData = { conversations: convos, messages: msgs }
-        localStorage.setItem('sturent_chat_data', JSON.stringify(updatedData))
+        setConversations(prev => {
+          if (prev.some(c => c.id === convoId)) return prev
+          return [tempConvo, ...prev]
+        })
+        setActiveId(convoId)
+        setActiveMessages([])
       }
-
-      setActiveId(convoId)
+      
+      // Clear navigation state
       window.history.replaceState({}, document.title)
     }
+  }, [location.state, conversations, user])
 
-    setConversations(convos)
-    setAllMessages(msgs)
-  }, [user, location.state])
-
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!input.trim() || !activeId || !user?.email) return
-    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    const newMsg = {
-      id: Date.now(),
-      senderEmail: user.email,
-      text: input.trim(),
-      time: nowStr
-    }
-
-    const chatData = JSON.parse(localStorage.getItem('sturent_chat_data') || '{}')
-    const convos = chatData.conversations || []
-    const msgs = chatData.messages || {}
-
-    const updatedMsgs = {
-      ...msgs,
-      [activeId]: [...(msgs[activeId] || []), newMsg]
-    }
-
-    const targetConvo = convos.find(c => c.id === activeId)
-    if (targetConvo) {
-      targetConvo.lastMessage = input.trim()
-      targetConvo.lastMessageTime = nowStr
-      targetConvo.unread = 0
-    }
-
-    const filteredConvos = convos.filter(c => c.id !== activeId)
-    const updatedConvos = targetConvo ? [targetConvo, ...filteredConvos] : convos
-
-    const updatedData = { conversations: updatedConvos, messages: updatedMsgs }
-    localStorage.setItem('sturent_chat_data', JSON.stringify(updatedData))
-
-    setConversations(updatedConvos)
-    setAllMessages(updatedMsgs)
+    const messageText = input.trim()
     setInput('')
+
+    try {
+      const { data } = await ChatService.sendMessage(activeId, messageText)
+      setActiveMessages(prev => [...prev, data])
+      fetchConversations(activeId)
+    } catch (err) {
+      toast.error('Failed to send message')
+      console.error(err)
+    }
   }
 
   const isAdminPath = location.pathname.startsWith('/admin')
@@ -319,15 +255,13 @@ export default function Chat() {
             return (
               <div
                 key={c.id}
-                onClick={() => {
+                onClick={async () => {
                   setActiveId(c.id)
-                  setConversations(prev => {
-                    const next = prev.map(conv => conv.id === c.id ? { ...conv, unread: 0 } : conv)
-                    const chatData = JSON.parse(localStorage.getItem('sturent_chat_data') || '{}')
-                    chatData.conversations = next
-                    localStorage.setItem('sturent_chat_data', JSON.stringify(chatData))
-                    return next
-                  })
+                  // Immediately fetch and mark as read
+                  fetchMessages(c.id)
+                  setConversations(prev =>
+                    prev.map(conv => conv.id === c.id ? { ...conv, unread: 0 } : conv)
+                  )
                 }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12,
@@ -353,7 +287,7 @@ export default function Chat() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
                     <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{recipientInfo.name}</span>
-                    <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>{c.lastMessageTime}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>{formatLastMessageTime(c.lastMessageTime)}</span>
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 500, marginBottom: 2 }}>{c.productName || c.sub}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.lastMessage}</div>
@@ -427,7 +361,7 @@ export default function Chat() {
                     }}>
                       {m.text}
                     </div>
-                    <span style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 3, padding: '0 2px' }}>{m.time}</span>
+                    <span style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 3, padding: '0 2px' }}>{formatMessageTime(m.time)}</span>
                   </div>
                 )
               })}
