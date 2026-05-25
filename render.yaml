@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: sturent-backend
+    env: python
+    buildCommand: cd backend && ./build.sh
+    startCommand: cd backend && gunicorn sturent.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sturent-db
+          property: connectionString
+      - key: DJANGO_SETTINGS_MODULE
+        value: sturent.settings.production
+      - key: SECRET_KEY
+        generateValue: true
+
+  - type: psql
+    name: sturent-db
+    plan: free
