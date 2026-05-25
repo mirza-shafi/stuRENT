@@ -3,9 +3,9 @@
  * Left: conversation list | Right: active chat window
  */
 import { useState, useRef, useEffect } from 'react'
-import { Send, Search, MessageCircle } from 'lucide-react'
+import { Send, Search, MessageCircle, ChevronRight } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { useLocation } from 'react-router-dom'
+import { useLocation, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 
 const AUTO_REPLIES = [
@@ -252,10 +252,11 @@ export default function Chat() {
   }
 
   const isAdminPath = location.pathname.startsWith('/admin')
+  const containerHeight = isAdminPath ? 'calc(100vh - 210px)' : 'calc(100vh - 64px)'
   const containerStyle = isAdminPath ? {
     display: 'grid',
     gridTemplateColumns: '300px 1fr',
-    height: 'calc(100vh - 140px)',
+    height: containerHeight,
     background: 'var(--bg-2)',
     borderRadius: '16px',
     border: '1px solid var(--border)',
@@ -270,7 +271,30 @@ export default function Chat() {
   }
 
   return (
-    <div style={containerStyle}>
+    <div className={isAdminPath ? "fade-in" : ""} style={isAdminPath ? { display: 'flex', flexDirection: 'column' } : {}}>
+      {/* Admin Panel Breadcrumb & Page Header */}
+      {isAdminPath && (
+        <div style={{ marginBottom: 24 }}>
+          {/* ── Breadcrumb ── */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>
+            <Link to="/admin/dashboard" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Home</Link>
+            <ChevronRight size={13} />
+            <span style={{ color: 'var(--text)' }}>Messages</span>
+          </nav>
+
+          {/* ── Page Header ── */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', margin: 0 }}>Messages</h1>
+              <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 4 }}>
+                Direct student communications and listing inquiries
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={containerStyle}>
 
       {/* ── LEFT: Conversation List ── */}
       <div style={{ background: 'var(--bg-2)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -343,10 +367,14 @@ export default function Chat() {
       {/* ── RIGHT: Chat Window ── */}
       <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
         {!activeId ? (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', gap: 12 }}>
-            <MessageCircle size={56} style={{ opacity: .2 }} />
-            <p style={{ fontWeight: 600, fontSize: 16 }}>Select a conversation</p>
-            <p style={{ fontSize: 13 }}>Click a contact on the left to start chatting</p>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', gap: 16, background: 'var(--bg-3)', padding: 32 }}>
+            <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--primary-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid rgba(99,102,241,.15)', color: 'var(--primary)', marginBottom: 8, boxShadow: 'var(--shadow-sm)' }}>
+              <MessageCircle size={36} />
+            </div>
+            <h3 style={{ fontWeight: 800, fontSize: 18, color: 'var(--text)', margin: 0 }}>Direct Messaging Portal</h3>
+            <p style={{ fontSize: 13, maxWidth: 320, textAlign: 'center', lineHeight: 1.6, color: 'var(--text-muted)', margin: 0 }}>
+              Select a conversation from the sidebar to view messages, answer inquiries, or coordinate student handoffs.
+            </p>
           </div>
         ) : (
           <>
@@ -432,6 +460,7 @@ export default function Chat() {
           }
         }
       `}</style>
+      </div>
     </div>
   )
 }
