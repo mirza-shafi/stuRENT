@@ -75,7 +75,20 @@ export default function AddProduct() {
       toast.success('Your listing was published successfully! 🎉')
       navigate('/products')
     } catch (err) {
-      toast.error(err.response?.data?.price?.[0] || err.response?.data?.message || 'Failed to publish listing.')
+      const data = err.response?.data
+      let msg = 'Failed to publish listing.'
+      if (data) {
+        if (typeof data === 'object') {
+          const errors = Object.entries(data).map(([key, val]) => {
+            const displayVal = Array.isArray(val) ? val[0] : JSON.stringify(val)
+            return `${key}: ${displayVal}`
+          })
+          msg = errors.join('\n')
+        } else if (typeof data === 'string') {
+          msg = data
+        }
+      }
+      toast.error(msg)
     } finally {
       setSaving(false)
     }

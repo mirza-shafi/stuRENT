@@ -28,6 +28,7 @@ class Product(models.Model):
     class Category(models.TextChoices):
         INDOOR  = "Indoor",  _("Indoor")
         OUTDOOR = "Outdoor", _("Outdoor")
+        HOUSING = "Housing", _("Housing")
 
     class ListingType(models.TextChoices):
         RENT = "Rent", _("Rent Only")

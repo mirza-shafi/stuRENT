@@ -1,11 +1,12 @@
 /**
- * Refund.jsx — Refund management page (Phoenix style)
- * Process and manage refunds for specific orders
+ * Refund.jsx — Premium Admin Refund Management Page (Phoenix Style)
  */
-
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ChevronLeft, AlertCircle, CheckCircle, DollarSign, Package } from 'lucide-react'
+import {
+  ChevronLeft, AlertCircle, CheckCircle, DollarSign,
+  Package, ChevronRight, User, Mail, Phone, RefreshCcw
+} from 'lucide-react'
 import OrderService from '../../services/orderService'
 import toast from 'react-hot-toast'
 
@@ -71,9 +72,9 @@ export default function Refund() {
   )
 
   if (!order) return (
-    <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-      <AlertCircle size={48} color="var(--danger)" style={{ margin: '0 auto 16px' }} />
-      <h2>Order not found</h2>
+    <div className="empty-state card" style={{ padding: 60, marginTop: 40 }}>
+      <AlertCircle size={48} className="empty-state__icon" style={{ color: 'var(--danger)' }} />
+      <h2 className="empty-state__title">Order not found</h2>
       <Link to="/admin/orders" className="btn btn--primary" style={{ marginTop: 12 }}>← Back to Orders</Link>
     </div>
   )
@@ -84,227 +85,525 @@ export default function Refund() {
   const total = subtotal + tax + (order.shipping_cost || 0)
 
   return (
-    <div className="fade-in">
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
-        <button onClick={() => navigate(`/admin/orders/${id}`)} className="btn btn--ghost" style={{ padding: 8 }}>
-          <ChevronLeft size={20} />
-        </button>
-        <div>
-          <h1 className="page-title">Refund Order #{order.id}</h1>
-          <p className="page-subtitle">Customer ID: {order.customer?.id || order.customer_id || '—'}</p>
+    <div className="ref-container fade-in">
+      {/* ── Breadcrumb ── */}
+      <nav className="ref-breadcrumb" aria-label="breadcrumb">
+        <ol>
+          <li><Link to="/admin/dashboard">Home</Link></li>
+          <ChevronRight size={13} style={{ color: 'var(--text-dim)' }} />
+          <li><Link to="/admin/orders">Orders</Link></li>
+          <ChevronRight size={13} style={{ color: 'var(--text-dim)' }} />
+          <li><Link to={`/admin/orders/${order.id}`}>Order #{order.id}</Link></li>
+          <ChevronRight size={13} style={{ color: 'var(--text-dim)' }} />
+          <li className="active" aria-current="page">Refund</li>
+        </ol>
+      </nav>
+
+      {/* ── Header ── */}
+      <div className="ref-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <button onClick={() => navigate(`/admin/orders/${order.id}`)} className="ref-btn-back" title="Back to order">
+            <ChevronLeft size={18} />
+          </button>
+          <div>
+            <h1 className="ref-title">Refund Order #{order.id}</h1>
+            <p className="ref-subtitle">Process transaction reversals for students</p>
+          </div>
         </div>
       </div>
 
-      {/* Two column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24, alignItems: 'start' }}>
-        
-        {/* Left: Refund Form */}
-        <div>
+      {/* ── Two Column Grid ── */}
+      <div className="ref-grid">
+        {/* Left Column: Form / Status & Line Items */}
+        <div className="ref-col-main">
+          {/* Refund success alert banner */}
           {refunded && (
-            <div style={{ background: 'rgba(16,185,129,.12)', border: '1px solid rgba(16,185,129,.25)', borderRadius: 12, padding: 16, marginBottom: 24, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <div className="ref-alert-banner">
               <CheckCircle size={20} color="var(--success)" style={{ flexShrink: 0, marginTop: 2 }} />
               <div>
-                <div style={{ fontWeight: 700, color: 'var(--success)', marginBottom: 4 }}>Refund Processed</div>
-                <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>The refund of ${refundAmount} has been successfully processed.</p>
+                <h4 style={{ margin: '0 0 4px 0', fontWeight: 700, color: 'var(--success)' }}>Refund Processed Successfully</h4>
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)' }}>
+                  A refund of <strong>${parseFloat(refundAmount).toFixed(2)}</strong> has been credited. The order status is now updated.
+                </p>
               </div>
             </div>
           )}
 
-          {/* Items Table */}
-          <div className="card" style={{ marginBottom: 24 }}>
-            <div style={{ padding: 20, borderBottom: '1px solid var(--border)' }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Order Items</h2>
-            </div>
-            <table style={{ width: '100%', fontSize: 14 }}>
-              <thead style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
-                <tr>
-                  <th style={{ padding: '12px 20px', textAlign: 'left', fontWeight: 600, color: 'var(--text-muted)', fontSize: 12 }}>Product</th>
-                  <th style={{ padding: '12px 20px', textAlign: 'center', fontWeight: 600, color: 'var(--text-muted)', fontSize: 12 }}>Qty</th>
-                  <th style={{ padding: '12px 20px', textAlign: 'right', fontWeight: 600, color: 'var(--text-muted)', fontSize: 12 }}>Price</th>
-                  <th style={{ padding: '12px 20px', textAlign: 'right', fontWeight: 600, color: 'var(--text-muted)', fontSize: 12 }}>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '16px 20px' }}>
-                      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                        {item.product?.image ? (
-                          <img src={`${item.product.image?.startsWith('http') ? item.product.image : `${BASE_URL}${item.product.image}`}`} alt={item.product?.name} style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} />
-                        ) : (
-                          <div style={{ width: 40, height: 40, borderRadius: 6, background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>📦</div>
-                        )}
-                        <span>{item.product?.name || 'Product'}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px 20px', textAlign: 'center', fontWeight: 600 }}>{item.quantity || 1}</td>
-                    <td style={{ padding: '16px 20px', textAlign: 'right', color: 'var(--text-muted)' }}>${item.price?.toFixed(2)}</td>
-                    <td style={{ padding: '16px 20px', textAlign: 'right', fontWeight: 600 }}>${(item.price * (item.quantity || 1))?.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Refund Form */}
+          {/* Refund Details Form */}
           {!refunded && (
-            <form onSubmit={handleRefund}>
-              <div className="card" style={{ padding: 24 }}>
-                <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Refund Details</h2>
+            <form onSubmit={handleRefund} className="ref-card card" style={{ padding: 24, marginBottom: 24 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', margin: '0 0 20px 0', borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
+                Refund Request Form
+              </h2>
 
-                {/* Refund Reason */}
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ fontSize: 14, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text)' }}>Reason for Refund</label>
-                  <select
-                    value={refundReason}
-                    onChange={e => setRefundReason(e.target.value)}
+              {/* Reason */}
+              <div className="ref-form-group">
+                <label className="ref-field-label">Reason for Refund *</label>
+                <select
+                  value={refundReason}
+                  onChange={e => setRefundReason(e.target.value)}
+                  className="ref-select"
+                  required
+                >
+                  <option value="">Select a verified reason...</option>
+                  <option value="customer_request">🤝 Customer Request / Friendly Cancellation</option>
+                  <option value="damaged_item">🪑 Damaged Item / Condition Issue</option>
+                  <option value="wrong_item">❌ Wrong Item Handed Over</option>
+                  <option value="not_as_described">⚠️ Item Not as Described</option>
+                  <option value="late_delivery">⏰ Handoff Timeout / Seller Absent</option>
+                  <option value="other">💬 Other (Please specify in notes)</option>
+                </select>
+              </div>
+
+              {/* Amount */}
+              <div className="ref-form-group">
+                <label className="ref-field-label">Refund Amount ($) *</label>
+                <div style={{ position: 'relative' }}>
+                  <span className="ref-currency-symbol">$</span>
+                  <input
+                    type="number"
+                    value={refundAmount}
+                    onChange={e => setRefundAmount(e.target.value)}
+                    step="0.01"
+                    max={total}
+                    className="ref-input"
                     required
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      border: '1px solid var(--border)',
-                      borderRadius: 10,
-                      background: 'var(--surface)',
-                      color: 'var(--text)',
-                      fontSize: 14,
-                      fontFamily: 'inherit',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <option value="">Select a reason...</option>
-                    <option value="customer_request">Customer Request</option>
-                    <option value="damaged_item">Damaged Item</option>
-                    <option value="wrong_item">Wrong Item Sent</option>
-                    <option value="not_as_described">Not as Described</option>
-                    <option value="late_delivery">Late Delivery</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                {/* Refund Amount */}
-                <div style={{ marginBottom: 24 }}>
-                  <label style={{ fontSize: 14, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text)' }}>Refund Amount</label>
-                  <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: 14, fontWeight: 600 }}>$</span>
-                    <input
-                      type="number"
-                      value={refundAmount}
-                      onChange={e => setRefundAmount(e.target.value)}
-                      step="0.01"
-                      max={total}
-                      required
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px 10px 28px',
-                        border: '1px solid var(--border)',
-                        borderRadius: 10,
-                        background: 'var(--surface)',
-                        color: 'var(--text)',
-                        fontSize: 14,
-                        fontFamily: 'inherit'
-                      }}
-                    />
-                  </div>
-                  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
-                    Maximum: ${total.toFixed(2)}
-                  </p>
-                </div>
-
-                {/* Notes */}
-                <div style={{ marginBottom: 24 }}>
-                  <label style={{ fontSize: 14, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text)' }}>Internal Notes (Optional)</label>
-                  <textarea
-                    placeholder="Add any internal notes about this refund..."
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      border: '1px solid var(--border)',
-                      borderRadius: 10,
-                      background: 'var(--surface)',
-                      color: 'var(--text)',
-                      fontSize: 14,
-                      fontFamily: 'inherit',
-                      minHeight: 100,
-                      resize: 'vertical'
-                    }}
                   />
                 </div>
+                <span className="ref-input-hint">Maximum refundable amount is <strong>${total.toFixed(2)}</strong></span>
+              </div>
 
-                {/* Action Buttons */}
-                <button
-                  type="submit"
-                  disabled={processing}
-                  className="btn btn--primary btn--full"
-                  style={{ marginBottom: 8 }}
-                >
-                  {processing ? <span className="spinner" style={{ marginRight: 8 }} /> : '✓'} Refund ${refundAmount || '0.00'}
-                </button>
-                <Link to={`/admin/orders/${id}`} className="btn btn--ghost btn--full">
+              {/* Internal Notes */}
+              <div className="ref-form-group">
+                <label className="ref-field-label">Internal Handoff Notes</label>
+                <textarea
+                  placeholder="Describe resolution details, meeting info, or bank cash return details..."
+                  className="ref-textarea"
+                  rows={4}
+                />
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 28 }}>
+                <Link to={`/admin/orders/${order.id}`} className="ref-btn-discard">
                   Cancel
                 </Link>
+                <button type="submit" className="ref-btn-submit" disabled={processing}>
+                  {processing ? <span className="spinner" style={{ width: 14, height: 14, borderTopColor: '#fff' }} /> : <><RefreshCcw size={14} style={{ marginRight: 6 }} /> Process Refund</>}
+                </button>
               </div>
             </form>
           )}
+
+          {/* Table: Order Items */}
+          <div className="ref-card card">
+            <div className="ref-card-header">
+              <Package size={16} />
+              <span>Items in this Order</span>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="ref-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th style={{ textAlign: 'center' }}>Quantity</th>
+                    <th style={{ textAlign: 'right' }}>Price</th>
+                    <th style={{ textAlign: 'right' }}>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item, idx) => (
+                    <tr key={idx}>
+                      <td>
+                        <div className="ref-product-cell">
+                          <div className="ref-product-thumb">
+                            {item.product?.image ? (
+                              <img src={`${item.product.image?.startsWith('http') ? item.product.image : `${BASE_URL}${item.product.image}`}`} alt={item.product?.name} />
+                            ) : (
+                              <span>{item.product?.category === 'Indoor' ? '🪑' : '🏕️'}</span>
+                            )}
+                          </div>
+                          <div>
+                            <div className="ref-product-name">{item.product?.name || 'Product'}</div>
+                            <div className="ref-product-cat">{item.product?.category || 'Category'}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--text)' }}>
+                        {item.quantity || 1}
+                      </td>
+                      <td style={{ textAlign: 'right', color: 'var(--text-muted)' }}>
+                        ${parseFloat(item.price || 0).toFixed(2)}
+                      </td>
+                      <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--primary)' }}>
+                        ${(parseFloat(item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
-        {/* Right: Summary */}
-        <div>
-          {/* Order Summary */}
-          <div className="card" style={{ marginBottom: 20 }}>
-            <div style={{ padding: 20, borderBottom: '1px solid var(--border)' }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Order Summary</h3>
+        {/* Right Column: Financial Summary & Profile */}
+        <div className="ref-col-side">
+          {/* Card: Financial Summary */}
+          <div className="ref-card card">
+            <div className="ref-card-header">
+              <DollarSign size={16} />
+              <span>Original Order Summary</span>
             </div>
-            <div style={{ padding: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 13, color: 'var(--text-muted)' }}>
-                <span>Items subtotal:</span>
-                <span>${subtotal.toFixed(2)}</span>
+            <div className="ref-card-body">
+              <div className="ref-summary-row">
+                <span>Items Subtotal:</span>
+                <strong>${subtotal.toFixed(2)}</strong>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 13, color: 'var(--text-muted)' }}>
-                <span>Discount:</span>
-                <span>-${(order.discount || 0).toFixed(2)}</span>
+              <div className="ref-summary-row">
+                <span>Tax & Fee:</span>
+                <strong>${tax.toFixed(2)}</strong>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 13, color: 'var(--text-muted)' }}>
-                <span>Tax:</span>
-                <span>${tax.toFixed(2)}</span>
+              <div className="ref-summary-row" style={{ paddingBottom: 14, borderBottom: '1px solid var(--border)' }}>
+                <span>Delivery / Logistics:</span>
+                <strong>${(order.shipping_cost || 0).toFixed(2)}</strong>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, fontSize: 13, color: 'var(--text-muted)', paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
-                <span>Shipping:</span>
-                <span>${(order.shipping_cost || 0).toFixed(2)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: 'var(--primary)' }}>
-                <span>Total:</span>
+              <div className="ref-summary-total">
+                <span>Total Value:</span>
                 <span>${total.toFixed(2)}</span>
               </div>
             </div>
           </div>
 
-          {/* Customer Info */}
-          <div className="card">
-            <div style={{ padding: 20, borderBottom: '1px solid var(--border)' }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Customer</h3>
+          {/* Card: Handoff Customer Profile */}
+          <div className="ref-card card">
+            <div className="ref-card-header">
+              <User size={16} />
+              <span>Customer Details</span>
             </div>
-            <div style={{ padding: 20 }}>
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Name</div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{order.customer?.name || order.customer_name || '—'}</div>
+            <div className="ref-card-body">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div className="ref-avatar">
+                  {order.customer?.name?.[0]?.toUpperCase() || 'U'}
+                </div>
+                <div>
+                  <h4 style={{ margin: 0, fontWeight: 700, fontSize: 14 }}>{order.customer?.name || order.customer_name || 'Verified Student'}</h4>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>ID: #{order.customer?.id || '—'}</span>
+                </div>
               </div>
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Email</div>
-                <a href={`mailto:${order.customer?.email}`} style={{ fontSize: 14, color: 'var(--primary)', textDecoration: 'none' }}>
-                  {order.customer?.email || '—'}
-                </a>
+
+              <div className="ref-profile-info-row">
+                <Mail size={13} color="var(--text-dim)" />
+                <a href={`mailto:${order.customer?.email}`} className="ref-link">{order.customer?.email || '—'}</a>
               </div>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Phone</div>
-                <a href={`tel:${order.customer?.phone}`} style={{ fontSize: 14, color: 'var(--primary)', textDecoration: 'none' }}>
-                  {order.customer?.phone || '—'}
-                </a>
+              <div className="ref-profile-info-row" style={{ marginTop: 8 }}>
+                <Phone size={13} color="var(--text-dim)" />
+                <a href={`tel:${order.customer?.phone}`} className="ref-link">{order.customer?.phone || '—'}</a>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ── Custom Scoped CSS ── */}
+      <style>{`
+        .ref-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px 10px 80px;
+          font-family: 'DM Sans', var(--font);
+        }
+
+        /* Breadcrumb navigation */
+        .ref-breadcrumb {
+          margin-bottom: 24px;
+        }
+        .ref-breadcrumb ol {
+          display: flex;
+          align-items: center;
+          list-style: none;
+          gap: 8px;
+          font-size: 13px;
+          color: var(--text-muted);
+        }
+        .ref-breadcrumb li a {
+          color: var(--primary);
+          transition: color 0.15s;
+        }
+        .ref-breadcrumb li a:hover {
+          color: var(--primary-hov);
+          text-decoration: underline;
+        }
+        .ref-breadcrumb li.active {
+          color: var(--text);
+          font-weight: 500;
+        }
+
+        /* Header block */
+        .ref-header {
+          margin-bottom: 28px;
+        }
+        .ref-btn-back {
+          width: 38px;
+          height: 38px;
+          border-radius: var(--radius-md);
+          border: 1px solid var(--border);
+          background: var(--bg-2);
+          color: var(--text);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+        .ref-btn-back:hover {
+          background: var(--surface-hov);
+          border-color: var(--primary);
+          color: var(--primary);
+        }
+        .ref-title {
+          font-size: 24px;
+          font-weight: 800;
+          color: var(--text);
+          letter-spacing: -0.5px;
+          margin: 0;
+        }
+        .ref-subtitle {
+          font-size: 13.5px;
+          color: var(--text-muted);
+          margin-top: 4px;
+        }
+
+        /* Grid layout */
+        .ref-grid {
+          display: grid;
+          grid-template-columns: 1.6fr 1fr;
+          gap: 24px;
+          align-items: start;
+        }
+
+        /* Alert success banner */
+        .ref-alert-banner {
+          background: rgba(16,185,129,.12);
+          border: 1px solid rgba(16,185,129,.22);
+          border-radius: var(--radius-md);
+          padding: 16px 20px;
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+          margin-bottom: 24px;
+        }
+
+        /* Card styles */
+        .ref-card {
+          background: var(--bg-2);
+          border: 1px solid var(--border);
+          overflow: hidden;
+        }
+        .ref-card-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 14px 20px;
+          border-bottom: 1px solid var(--border);
+          font-weight: 700;
+          font-size: 14px;
+          color: var(--text);
+          background: var(--bg-3);
+        }
+        .ref-card-body {
+          padding: 20px;
+        }
+
+        /* Form elements */
+        .ref-form-group {
+          margin-bottom: 20px;
+        }
+        .ref-field-label {
+          display: block;
+          font-size: 12px;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          letter-spacing: 0.04em;
+          margin-bottom: 8px;
+        }
+        .ref-select, .ref-input, .ref-textarea {
+          width: 100%;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          background: var(--bg-3);
+          color: var(--text);
+          font-size: 14px;
+          padding: 10px 14px;
+          font-family: inherit;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+        .ref-select:focus, .ref-input:focus, .ref-textarea:focus {
+          border-color: var(--primary);
+        }
+        .ref-currency-symbol {
+          position: absolute;
+          left: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--text-muted);
+          font-weight: 700;
+          font-size: 14px;
+          pointer-events: none;
+        }
+        .ref-input {
+          padding-left: 28px;
+        }
+        .ref-input-hint {
+          display: block;
+          font-size: 11.5px;
+          color: var(--text-dim);
+          margin-top: 5px;
+        }
+        .ref-btn-discard {
+          padding: 10px 20px;
+          border-radius: var(--radius-md);
+          font-size: 13.5px;
+          font-weight: 600;
+          color: var(--text-muted);
+          border: 1px solid var(--border);
+          background: var(--bg-2);
+          transition: all 0.2s;
+          text-decoration: none;
+        }
+        .ref-btn-discard:hover {
+          background: var(--surface-hov);
+          color: var(--text);
+        }
+        .ref-btn-submit {
+          padding: 10px 22px;
+          border-radius: var(--radius-md);
+          font-size: 13.5px;
+          font-weight: 700;
+          color: #fff;
+          background: var(--danger);
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          transition: all 0.2s;
+        }
+        .ref-btn-submit:hover {
+          background: #dc2626;
+          transform: translateY(-1px);
+        }
+
+        /* Order items table */
+        .ref-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 13.5px;
+        }
+        .ref-table th {
+          padding: 12px 20px;
+          background: var(--bg-3);
+          color: var(--text-muted);
+          font-weight: 700;
+          text-transform: uppercase;
+          font-size: 11px;
+          letter-spacing: 0.06em;
+          text-align: left;
+          border-bottom: 1px solid var(--border);
+        }
+        .ref-table td {
+          padding: 14px 20px;
+          border-bottom: 1px solid var(--border);
+          vertical-align: middle;
+        }
+        .ref-table tr:last-child td {
+          border-bottom: none;
+        }
+        .ref-product-cell {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .ref-product-thumb {
+          width: 44px;
+          height: 44px;
+          border-radius: 8px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+        .ref-product-thumb img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .ref-product-name {
+          font-weight: 700;
+          color: var(--text);
+        }
+        .ref-product-cat {
+          font-size: 11px;
+          color: var(--text-muted);
+          margin-top: 2px;
+        }
+
+        /* Summaries */
+        .ref-summary-row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13px;
+          color: var(--text-muted);
+          margin-bottom: 10px;
+        }
+        .ref-summary-total {
+          display: flex;
+          justify-content: space-between;
+          font-size: 17px;
+          font-weight: 850;
+          color: var(--primary);
+          margin-top: 14px;
+          padding-top: 14px;
+          border-top: 1px dashed var(--border);
+        }
+
+        /* Profile details */
+        .ref-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--primary), var(--accent));
+          color: #fff;
+          font-weight: 700;
+          font-size: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .ref-profile-info-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+        }
+        .ref-link {
+          color: var(--primary);
+          text-decoration: none;
+        }
+        .ref-link:hover {
+          text-decoration: underline;
+        }
+
+        @media (max-width: 900px) {
+          .ref-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </div>
   )
 }

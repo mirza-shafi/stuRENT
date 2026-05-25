@@ -67,8 +67,22 @@ export default function ProductList() {
       if (editItem) { await ProductService.update(editItem.id, payload); toast.success('Product updated.') }
       else          { await ProductService.create(payload);               toast.success('Product created.') }
       closeModal(); refetch()
-    } catch (err) { toast.error(err.response?.data?.price?.[0] || 'Failed to save product.') }
-    finally { setSaving(false) }
+    } catch (err) {
+      const data = err.response?.data
+      let msg = 'Failed to save product.'
+      if (data) {
+        if (typeof data === 'object') {
+          const errors = Object.entries(data).map(([key, val]) => {
+            const displayVal = Array.isArray(val) ? val[0] : JSON.stringify(val)
+            return `${key}: ${displayVal}`
+          })
+          msg = errors.join('\n')
+        } else if (typeof data === 'string') {
+          msg = data
+        }
+      }
+      toast.error(msg)
+    } finally { setSaving(false) }
   }
 
   const handleDelete = async (id) => {

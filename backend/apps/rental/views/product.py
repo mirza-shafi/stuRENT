@@ -26,6 +26,14 @@ class ProductListCreateView(generics.ListCreateAPIView):
             return ProductDetailSerializer
         return ProductListSerializer
 
+    def perform_create(self, serializer):
+        from apps.rental.models import Customer
+        try:
+            customer = self.request.user.customer_profile
+            serializer.save(posted_by=customer)
+        except (AttributeError, Customer.DoesNotExist):
+            serializer.save()
+
 
 class ProductRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     """
