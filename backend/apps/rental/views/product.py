@@ -28,11 +28,25 @@ class ProductListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         from apps.rental.models import Customer
+        import traceback
+        import sys
         try:
             customer = self.request.user.customer_profile
+            print(f"[DEBUG] perform_create: user has customer profile: {customer}", file=sys.stderr)
             serializer.save(posted_by=customer)
-        except (AttributeError, Customer.DoesNotExist):
-            serializer.save()
+        except (AttributeError, Customer.DoesNotExist) as e:
+            print(f"[DEBUG] perform_create: user has NO customer profile. Exception: {e}", file=sys.stderr)
+            try:
+                serializer.save()
+            except Exception as save_err:
+                print(f"[DEBUG] Error during serializer.save() without profile: {save_err}", file=sys.stderr)
+                traceback.print_exc(file=sys.stderr)
+                raise
+        except Exception as e:
+            print(f"[DEBUG] Unexpected error in perform_create: {e}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+            raise
+
 
 
 class ProductRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):

@@ -3,7 +3,8 @@ from .base import *  # noqa: F401, F403
 from decouple import config
 import dj_database_url
 
-DEBUG = False
+DEBUG = config("DEBUG", default=True, cast=bool)
+
 
 # Load Render's external DATABASE_URL if available, otherwise fallback to sqlite
 DATABASES = {
