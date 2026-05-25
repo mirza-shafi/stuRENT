@@ -3,7 +3,7 @@
  * Left: conversation list | Right: active chat window
  */
 import { useState, useRef, useEffect } from 'react'
-import { Send, Search, MessageCircle, ChevronRight } from 'lucide-react'
+import { Send, Search, MessageCircle, ChevronRight, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useLocation, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -294,10 +294,10 @@ export default function Chat() {
         </div>
       )}
 
-      <div style={containerStyle}>
+      <div className="chat-container" style={containerStyle}>
 
       {/* ── LEFT: Conversation List ── */}
-      <div style={{ background: 'var(--bg-2)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className={`chat-sidebar-pane ${activeId ? 'chat-hide-mobile' : ''}`} style={{ background: 'var(--bg-2)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Header */}
         <div style={{ padding: '18px 16px 12px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 12 }}>Messages</div>
@@ -365,7 +365,7 @@ export default function Chat() {
       </div>
 
       {/* ── RIGHT: Chat Window ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
+      <div className={`chat-window-pane ${!activeId ? 'chat-hide-mobile' : ''}`} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
         {!activeId ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', gap: 16, background: 'var(--bg-3)', padding: 32 }}>
             <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--primary-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid rgba(99,102,241,.15)', color: 'var(--primary)', marginBottom: 8, boxShadow: 'var(--shadow-sm)' }}>
@@ -380,6 +380,25 @@ export default function Chat() {
           <>
             {/* Chat header */}
             <div style={{ padding: '14px 20px', background: 'var(--bg-2)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <button 
+                onClick={() => setActiveId(null)}
+                className="chat-back-btn"
+                style={{
+                  marginRight: 4,
+                  padding: 6,
+                  borderRadius: 8,
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface)',
+                  color: 'var(--text)',
+                  cursor: 'pointer',
+                  display: 'none',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                title="Back to conversations"
+              >
+                <ArrowLeft size={16} />
+              </button>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: activeConvo?.color || '#6366f1', color: '#fff', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 {activeRecipient?.avatar}
               </div>
@@ -455,8 +474,14 @@ export default function Chat() {
           40% { transform: translateY(-6px); }
         }
         @media (max-width: 768px) {
-          div[style*="gridTemplateColumns: 300px 1fr"] {
+          .chat-container {
             grid-template-columns: 1fr !important;
+          }
+          .chat-hide-mobile {
+            display: none !important;
+          }
+          .chat-back-btn {
+            display: flex !important;
           }
         }
       `}</style>
