@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import ThemeToggle from '../../components/ui/ThemeToggle'
 import toast from 'react-hot-toast'
+import { auth, googleProvider } from '../../firebase'
+import { signInWithPopup } from 'firebase/auth'
+
 
 function Field({ name, label, type = 'text', placeholder, value, onChange, error }) {
   return (
@@ -17,7 +20,7 @@ function Field({ name, label, type = 'text', placeholder, value, onChange, error
 const INIT = { username: '', email: '', password: '', password_confirm: '', university_name: '', student_id: '' }
 
 export default function Register() {
-  const { register } = useAuth()
+  const { register, googleLogin } = useAuth()
   const navigate = useNavigate()
   const [form, setForm]       = useState(INIT)
   const [errors, setErrors]   = useState({})
@@ -32,7 +35,22 @@ export default function Register() {
     finally { setLoading(false) }
   }
 
-  const handleGoogle = () => toast('🚀 Google Sign-Up coming soon!', { icon: '⏳' })
+  const handleGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      const idToken = await result.user.getIdToken()
+      if (result.user.photoURL) {
+        localStorage.setItem('user_avatar', result.user.photoURL)
+      }
+      localStorage.setItem('login_method', 'google')
+      await googleLogin(idToken)
+      toast.success('Welcome to stuRENT!')
+      navigate('/products')
+    } catch (err) {
+      console.error(err)
+      toast.error(err.response?.data?.detail || 'Google Sign-In failed.')
+    }
+  }
 
   return (
     <div className="auth-page">

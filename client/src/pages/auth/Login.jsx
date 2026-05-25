@@ -3,9 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import ThemeToggle from '../../components/ui/ThemeToggle'
 import toast from 'react-hot-toast'
+import { auth, googleProvider } from '../../firebase'
+import { signInWithPopup } from 'firebase/auth'
 
 export default function Login() {
-  const { login } = useAuth()
+  const { login, googleLogin } = useAuth()
   const navigate  = useNavigate()
   const [form, setForm]       = useState({ username: '', password: '' })
   const [loading, setLoading] = useState(false)
@@ -21,7 +23,22 @@ export default function Login() {
     finally { setLoading(false) }
   }
 
-  const handleGoogle = () => toast('🚀 Google Sign-Up coming soon!', { icon: '⏳' })
+  const handleGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      const idToken = await result.user.getIdToken()
+      if (result.user.photoURL) {
+        localStorage.setItem('user_avatar', result.user.photoURL)
+      }
+      localStorage.setItem('login_method', 'google')
+      await googleLogin(idToken)
+      toast.success('Welcome back!')
+      navigate('/products')
+    } catch (err) {
+      console.error(err)
+      toast.error(err.response?.data?.detail || 'Google Sign-In failed.')
+    }
+  }
 
   return (
     <div className="auth-page">
