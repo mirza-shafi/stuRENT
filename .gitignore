@@ -103,3 +103,4 @@ yarn-error.log*
 .eslintcache
 coverage/
 .nyc_output/
+backend/sturent-17f09-firebase-adminsdk-fbsvc-c619c72a77.json
