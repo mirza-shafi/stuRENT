@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Package, Plus, Settings, LogOut, LogIn, Menu, X, ShoppingBag } from 'lucide-react'
+import { Package, Plus, Settings, LogOut, LogIn, Menu, X, ShoppingBag, MessageSquare } from 'lucide-react'
 import { useCart } from '../CartWishlist'
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
@@ -49,6 +49,7 @@ export default function StudentNavbar() {
           {link('/products', <Package size={15}/>, 'All Products')}
           {link('/products/add-product', <Plus size={15}/>, 'Be a Vendor')}
           {user && link('/my-products', <Package size={15}/>, 'My Products')}
+          {user && link('/messages', <MessageSquare size={15}/>, 'Messages')}
         </nav>
 
         <div className="snav__right">
@@ -106,6 +107,7 @@ export default function StudentNavbar() {
           {link('/products', null, '📋 All Products')}
           {link('/products/add-product', null, '✨ Be a Vendor')}
           {user && link('/my-products', null, '📦 My Products')}
+          {user && link('/messages', null, '💬 Messages')}
           {user && link('/profile',   null, '👤 Profile')}
           {!user && <button className="btn btn--ghost btn--full" onClick={() => { setOpen(false); openLoginModal() }}>Sign In</button>}
           {!user && <button className="btn btn--primary btn--full" onClick={() => { setOpen(false); openRegisterModal() }}>Sign Up</button>}

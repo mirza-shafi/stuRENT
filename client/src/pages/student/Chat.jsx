@@ -252,7 +252,7 @@ export default function Chat() {
   }
 
   const isAdminPath = location.pathname.startsWith('/admin')
-  const containerHeight = isAdminPath ? 'calc(100vh - 210px)' : 'calc(100vh - 64px)'
+  const containerHeight = isAdminPath ? 'calc(100dvh - 210px)' : 'calc(100dvh - 64px)'
   const containerStyle = isAdminPath ? {
     display: 'grid',
     gridTemplateColumns: '300px 1fr',
@@ -265,7 +265,7 @@ export default function Chat() {
   } : {
     display: 'grid',
     gridTemplateColumns: '300px 1fr',
-    height: 'calc(100vh - 64px)',
+    height: 'calc(100dvh - 64px)',
     background: 'var(--bg)',
     overflow: 'hidden'
   }
@@ -474,8 +474,12 @@ export default function Chat() {
           40% { transform: translateY(-6px); }
         }
         @media (max-width: 768px) {
+          .student-main-content:has(.chat-container) {
+            padding: 0 !important;
+          }
           .chat-container {
             grid-template-columns: 1fr !important;
+            height: calc(100dvh - 64px) !important;
           }
           .chat-hide-mobile {
             display: none !important;
