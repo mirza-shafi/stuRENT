@@ -315,31 +315,31 @@ export default function AllProducts() {
         .ap-main { flex:1; min-width:0; }
 
         /* ── Grid ── */
-        .ap-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:18px; }
-        .ap-skeleton { height:300px; border-radius:14px; background:linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%); background-size:400% 100%; animation:shimmer 1.5s infinite; }
+        .ap-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
+        .ap-skeleton { height:250px; border-radius:10px; background:linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%); background-size:400% 100%; animation:shimmer 1.5s infinite; }
         @keyframes shimmer { 0%{background-position:100% 50%} 100%{background-position:0% 50%} }
-
+ 
         /* ── Product Card ── */
-        .ap-card { background:#fff; border-radius:14px; border:1px solid #e8e6e1; overflow:hidden; transition:all .25s; position:relative; text-decoration:none; color:inherit; display:block; }
-        .ap-card:hover { box-shadow:0 10px 32px rgba(0,0,0,.1); transform:translateY(-4px); border-color:transparent; }
+        .ap-card { background:#fff; border-radius:10px; border:1px solid #e8e6e1; overflow:hidden; transition:all .25s; position:relative; text-decoration:none; color:inherit; display:block; }
+        .ap-card:hover { box-shadow:0 8px 24px rgba(0,0,0,.08); transform:translateY(-2px); border-color:transparent; }
         .ap-card:hover .ap-card-overlay { opacity:1; }
-        .ap-card-img { aspect-ratio:1; background:#f5f4f0; display:flex; align-items:center; justify-content:center; font-size:60px; position:relative; overflow:hidden; }
+        .ap-card-img { aspect-ratio:1; background:#f5f4f0; display:flex; align-items:center; justify-content:center; font-size:48px; position:relative; overflow:hidden; }
         .ap-card-img img { width:100%; height:100%; object-fit:cover; }
-        .ap-card-badge { position:absolute; top:10px; left:10px; font-size:10px; font-weight:700; padding:3px 9px; border-radius:999px; text-transform:uppercase; letter-spacing:.05em; z-index:2; }
+        .ap-card-badge { position:absolute; top:8px; left:8px; font-size:8px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase; letter-spacing:.05em; z-index:2; }
         .badge-rent { background:rgba(99,102,241,.9); color:#fff; }
         .badge-buy  { background:rgba(16,185,129,.9); color:#fff; }
         .badge-both { background:rgba(245,158,11,.9); color:#fff; }
-        .ap-avail-dot { position:absolute; top:10px; right:10px; width:10px; height:10px; border-radius:50%; border:2px solid #fff; z-index:2; }
+        .ap-avail-dot { position:absolute; top:8px; right:8px; width:8px; height:8px; border-radius:50%; border:2px solid #fff; z-index:2; }
         .ap-card-overlay { position:absolute; inset:0; background:rgba(26,26,46,.35); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s; }
-        .ap-quick-view { background:#fff; color:#1a1a2e; font-size:12px; font-weight:700; padding:8px 18px; border-radius:20px; border:none; cursor:pointer; font-family:inherit; }
-        .ap-card-body { padding:14px; }
+        .ap-quick-view { background:#fff; color:#1a1a2e; font-size:11px; font-weight:700; padding:6px 14px; border-radius:20px; border:none; cursor:pointer; font-family:inherit; }
+        .ap-card-body { padding:10px; }
         .ap-card-cat { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#94a3b8; margin-bottom:4px; }
-        .ap-card-name { font-size:14px; font-weight:600; color:#1a1a2e; margin-bottom:8px; line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-        .ap-card-price { display:flex; align-items:baseline; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
-        .ap-price-main { font-size:18px; font-weight:800; color:#6366f1; }
-        .ap-price-unit { font-size:11px; color:#94a3b8; }
-        .ap-price-buy { font-size:12px; color:#10b981; font-weight:700; background:#ecfdf5; padding:2px 8px; border-radius:6px; }
-        .ap-card-btn { display:block; width:100%; background:#6366f1; color:#fff; border:none; border-radius:8px; padding:9px; font-size:12px; font-weight:700; text-align:center; cursor:pointer; font-family:inherit; transition:background .2s; text-decoration:none; }
+        .ap-card-name { font-size:12px; font-weight:600; color:#1a1a2e; margin-bottom:4px; line-height:1.35; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+        .ap-card-price { display:flex; align-items:baseline; gap:4px; margin-bottom:8px; flex-wrap:wrap; }
+        .ap-price-main { font-size:15px; font-weight:800; color:#6366f1; }
+        .ap-price-unit { font-size:10px; color:#94a3b8; }
+        .ap-price-buy { font-size:11px; color:#10b981; font-weight:700; background:#ecfdf5; padding:2px 6px; border-radius:4px; }
+        .ap-card-btn { display:block; width:100%; background:#6366f1; color:#fff; border:none; border-radius:6px; padding:6px; font-size:11px; font-weight:700; text-align:center; cursor:pointer; font-family:inherit; transition:background .2s; text-decoration:none; }
         .ap-card-btn:hover { background:#4f46e5; }
 
         /* ── List view ── */
