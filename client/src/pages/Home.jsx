@@ -365,7 +365,7 @@ function HomePageInner() {
 
 function NavActions({ user }) {
   const { cartCount, wish, setCartOpen, setWishOpen } = useCart()
-  const { openLoginModal, openRegisterModal } = useAuth()
+  const { openLoginModal, openRegisterModal, logout } = useAuth()
   const navigate = useNavigate()
   const [openDrop, setOpenDrop] = useState(null)
 
@@ -454,7 +454,30 @@ function NavActions({ user }) {
 
       {/* Auth */}
       {user ? (
-        <Link to="/products" className="hp-na-auth-btn">📦 Listings</Link>
+        <div className="hp-na-wrap">
+          <button className="hp-na-btn" title="My Profile" onClick={() => toggleDrop('profile')}>
+            <span className="hp-na-icon">👤</span>
+            <span className="hp-na-label">Profile</span>
+          </button>
+          {openDrop === 'profile' && (
+            <div className="hp-na-drop" style={{ right: 0 }}>
+              <div className="hp-na-drop-title">Welcome, {user.username}</div>
+              <Link to="/profile" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>👤 My Profile / Settings</Link>
+              <Link to="/products/add-product" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>📦 Add Product</Link>
+              <Link to="/my-orders" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>📍 My Orders</Link>
+              {user.is_staff && (
+                <Link to="/admin/dashboard" className="hp-na-drop-item" onClick={() => setOpenDrop(null)}>🔐 Admin Panel</Link>
+              )}
+              <button 
+                onClick={() => { logout(); setOpenDrop(null); }} 
+                className="hp-na-drop-item" 
+                style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+              >
+                🚪 Log Out
+              </button>
+            </div>
+          )}
+        </div>
       ) : (
         <>
           <button onClick={openLoginModal} className="hp-na-auth-btn" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Sign In</button>
