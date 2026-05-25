@@ -245,6 +245,7 @@ class GoogleLoginView(APIView):
             email = decoded_token.get("email")
             uid = decoded_token.get("uid")
             name = decoded_token.get("name") or (email.split("@")[0] if email else "Google User")
+            photo_url = decoded_token.get("picture") or ""
 
             if not email:
                 return Response(
@@ -276,7 +277,14 @@ class GoogleLoginView(APIView):
                     email=email,
                     university_name="Google Account",
                     student_id="",
+                    avatar_url=photo_url,
                 )
+            else:
+                # Update avatar_url if it changed or is empty
+                customer = Customer.objects.filter(user=user).first()
+                if customer and photo_url and customer.avatar_url != photo_url:
+                    customer.avatar_url = photo_url
+                    customer.save()
 
             # Issue SimpleJWT tokens
             refresh = RefreshToken.for_user(user)

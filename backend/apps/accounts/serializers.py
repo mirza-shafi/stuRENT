@@ -46,8 +46,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """Read-only serializer for the authenticated user's public profile."""
+    avatar_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "username", "email", "first_name", "last_name", "date_joined", "is_staff", "is_superuser")
+        fields = ("id", "username", "email", "first_name", "last_name", "date_joined", "is_staff", "is_superuser", "avatar_url")
         read_only_fields = fields
+
+    def get_avatar_url(self, obj):
+        try:
+            return obj.customer_profile.avatar_url
+        except Exception:
+            return ""

@@ -11,7 +11,12 @@ import toast from 'react-hot-toast'
 
 const EMPTY_FORM = { name: '', email: '', phone: '' }
 
-function Avatar({ name, size = 36 }) {
+function Avatar({ name, avatarUrl, size = 36 }) {
+  if (avatarUrl) {
+    return (
+      <img src={avatarUrl} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+    )
+  }
   const colors = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
   const color = colors[(name?.charCodeAt(0) || 0) % colors.length]
   return (
@@ -131,7 +136,7 @@ export default function CustomerList() {
                     {/* Customer col */}
                     <td style={{ padding: '14px 20px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <Avatar name={c.name} />
+                        <Avatar name={c.name} avatarUrl={c.avatar_url} />
                         <div>
                           <div style={{ fontWeight: 700, color: 'var(--text)' }}>{c.name}</div>
                           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>ID #{c.id}</div>

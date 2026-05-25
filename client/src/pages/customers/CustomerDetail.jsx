@@ -7,7 +7,12 @@ import Badge from '../../components/ui/Badge'
 import { useApi } from '../../hooks/useApi'
 import CustomerService from '../../services/customerService'
 
-function Avatar({ name, size = 72 }) {
+function Avatar({ name, avatarUrl, size = 72 }) {
+  if (avatarUrl) {
+    return (
+      <img src={avatarUrl} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }} />
+    )
+  }
   const colors = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
   const color = colors[(name?.charCodeAt(0) || 0) % colors.length]
   return (
@@ -144,7 +149,7 @@ export default function CustomerDetail() {
           {/* Profile Card */}
           <div className="card" style={{ padding: 24, marginBottom: 16, textAlign: 'center' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-              <Avatar name={customer?.name} />
+              <Avatar name={customer?.name} avatarUrl={customer?.avatar_url} />
             </div>
             <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--text)', marginBottom: 4 }}>{customer?.name}</div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>Student Customer</div>

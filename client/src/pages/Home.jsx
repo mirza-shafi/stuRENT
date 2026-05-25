@@ -368,7 +368,7 @@ function NavActions({ user }) {
   const { openLoginModal, openRegisterModal, logout } = useAuth()
   const navigate = useNavigate()
   const [openDrop, setOpenDrop] = useState(null)
-  const avatarUrl = localStorage.getItem('user_avatar')
+  const avatarUrl = user?.avatar_url || localStorage.getItem('user_avatar')
   const loginMethod = localStorage.getItem('login_method')
 
   const toggleDrop = (name) => setOpenDrop(d => d === name ? null : name)

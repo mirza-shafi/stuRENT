@@ -11,7 +11,7 @@ export default function StudentNavbar() {
   const { cartCount } = useCart()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
-  const avatarUrl = localStorage.getItem('user_avatar')
+  const avatarUrl = user?.avatar_url || localStorage.getItem('user_avatar')
   const loginMethod = localStorage.getItem('login_method')
 
   const handleLogout = async () => { await logout(); toast.success('Logged out'); navigate('/') }

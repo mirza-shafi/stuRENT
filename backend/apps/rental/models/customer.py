@@ -27,6 +27,7 @@ class Customer(models.Model):
     email = models.EmailField(_("email address"), unique=True)
     university_name = models.CharField(_("university name"), max_length=200, blank=True, default="")
     student_id = models.CharField(_("student id"), max_length=50, blank=True, default="")
+    avatar_url = models.URLField(_("avatar URL"), max_length=500, blank=True, default="")
     date_created = models.DateTimeField(_("date created"), auto_now_add=True)
     updated_at = models.DateTimeField(_("last updated"), auto_now=True)
 

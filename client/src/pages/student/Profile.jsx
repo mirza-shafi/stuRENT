@@ -84,10 +84,14 @@ export default function Profile() {
 
       {tab === 'Overview' && (
         <div className="card" style={{ padding: '24px', maxWidth: '480px' }}>
-          <div style={{ display: 'flex', align: 'center', gap: '16px', marginBottom: '20px' }}>
-            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 800, color: '#fff', flexShrink: 0 }}>
-              {user?.username?.[0]?.toUpperCase()}
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+            {user?.avatar_url ? (
+              <img src={user.avatar_url} alt="Profile" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+            ) : (
+              <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+                {user?.username?.[0]?.toUpperCase()}
+              </div>
+            )}
             <div>
               <div style={{ fontWeight: 700, fontSize: '18px' }}>{user?.username}</div>
               <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{user?.email}</div>
