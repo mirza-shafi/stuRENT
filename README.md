@@ -2,6 +2,8 @@
 
 **Student Rental Management System** — A modern Django REST API + React Single Page Application designed specifically for student accommodations, room rentals, equipment rentals, and peer-to-peer buying/selling.
 
+🔗 **Live Link**: [sturent.mirzashafi.com](https://sturent.mirzashafi.com/)
+
 ---
 
 ## 🌟 Core Features & Recent Updates
