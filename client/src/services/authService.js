@@ -64,6 +64,7 @@ const AuthService = {
       localStorage.removeItem('refresh_token')
       localStorage.removeItem('is_admin')
       localStorage.removeItem('user_avatar')
+      localStorage.removeItem('login_method')
     }
   },
 

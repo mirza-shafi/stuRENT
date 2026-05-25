@@ -95,6 +95,7 @@ export default function AuthModal() {
       if (result.user.photoURL) {
         localStorage.setItem('user_avatar', result.user.photoURL)
       }
+      localStorage.setItem('login_method', 'google')
       await googleLogin(idToken)
       toast.success('Welcome!')
       closeAuthModal()
