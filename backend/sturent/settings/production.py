@@ -3,7 +3,7 @@ from .base import *  # noqa: F401, F403
 from decouple import config
 import dj_database_url
 
-DEBUG = True
+DEBUG = False
 
 # Load Render's external DATABASE_URL if available, otherwise fallback to sqlite
 DATABASES = {
@@ -16,8 +16,8 @@ DATABASES = {
 # ── Render handles SSL at proxy level — don't redirect internally ─────────────
 SECURE_SSL_REDIRECT = False
 SECURE_HSTS_SECONDS = 0
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+SECURE_CONTENT_TYPE_NOSNIFF = False
+X_FRAME_OPTIONS = "DENY"
 
 # ── CORS — allow Vercel frontend ──────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = config(
@@ -27,8 +27,11 @@ CORS_ALLOWED_ORIGINS = config(
 )
 CORS_ALLOW_CREDENTIALS = True
 
-# ── Static Files (WhiteNoise) ────────────────────────────────────────────────
+# ── Static Files (WhiteNoise) & Media Files ──────────────────────────────────
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
