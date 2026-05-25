@@ -31,5 +31,6 @@ urlpatterns = [
     path("student/products/<int:pk>/", views.StudentProductDetailView.as_view(), name="student-product-detail"),
     path("student/rent/", views.StudentRentView.as_view(), name="student-rent"),
     path("student/my-orders/", views.StudentMyOrdersView.as_view(), name="student-my-orders"),
+    path("student/my-products/", views.StudentMyProductsView.as_view(), name="student-my-products"),
 ]
 

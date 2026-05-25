@@ -15,6 +15,7 @@ import TrackOrder     from './pages/student/TrackOrder'
 import Profile        from './pages/student/Profile'
 import Chat           from './pages/student/Chat'
 import AddProduct     from './pages/products/AddProduct'
+import MyProducts     from './pages/student/MyProducts'
 import Cart           from './pages/student/Cart'
 import { CartProvider } from './components/CartWishlist'
 
@@ -79,6 +80,7 @@ export default function App() {
             <Route path="/my-orders" element={<StudentRoute><MyOrders /></StudentRoute>} />
             <Route path="/track-order/:id" element={<StudentRoute><TrackOrder /></StudentRoute>} />
             <Route path="/products/add-product" element={<StudentRoute><AddProduct /></StudentRoute>} />
+            <Route path="/my-products" element={<StudentRoute><MyProducts /></StudentRoute>} />
             <Route path="/profile"   element={<StudentRoute><Profile /></StudentRoute>} />
             <Route path="/messages"  element={<StudentRoute><Chat /></StudentRoute>} />
 

@@ -123,3 +123,24 @@ class StudentMyOrdersView(generics.ListAPIView):
             )
         except Customer.DoesNotExist:
             return Order.objects.none()
+
+
+class StudentMyProductsView(generics.ListAPIView):
+    """
+    GET /api/v1/student/my-products/
+    Returns only the products posted by the logged-in student (vendor).
+    """
+
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ProductListSerializer
+
+    def get_queryset(self):
+        try:
+            customer = self.request.user.customer_profile
+            return (
+                Product.objects.filter(posted_by=customer)
+                .prefetch_related("tags")
+                .order_by("-date_created")
+            )
+        except Customer.DoesNotExist:
+            return Product.objects.none()

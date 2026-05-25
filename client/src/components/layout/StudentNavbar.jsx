@@ -48,6 +48,7 @@ export default function StudentNavbar() {
         <nav className="snav__links">
           {link('/products', <Package size={15}/>, 'All Products')}
           {link('/products/add-product', <Plus size={15}/>, 'Be a Vendor')}
+          {user && link('/my-products', <Package size={15}/>, 'My Products')}
         </nav>
 
         <div className="snav__right">
@@ -104,6 +105,7 @@ export default function StudentNavbar() {
         <div className="snav__mobile">
           {link('/products', null, '📋 All Products')}
           {link('/products/add-product', null, '✨ Be a Vendor')}
+          {user && link('/my-products', null, '📦 My Products')}
           {user && link('/profile',   null, '👤 Profile')}
           {!user && <button className="btn btn--ghost btn--full" onClick={() => { setOpen(false); openLoginModal() }}>Sign In</button>}
           {!user && <button className="btn btn--primary btn--full" onClick={() => { setOpen(false); openRegisterModal() }}>Sign Up</button>}

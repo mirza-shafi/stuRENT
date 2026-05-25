@@ -53,6 +53,9 @@ export default function Profile() {
         <Link to="/my-orders" className="btn btn--ghost">
           <ShoppingBag size={15} /> My Orders
         </Link>
+        <Link to="/my-products" className="btn btn--ghost">
+          📦 My Products
+        </Link>
         <Link to="/messages" className="btn btn--ghost">
           💬 Messages
         </Link>

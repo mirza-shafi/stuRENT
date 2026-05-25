@@ -41,6 +41,9 @@ const ProductService = {
 
   /** GET /api/v1/products/?approval_status=pending — admin pending list */
   getPending: () => api.get('/products/', { params: { approval_status: 'pending' } }),
+
+  /** GET /api/v1/student/my-products/ — customer's own products list */
+  getMyProducts: () => api.get('/student/my-products/'),
 }
 
 export default ProductService

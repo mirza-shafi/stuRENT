@@ -7,6 +7,7 @@ from .student import (
     StudentProductDetailView,
     StudentRentView,
     StudentMyOrdersView,
+    StudentMyProductsView,
 )
 
 __all__ = [
@@ -23,4 +24,5 @@ __all__ = [
     "StudentProductDetailView",
     "StudentRentView",
     "StudentMyOrdersView",
+    "StudentMyProductsView",
 ]
